@@ -10,6 +10,15 @@ This portfolio artifact presents my five-stage analytical workflow for turning t
 
 The objective is not merely faster reporting. It is better decisions grounded in transparent evidence. AI assists with structure, analytical design, review, and quality control; human judgment remains responsible for the evidence, interpretation, and recommendation.
 
+## Detailed workflow frameworks
+
+The repository currently contains completed framework documentation for Stages 1, 2, and 4:
+
+- **Stages 1–2 — Start and Framing:** [Three-AI Start and Framing Dialogue Framework](docs/three-ai-start-and-framing-dialogue-framework.md)
+- **Stage 4 — Execution, validation, and deeper analysis:** [Three-AI Independent Validation and Analysis Framework](docs/three-ai-validation-and-analysis-framework.md)
+
+Stage 3, **Design**, and Stage 5, **Finish**, will receive their own detailed framework documents.
+
 ## Portfolio files
 
 - [Presentation (PDF)](Becoming_an_AI-Augmented_Analyst.pdf)
