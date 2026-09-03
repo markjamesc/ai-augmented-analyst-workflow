@@ -12,13 +12,14 @@ The objective is not merely faster reporting. It is better decisions grounded in
 
 ## Detailed workflow frameworks
 
-The repository currently contains completed framework documentation for Stages 1 through 4:
+The repository contains completed detailed framework documentation for all five stages:
 
 - **Stages 1–2 — Start and Framing:** [Three-AI Start and Framing Dialogue Framework](docs/three-ai-start-and-framing-dialogue-framework.md)
 - **Stage 3 — Measurement Design:** [Three-AI Measurement Design Framework](docs/three-ai-measurement-design-framework.md)
 - **Stage 4 — Execution, validation, and deeper analysis:** [Three-AI Independent Validation and Analysis Framework](docs/three-ai-validation-and-analysis-framework.md)
+- **Stage 5 — Interpretation and recommendation:** [Three-AI Interpretation and Recommendation Framework](docs/three-ai-interpretation-and-recommendation-framework.md)
 
-Stage 5, **Finish**, will receive its own detailed framework document.
+Together, these documents specify the complete path from an initial stakeholder request to a validated, evidence-traceable decision.
 
 ## Portfolio files
 
