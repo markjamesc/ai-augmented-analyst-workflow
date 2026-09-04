@@ -33,8 +33,8 @@ Together, these documents specify the complete path from an initial stakeholder 
 
 | Project | Decision supported | Evidence |
 |---|---|---|
-| [FulfillIQ](https://github.com/markjamesc/fulfilliq) | Which sellers should enter a 30-day late-fulfillment performance plan? | MySQL, R, Excel evidence, three-AI review, decision brief |
-| [Bitcoin Proxy Analysis](https://github.com/markjamesc/ai-augmented-bitcoin-proxy-analysis) | Which public Bitcoin proxies, if any, are preferable to owning Bitcoin directly? | Scenario model, reproducible notebook, validation checks, report and presentation |
+| [FulfillIQ](https://github.com/markjamesc/fulfilliq) | Which sellers should enter a 30-day late-fulfillment performance plan? | reviewed MySQL specification, R validation of the committed export, Excel evidence, three-AI review, decision brief |
+| [Bitcoin Proxy Analysis](https://github.com/markjamesc/ai-augmented-bitcoin-proxy-analysis) | Which public Bitcoin proxies, if any, are preferable to owning Bitcoin directly? | scenario model, executed notebook, internal QA checks, report and presentation |
 
 The workflow repository explains the method; the case-study repositories show the method applied.
 
