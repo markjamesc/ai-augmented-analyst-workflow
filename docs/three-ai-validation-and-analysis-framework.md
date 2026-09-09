@@ -360,6 +360,44 @@ AI 3 should produce more than a final rate. Recommended validation outputs inclu
 
 These intermediate totals help identify the point at which two paths diverge.
 
+## 6A. Pre-build enforcement checklist (V3)
+
+Keep the dual-builder + exact-recon architecture. Harden **checklist enforcement** so Stage 3 translation gaps cannot silently ship.
+
+### Pre-build attestation (each of SQL A, SQL B, R(B))
+
+Before claiming a first freeze, each builder must tick — with Stage 3 clause cites:
+
+1. Half-rate / persistence rules implemented as locked (not a weaker proxy).
+2. Real dual-clock / twin-timestamp N-rule with action-override semantics when the design requires it (no fake clocks).
+3. Full analytical-unit universe required by the design (including zero-eligible units when recon demands them).
+4. Membership-first selection; no padding; simulation or occupancy labels as locked.
+5. Non-enrolling actions (e.g. INCONCLUSIVE / WATCH) never promoted to enroll by discretion.
+
+### Known-case fixtures before recon
+
+Run the Stage 3 gold fixtures (or equivalent tiny cases) against each build. A fixture fail blocks reconciliation claiming Pass.
+
+### Hard recon contract
+
+Validation Gate Pass requires **exact** match on the locked decision grain fields (at minimum: numerator, denominator, action, membership, selected / capacity outcome, and full universe overlap). No “close enough” on action or membership. Identical enroll and inconclusive sets required when those actions exist.
+
+### Mismatch diagnosis rule
+
+On action or universe split: diagnose against the **locked Stage 3** design; repair by re-implementing and re-running. **Never** copy the other path’s ID list into the failing path. Log the root cause (translation miss vs plumbing vs shared design error).
+
+### Snapshot / lineage checklist
+
+Shared freeze IDs, snapshot labels, and package hashes must match before final recon. Align PENDING or placeholder lineage before claiming Pass.
+
+### Plumbing adaptations
+
+Privilege, temporary-table, or dialect adaptations are allowed only if judged logic is unchanged; document them in the validation packet. Do not hide them.
+
+### Simulation / release block
+
+A Validation Gate Pass on a simulation pack unlocks Stage 5 interpretation of that pack only. It does **not** authorize live enrollment. Any roster derived from a simulation capacity setting must carry the simulation label. Live release remains a separate owner decision after current data, real occupancy, and operational prerequisites.
+
 ## 7. Exact reconciliation
 
 ### What must be compared
@@ -502,7 +540,7 @@ After any material correction:
 4. Create a new reconciliation report.
 5. Preserve the earlier failed report for the audit trail.
 
-Manual edits to a result table are prohibited. A correction must be made in the SQL or R code and reproduced.
+Manual edits to a result table are prohibited. A correction must be made in the SQL or R code and reproduced. Never copy the other path’s selected-ID list into a failing implementation to force a match; repair toward the locked Stage 3 design and re-run.
 
 ## 9. Cross-review after reconciliation
 
