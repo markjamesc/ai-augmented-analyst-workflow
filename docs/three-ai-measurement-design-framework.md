@@ -721,6 +721,35 @@ Not acceptable during Stage 3: executable query syntax, CTE construction, databa
 
 The design defines what the code must do. Stage 4 independently determines how to implement it.
 
+## 19A. Spec→builder translation and known-case fixtures (V3)
+
+Stage 3 must be precise enough that independent builders implement the *same* decision rules. FulfillIQ 2.0 showed that prose design locks can still under-translate into SQL/R: missing half-rate persistence, faked dual-clock N5, and incomplete entity universe produced action diffs until repaired toward the locked design.
+
+### Translation requirement
+
+Every decision-changing rule in the locked design must map to an **executable builder attestation** with an exact clause cite (section/ID). Builders may not treat unnamed “spirit of the design” as authority.
+
+Minimum attestation classes when the design uses them:
+
+- half-window / persistence rules versus leave-one-out or reference comparators;
+- dual-clock or twin-timestamp rules with **action-override** semantics (e.g. date vs timestamp → INCONCLUSIVE when actions disagree);
+- full analytical-unit universe, including zero-eligible or non-qualifying units required for recon;
+- membership-first selection, capacity/simulation labels, and no-padding rules;
+- non-enrolling actions (WATCH / INCONCLUSIVE) that must never be enrolled by discretion.
+
+### Known-case / gold fixtures
+
+Before Design Gate Pass is treated as Stage-4-ready, the design (or an attached fixture appendix) must include **tiny known cases** that:
+
+1. Pass when the rule is implemented correctly; and
+2. **Fail the build** if the rule is omitted, faked, or replaced with a weaker proxy.
+
+Fixtures are not optional color. They are the Stage 3→4 sieve for translation drift. Shared wrong design can still match across builders after fixtures pass — fixtures cut *translation* drift; they do not erase correlated design error.
+
+### Design Gate addition
+
+Gate 10 / Stage 4 contract is incomplete unless translation attestations and required fixtures are listed for every decision-changing rule above.
+
 ## 20. Stage 4 output contract
 
 The locked design must support the three-AI execution architecture.
@@ -1072,6 +1101,7 @@ The design passes only when all of the following are satisfied.
 - SQL B lower-grain contract complete.
 - R(B) independent-reconstruction contract complete.
 - Reconciliation requirements complete.
+- Spec→builder translation attestations and known-case fixtures complete for every decision-changing rule (§19A).
 - No production SQL or R has been written in Stage 3.
 
 ### Gate 11 — Review and ownership
