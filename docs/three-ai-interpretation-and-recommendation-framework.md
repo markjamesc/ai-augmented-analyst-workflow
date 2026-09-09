@@ -135,6 +135,7 @@ All three AIs receive the same versioned Stage 5 Evidence Package.
 - sensitivity analyses;
 - model or forecast evaluation artifacts;
 - and unresolved limitations.
+- **Judged dual-clock / N-rule fields** when any unit is labeled INCONCLUSIVE or equivalent (e.g. action disagreement flags, twin-run actions) — cite the freeze export, not an ambiguous parenthetical alone (V3 packaging completeness; not a Stage 5 redesign).
 
 ### File inventory requirement
 
