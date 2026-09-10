@@ -33,8 +33,10 @@ Together, these documents specify the complete path from an initial stakeholder 
 
 | Project | Decision supported | Evidence |
 |---|---|---|
-| [FulfillIQ](https://github.com/markjamesc/fulfilliq) | Which sellers should enter a 30-day late-fulfillment performance plan? | reviewed MySQL specification, R validation of the committed export, Excel evidence, three-AI review, decision brief |
+| [FulfillIQ 2.0](https://github.com/markjamesc/fulfilliq-2.0) | Which sellers meet the locked rules for investigation in a 30-day plan simulation? | independent SQL A / SQL B / R(B), reconciliation across 3,095 sellers, seven investigation candidates, two inconclusive cases, completed interpretation gates |
 | [Bitcoin Proxy Analysis](https://github.com/markjamesc/ai-augmented-bitcoin-proxy-analysis) | Which public Bitcoin proxies, if any, are preferable to owning Bitcoin directly? | scenario model, executed notebook, internal QA checks, report and presentation |
+
+[FulfillIQ V1](https://github.com/markjamesc/fulfilliq) remains the historical baseline. V2 is the current worked example.
 
 The workflow repository explains the method; the case-study repositories show the method applied.
 
