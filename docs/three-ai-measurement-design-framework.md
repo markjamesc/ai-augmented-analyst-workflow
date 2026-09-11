@@ -665,6 +665,12 @@ If only a limited number of entities can receive intervention, the design must s
 
 The selection logic must be fixed before the ranked results are viewed.
 
+When the design uses persistence, twin-clock, or capacity selection, the decision-rule contract must also lock (in Spec→builder-translatable form):
+
+- **Half-window persistence** (if used): non-overlapping halves; per-half floors + comparator; AND-of-halves persistence gate; half audit fields; no pooled-window collapse.
+- **Dual-clock / twin action-override** (if used): real twin pipelines; post-capacity action disagree → INCONCLUSIVE / non-enrolling; twin evidence fields; no fake clocks.
+- **Universe + membership-first + no-pad** (if used): full analytical-unit universe including zero-eligible / non-qualifiers; membership-first then rank under slots; select `min(S,Q)`; no inventing entities to hit capacity.
+
 ### What the rule does not establish
 
 A decision threshold is a policy choice informed by evidence. It is not automatically:
@@ -723,32 +729,68 @@ The design defines what the code must do. Stage 4 independently determines how t
 
 ## 19A. Spec→builder translation and known-case fixtures (V3)
 
-Stage 3 must be precise enough that independent builders implement the *same* decision rules. FulfillIQ 2.0 showed that prose design locks can still under-translate into SQL/R: missing half-rate persistence, faked dual-clock N5, and incomplete entity universe produced action diffs until repaired toward the locked design.
+Stage 3 must be precise enough that independent builders implement the *same* decision rules. Prose design locks can still under-translate into SQL/R: omitted half-window persistence, faked dual-clock action-override, or an incomplete analytical-unit universe produce decision-changing diffs until repaired toward the locked design. Worked evidence (FulfillIQ Olist dual-path recon + known-case fixtures) confirmed that translation drift is real and that fixtures catch *translation* misses — they do not erase correlated shared-design error.
 
-### Translation requirement
+### Translation requirement (Spec→builder packet)
 
-Every decision-changing rule in the locked design must map to an **executable builder attestation** with an exact clause cite (section/ID). Builders may not treat unnamed “spirit of the design” as authority.
+Every decision-changing rule in the locked design must map to a **builder attestation** with an exact clause cite (section/ID). Builders may not treat unnamed “spirit of the design” as authority.
 
-Minimum attestation classes when the design uses them:
+Stage 3 approves the **complete translation contract** and frozen fixture pack **without requiring production code**. Pre-build commitments, executed attestations, and frozen-fixture results are Stage 4 records (diagnostic comparison may occur earlier than an authorized reconciliation Pass).
 
-- half-window / persistence rules versus leave-one-out or reference comparators;
-- dual-clock or twin-timestamp rules with **action-override** semantics (e.g. date vs timestamp → INCONCLUSIVE when actions disagree);
-- full analytical-unit universe, including zero-eligible or non-qualifying units required for recon;
-- membership-first selection, capacity/simulation labels, and no-padding rules;
-- non-enrolling actions (WATCH / INCONCLUSIVE) that must never be enrolled by discretion.
+Before Stage 4 is treated as ready, builders must produce a **Spec→builder translation packet** covering **ALL** locked Stage 3 decision-changing gates used by the design — not one-rule-at-a-time only. **Fail** Stage-4-ready if any locked gate lacks translation (exact clause cite + known-case fixture map entry that fails the build if the rule is omitted or faked).
 
-### Known-case / gold fixtures
+Each path attests its **own** locked contract:
+
+- **SQL B** supplies the required source grain and reconstruction-input fields.
+- **SQL A** and **R(B)** independently implement the judged / final decision logic.
+
+Minimum gate classes when the design uses them (general language). Optional persistence, twin, capacity, and simulation mechanics may be marked **N/A** only with an explicit design cite that the mechanic is unused. Packet completeness, lineage mapping, and independence remain mandatory.
+
+| Gate class | Mechanic builders must translate |
+|---|---|
+| Half-window / persistence | Split-window **half-rate persistence**: each non-overlapping analysis half meets locked floors (eligible≥N, event≥M) and half-rate ≥ that half’s comparator (equality passes); thin half fails persistence; overall persistence gate = AND of half passes; emit half audit fields. Do **not** collapse halves into one pooled window. |
+| Dual-clock / twin action-override | Real **dual-clock / twin-timestamp** pipelines through gates → provisional membership → rank → capacity → provisional actions. Any post-capacity **action disagree** between clocks → final **INCONCLUSIVE** (or locked non-enrolling action); refill rules as designed; emit twin/disagree evidence fields. No fake clocks; no forcing enroll despite disagree. |
+| Full analytical-unit universe | Judged grain = **full analytical-unit universe** required by design (including zero-eligible / non-qualifiers with reason fields). Exact membership-set recon later depends on this grain. |
+| Membership-first + capacity + no-pad | **Membership-first**, then rank only qualifiers under available slots; select `min(S,Q)`; **no padding** / no inventing entities to hit capacity. |
+| Non-enrolling actions | Non-enrolling actions (e.g. WATCH / INCONCLUSIVE) must **never** be enrolled by discretion. |
+| Lineage field mapping | Spec→builder maps freeze/lineage fields (`snapshot_id`, `source_version`, extraction / observation-boundary, or locked equivalents) from the design/freeze contract into builder outputs. Lineage mapping is **mandatory** for every judged/export package that will claim recon-green (cite here — enforcement is Stage 4). Capacity/simulation mapping remains conditional on those gates being used. |
+| Capacity / simulation labels | Capacity and simulation / occupancy labels required by the design are mapped into outputs so Stage 4 can enforce non-live labeling when applicable. Design-cited N/A is allowed when the design does not use capacity/simulation. |
+
+Packet completeness rule: every design-used gate class above must appear with (1) exact clause cite, (2) fixture map entry, (3) covering attestation on each builder path, following that path’s locked contract. Unused optional mechanics require an explicit design-cited N/A. Omitting any used gate, or omitting lineage mapping for a recon-green claim, → packet Fail → Stage 4 not ready.
+
+### Known-case / gold fixtures (Fixture Gate)
 
 Before Design Gate Pass is treated as Stage-4-ready, the design (or an attached fixture appendix) must include **tiny known cases** that:
 
 1. Pass when the rule is implemented correctly; and
 2. **Fail the build** if the rule is omitted, faked, or replaced with a weaker proxy.
 
+**Known-case Fixture Gate (authority):**
+
+1. **Freeze before builders run.** Freeze the known-case fixture pack **before either builder begins implementation or execution** (identity: path + content hash and/or freeze timestamp). Freezing only before a readiness or first-freeze *claim* is not sufficient. Late-invented fixtures after builder churn do not count as Fixture Gate Pass. Stage 3 Fixture Gate Pass records pack-authority (freeze identity + pack present + no-greenwash); Stage 4 scores the frozen pack as an executed result.
+2. **No rewrite after Fail.** On fixture Fail, builders **repair toward locked Stage 3** and re-run. Builders / AIs must **not** rewrite fixture IDs, expected outcomes, or predicates to force green (greenwash). An explicitly owner-authorized fixture correction creates a **newly frozen version** and requires fresh validation; it cannot retroactively turn the failed version into a Pass. Silent AI edit is not owner authority.
+3. **Fixture Gate Pass before authoritative use.** Design Gate may treat the pack as authoritative only after Fixture Gate Pass (freeze identity + no-greenwash attestation + pack present). Scoring a mutable or post-fail-rewritten pack is Fail.
+
 Fixtures are not optional color. They are the Stage 3→4 sieve for translation drift. Shared wrong design can still match across builders after fixtures pass — fixtures cut *translation* drift; they do not erase correlated design error.
+
+### Spec→builder independence (dual-path)
+
+Dual builders (e.g. SQL A and R(B)) must each implement from the **locked grain + design** and that path’s **authorized source package only**.
+
+- Paths must **not** share a judged ID list, selected set, ENROLL list, or membership-YES list as a **build input**.
+- Shared Stage 3 design + freeze identity is allowed; sharing *results* / answer-key ID lists is not.
+- Cross-path agreement is established **only** by Stage 4 recon of independently produced outputs.
+
+This is a Design Gate / Spec→builder independence requirement. Stage 4 deepens the same rule as build-time independence + repair-time never-copy.
 
 ### Design Gate addition
 
-Gate 10 / Stage 4 contract is incomplete unless translation attestations and required fixtures are listed for every decision-changing rule above.
+Gate 10 / Stage 4 contract is incomplete unless **all** of the following are listed and satisfied:
+
+1. Spec→builder **translation packet** is complete for every decision-changing gate the design uses (§19A Translation requirement) — not one-rule-only. Stage 3 records the contract and freeze; it does not require production code.
+2. Known-case fixtures are present **and** Fixture Gate Pass is recorded (freeze identity **before builders run** + no-greenwash) before fixtures are treated as authoritative.
+3. Dual-path Spec→builder **independence** is attested (no shared judged/selected/membership ID list as build input).
+4. **Lineage field mapping is mandatory** for any judged/export package that will claim recon-green. Capacity/simulation label mapping appears in the packet when those gates are used (design-cited N/A otherwise).
 
 ## 20. Stage 4 output contract
 
@@ -1101,7 +1143,10 @@ The design passes only when all of the following are satisfied.
 - SQL B lower-grain contract complete.
 - R(B) independent-reconstruction contract complete.
 - Reconciliation requirements complete.
-- Spec→builder translation attestations and known-case fixtures complete for every decision-changing rule (§19A).
+- Spec→builder **translation packet** complete for **all** locked decision-changing gates the design uses (§19A) — not one-rule-only. Stage 3 records the contract without production code.
+- Known-case Fixture Gate Pass recorded (freeze identity **before builders run** + no rewrite after Fail) before fixtures are treated as authoritative (§19A).
+- Dual-path Spec→builder independence attested (no shared judged/selected/membership ID list as build input) (§19A).
+- Lineage field mapping present (mandatory for recon-green claims). Capacity/simulation label mapping present in the packet when those gates are used.
 - No production SQL or R has been written in Stage 3.
 
 ### Gate 11 — Review and ownership
@@ -1238,6 +1283,11 @@ The process fails if:
 - an AI disagreement is resolved by voting;
 - a blocking risk is hidden;
 - a material business change is not returned to the stakeholder;
+- the Spec→builder translation packet omits any locked decision-changing gate the design uses;
+- known-case fixtures are rewritten after a Fail to greenwash a build;
+- Design Gate treats fixtures as authoritative without Fixture Gate Pass (freeze identity recorded before builders run);
+- dual builders share a judged / selected / membership ID list as a build input;
+- Stage 4 is declared ready without lineage field mapping for a recon-green claim, or without capacity/simulation label mapping when those gates are used;
 - or Stage 4 cannot implement the design without making new analytical decisions.
 
 ## 33. Required deliverables
@@ -1300,6 +1350,10 @@ Stage 3 is complete only when:
 - cross-review disagreements were resolved through evidence rather than voting;
 - the SQL A, SQL B, R(B), and reconciliation contracts are complete;
 - no production SQL or R was written during Stage 3;
+- the Spec→builder translation packet covers every locked decision-changing gate the design uses;
+- known-case Fixture Gate Pass is recorded (freeze before builders run) before fixtures are treated as authoritative;
+- dual-path Spec→builder independence is attested;
+- lineage field mapping is present for recon-green claims; capacity/simulation label mappings are present when those gates are used;
 - the human analyst approved the lock;
 - and Stage 4 can begin without making new measurement decisions.
 
