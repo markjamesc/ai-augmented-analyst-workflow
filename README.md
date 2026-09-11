@@ -18,14 +18,17 @@ flowchart LR
     D --> E["Recommend action"]
 ```
 
-## Detailed workflow frameworks
+## Packet index (stages 1–5)
 
-The repository contains completed documentation for all five stages:
+| Stage | Document |
+|---|---|
+| 1–2 Start and Framing | [three-ai-start-and-framing-dialogue-framework.md](docs/three-ai-start-and-framing-dialogue-framework.md) |
+| 3 Measurement Design | [three-ai-measurement-design-framework.md](docs/three-ai-measurement-design-framework.md) |
+| 4 Execution, Validation, and Deeper Analysis | [three-ai-validation-and-analysis-framework.md](docs/three-ai-validation-and-analysis-framework.md) |
+| 4 R execution prompt (optional) | [ENGINE.md](docs/ENGINE.md) — one-file tidyverse R Workflow Engine under Stage 4 |
+| 5 Interpretation and Recommendation | [three-ai-interpretation-and-recommendation-framework.md](docs/three-ai-interpretation-and-recommendation-framework.md) |
 
-- **Stages 1–2 — Start and Framing:** [Three-AI Start and Framing Dialogue Framework](docs/three-ai-start-and-framing-dialogue-framework.md)
-- **Stage 3 — Measurement Design:** [Three-AI Measurement Design Framework](docs/three-ai-measurement-design-framework.md)
-- **Stage 4 — Execution, Validation, and Deeper Analysis:** [Three-AI Independent Validation and Analysis Framework](docs/three-ai-validation-and-analysis-framework.md)
-- **Stage 5 — Interpretation and Recommendation:** [Three-AI Interpretation and Recommendation Framework](docs/three-ai-interpretation-and-recommendation-framework.md)
+One-pager: [docs/PACKET.md](docs/PACKET.md).
 
 Together, these documents specify the complete path from an initial stakeholder request to a validated, evidence-traceable decision.
 
