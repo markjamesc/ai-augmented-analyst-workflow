@@ -362,33 +362,96 @@ These intermediate totals help identify the point at which two paths diverge.
 
 ## 6A. Pre-build enforcement checklist (V3)
 
-Keep the dual-builder + exact-recon architecture. Harden **checklist enforcement** so Stage 3 translation gaps cannot silently ship.
+Keep the dual-builder + exact-recon architecture. Harden **checklist enforcement** so Stage 3 translation gaps are less likely to ship uncaught. The checklist below is **mandatory** before Validation Gate Pass — soft “we meant to” ticks do not count. Worked evidence (FulfillIQ Olist dual-path recon + fixtures) showed that checklist enforcement caught translation drift in that pack; it does not prove exhaustive detection or that architecture change is never needed.
 
 ### Pre-build attestation (each of SQL A, SQL B, R(B))
 
-Before claiming a first freeze, each builder must tick — with Stage 3 clause cites:
+Before either builder begins implementation or execution, and before claiming a first freeze, each builder must tick **its own locked contract** — with Stage 3 clause cites — and the Stage 3 **Spec→builder translation packet must be packet-complete** (all locked decision-changing gates the design uses; not one-rule-only).
 
-1. Half-rate / persistence rules implemented as locked (not a weaker proxy).
-2. Real dual-clock / twin-timestamp N-rule with action-override semantics when the design requires it (no fake clocks).
-3. Full analytical-unit universe required by the design (including zero-eligible units when recon demands them).
-4. Membership-first selection; no padding; simulation or occupancy labels as locked.
-5. Non-enrolling actions (e.g. INCONCLUSIVE / WATCH) never promoted to enroll by discretion.
+**Path-contract split (attestations follow each path’s locked contract):**
 
-### Known-case fixtures before recon
+- **SQL B** attests that it supplies the required source grain and reconstruction-input fields.
+- **SQL A** and **R(B)** independently attest that they implement the judged / final decision logic.
 
-Run the Stage 3 gold fixtures (or equivalent tiny cases) against each build. A fixture fail blocks reconciliation claiming Pass.
+Optional persistence, twin, capacity, and simulation mechanics may be marked **N/A** only with an explicit design cite that the mechanic is unused. Packet completeness, lineage, and independence remain mandatory.
+
+**SQL A and R(B) decision-logic items (SQL B does not substitute for these):**
+
+1. **Half-rate / persistence** implemented as locked (split-window halves; per-half floors + comparator; AND-of-halves; half audit fields; not a weaker pooled-window proxy), or design-cited N/A.
+2. **Real dual-clock / twin-timestamp** pipelines with **locked dual-clock / action-override** semantics when the design requires it (post-capacity action disagree → INCONCLUSIVE / non-enrolling; twin evidence fields; no fake clocks), or design-cited N/A.
+3. **Full analytical-unit universe** required by the design (including zero-eligible / non-qualifiers when recon demands them).
+4. **Membership-first** selection; no padding; simulation or occupancy labels as locked; select `min(S,Q)` — or design-cited N/A for capacity/simulation labels when unused.
+5. **Non-enrolling actions** (e.g. INCONCLUSIVE / WATCH) never promoted to enroll by discretion.
+
+**All paths (SQL A, SQL B, R(B)):**
+
+6. **Lineage field mapping** present (`snapshot_id`, `source_version`, extraction / equivalent) per Stage 3 Spec→builder cite — **mandatory** for any judged/export package claiming recon-green.
+7. **Dual-path independence** attested: this path does not import the other path’s judged / selected / membership ID list as a build input.
+
+Stage 4 first records these **pre-build commitments**, then records **executed attestations** and frozen-fixture results before reconciliation may claim Pass. Diagnostic comparison may occur earlier; it is not an authorized Pass.
+
+**Stage 4 entry fail:** Missing translation packet; one-rule-only attestation when multiple gates are locked; any used gate above unticked; lineage omitted on a recon-green claim; SQL B treated as implementing judged decision logic in place of source-grain supply, or SQL A / R(B) omitting judged decision logic.
+
+### Known-case fixtures before recon (Fixture Gate)
+
+**Fixture Gate Pass is required** before Design/Validation treats fixtures as authoritative and before reconciliation may claim Pass.
+
+1. **Freeze before builders run.** Record fixture-pack freeze identity (path + content hash and/or freeze timestamp) **before either builder begins implementation or execution**. Freezing only before a Stage-4-ready or first-freeze *claim* is not sufficient.
+2. **Score the frozen pack.** Run the Stage 3 gold fixtures (or equivalent tiny cases) against each build using the **frozen** text.
+3. **No rewrite after Fail.** On fixture Fail, repair toward locked Stage 3 and re-run. Builders / AIs must **not** rewrite fixture IDs, expected outcomes, or predicates to greenwash. An explicitly owner-authorized fixture correction creates a **newly frozen version** and requires fresh validation; it cannot retroactively turn the failed version into a Pass.
+4. **Block recon-green.** A fixture Fail, missing freeze identity, or post-fail-rewritten pack **blocks** Validation Gate Pass.
+
+Fixture Gate is an additional authority/freeze gate — not a substitute for decision-field recon. Scoring the frozen pack is an **executed** Stage 4 result; diagnostic comparison may occur earlier and is not an authorized reconciliation Pass.
 
 ### Hard recon contract
 
-Validation Gate Pass requires **exact** match on the locked decision grain fields (at minimum: numerator, denominator, action, membership, selected / capacity outcome, and full universe overlap). No “close enough” on action or membership. Identical enroll and inconclusive sets required when those actions exist.
+Validation Gate Pass requires **exact** match on the locked decision grain fields. No “close enough” on action or membership.
 
-### Mismatch diagnosis rule
+At minimum, when present in the design:
 
-On action or universe split: diagnose against the **locked Stage 3** design; repair by re-implementing and re-running. **Never** copy the other path’s ID list into the failing path. Log the root cause (translation miss vs plumbing vs shared design error).
+| Field class | Exact-match expectation |
+|---|---|
+| Components | Numerator, denominator (and secondary twin components when locked) |
+| Action | Final action codes; identical enroll and inconclusive / non-enrolling sets |
+| Membership / selected | Membership and selected / capacity outcome sets |
+| Universe | Full analytical-unit universe overlap (including zero-eligible when required) |
+| Half audit (if used) | Half eligible/event/rate/pass fields and overall half-persistence gate |
+| Twin / disagree (if used) | Twin provisional actions + action-disagree flag / evidence fields |
+| Lineage | Shared freeze identity (`snapshot_id` / source_version / extraction equivalents) |
 
-### Snapshot / lineage checklist
+Identical enroll and inconclusive sets are required when those actions exist. Soft rate-only twin diagnostics do **not** satisfy an action-override dual-clock lock.
 
-Shared freeze IDs, snapshot labels, and package hashes must match before final recon. Align PENDING or placeholder lineage before claiming Pass.
+### Mismatch diagnosis / never-copy + dual-path independence
+
+**Build-time independence (before mismatch):** Dual builders must not share a judged ID list / selected set / ENROLL list / membership-YES list as a build input. Each path builds independently from locked grain+design (+ its authorized source package only). Recon is the sole authorized cross-path compare of independently produced outputs.
+
+**Repair-time never-copy (on mismatch):** On action, membership, selected, universe, or capacity-outcome split:
+
+1. Diagnose against the **locked Stage 3** design (independent path review; neither path is automatically the answer key).
+2. Repair by **re-implement + re-run** (preserve failed recon report; create a new report).
+3. **Never copy** the other path’s winner ID / selected / membership list into the failing path.
+4. **Never invent pad membership** / fill-to-cap rows.
+5. No manual result-table edits.
+6. Log root-cause class: translation miss vs plumbing vs shared design error vs recon bug.
+
+Build-time independence strengthens repair-time never-copy; both are required.
+
+### Snapshot / lineage checklist (freeze fields)
+
+Judged/export packages that claim freeze / recon-green must carry:
+
+- **`snapshot_id`** (or locked equivalent freeze identity);
+- **`source_version`** (or locked equivalent);
+- **extraction** timestamp and/or locked observation-boundary equivalent;
+
+or a documented **equivalent lineage** set that uniquely identifies the frozen source.
+
+Rules:
+
+1. Dual-path freeze identity must **align** before final recon (`snapshot_id` equal; source_version / extraction equivalents aligned to the same freeze).
+2. Blank / `PENDING` / placeholder lineage **fails** Pass — builders halt or Fail Stage-4-ready when required lineage is unverified.
+3. Spec→builder must have mapped these lineage fields from the locked freeze/design contract (Stage 3 §19A cite).
+4. Lineage is an **additional** recon-green gate, not a substitute for decision-field recon.
 
 ### Plumbing adaptations
 
@@ -396,7 +459,30 @@ Privilege, temporary-table, or dialect adaptations are allowed only if judged lo
 
 ### Simulation / release block
 
-A Validation Gate Pass on a simulation pack unlocks Stage 5 interpretation of that pack only. It does **not** authorize live enrollment. Any roster derived from a simulation capacity setting must carry the simulation label. Live release remains a separate owner decision after current data, real occupancy, and operational prerequisites.
+When capacity/simulation settings imply **non-live enrollment** (e.g. full-capacity simulation with occupancy treated as zero (S=C-style), or an equivalent locked sim label):
+
+1. Judged/export outputs must be labeled **simulation-only / not live release** (explicit sim flag and/or capacity-scenario text and/or `operational_release_authorized_flag=0` / equivalent).
+2. Missing simulation / non-live label on a sim-capacity run → Fail recon-green / Fail live claim.
+3. **Validation Gate Pass ≠ live enrollment.** Pass on a simulation pack unlocks Stage 5 **interpretation of that pack only**. Claiming “live release Pass” from sim Validation is Fail.
+4. Live release remains a **separate owner decision** after current data, real occupancy, and operational prerequisites.
+
+When the design does not use capacity/simulation, this block is design-cited N/A; lineage and independence remain mandatory.
+
+Simulation release block is an additional Pass-ceiling / labeling gate — not a substitute for decision-field recon. Worked evidence may use S=C simulation labels; the framework rule is the labeling + non-live ceiling, not any one project’s C/S numbers.
+
+### §6A checklist spine (must all Pass)
+
+| # | Item | Blocking if missing / soft |
+|---|---|---|
+| 1 | Pre-build attestation + **packet-complete** Spec→builder translation (each path attests its own contract) | Yes |
+| 2 | **Fixture Gate** Pass (freeze identity **before builders run**; score frozen pack; no rewrite after Fail; owner correction = new freeze version) | Yes |
+| 3 | Hard exact recon on locked decision fields + universe / half / twin fields when used (design-cited N/A for unused optional mechanics) | Yes |
+| 4 | Build-time **independence** + repair-time **never-copy** / diagnose-toward-design | Yes |
+| 5 | Snapshot / lineage freeze fields present + cross-path aligned (no PENDING Pass) — **mandatory** for recon-green | Yes |
+| 6 | Plumbing adaptations disclosed; judged logic unchanged | Yes |
+| 7 | Simulation / release block labels + Pass ≠ live enrollment ceiling (design-cited N/A when unused) | Yes |
+
+Packet completeness, lineage, and independence are never N/A. Optional persistence, twin, capacity, and simulation mechanics may be design-cited N/A only.
 
 ## 7. Exact reconciliation
 
@@ -540,7 +626,11 @@ After any material correction:
 4. Create a new reconciliation report.
 5. Preserve the earlier failed report for the audit trail.
 
-Manual edits to a result table are prohibited. A correction must be made in the SQL or R code and reproduced. Never copy the other path’s selected-ID list into a failing implementation to force a match; repair toward the locked Stage 3 design and re-run.
+Manual edits to a result table are prohibited. A correction must be made in the SQL or R code and reproduced.
+
+**Never-copy (repair-time):** Never copy the other path’s selected-ID / ENROLL / membership-YES list into a failing implementation to force a match; repair toward the locked Stage 3 design and re-run. Never invent pad membership. Log root-cause class (translation vs plumbing vs shared design vs recon).
+
+**Independence (build-time):** Dual paths must not have shared a judged ID list as a build input in the first place; recon remains the sole authorized cross-path compare (§6A).
 
 ## 9. Cross-review after reconciliation
 
@@ -713,13 +803,21 @@ The frozen package should include:
 - validated analytical dataset;
 - row count;
 - key-uniqueness results;
-- source extraction time;
+- **`snapshot_id`** (or locked equivalent freeze identity);
+- **`source_version`** (or locked equivalent);
+- **extraction** time and/or locked observation-boundary equivalent;
+- source extraction provenance notes;
 - SQL A version;
 - SQL B version;
 - R(B) version;
 - reconciliation report;
 - cross-review register;
+- Fixture Gate freeze identity (path + content hash / freeze timestamp) when fixtures were used;
+- simulation / non-live release labels when the pack is a simulation capacity run;
+- dual-path independence + never-copy attestations;
 - and a dataset hash where feasible.
+
+Blank / PENDING lineage fields fail freeze. Dual-path `snapshot_id` (and source/extraction equivalents) must align before the freeze is treated as Stage-4-green.
 
 ### The boundary of validation
 
@@ -1129,14 +1227,29 @@ The executive output can ultimately be compressed into three decision bullets, o
 | Critical results reproduce | Key reported values are computationally supported | The interpretation is automatically causal |
 | Interpretation review passes | Recommendation is traceable to evidence and decision rules | The business action is risk-free |
 
+### Validation Gate Pass ceiling (simulation)
+
+When the validated pack is labeled simulation-only / non-live:
+
+| Passing establishes | Passing does not establish |
+|---|---|
+| Independent outputs satisfied the specified reconciliation and frozen-fixture checks on that simulation pack | Live enrollment / operational release authority; that both paths cannot share an untested translation mistake |
+| Stage 5 may interpret that labeled pack | That the roster is current for live occupancy; exhaustive detection of every translation miss |
+
+Live release remains a separate owner decision after current data, real occupancy, and operational prerequisites (§6A Simulation / release block). Pass does not prove causal proof or erase correlated shared-design error.
+
 ## 18. Complete operating sequence
 
 1. Lock what must be measured.
 2. Give the same specification to three independent AIs.
+2a. Confirm Spec→builder translation packet is **packet-complete** for all locked gates; Fixture Gate freeze identity recorded **before builders run**; dual-path independence attested. Each path attests its own contract (SQL B: source grain/fields; SQL A and R(B): judged decision logic).
+2b. Each builder records §6A **pre-build commitments** (persistence / dual-clock / universe / membership-first / no-pad / non-enroll as applicable to that path’s contract; lineage; independence) **before implementation or execution begins**.
 3. Have AI 1 construct the final KPI directly in SQL.
 4. Have AI 2 construct a lower-grain dataset through a separate SQL path.
 5. Have AI 3 independently rebuild the KPI in R.
 6. Reconcile SQL A against R(B).
+6a. Score frozen known-case fixtures; fixture Fail or post-fail rewrite blocks Pass. Diagnostic comparison may occur earlier; it is not an authorized reconciliation Pass.
+6b. Confirm lineage freeze fields present and aligned (mandatory for recon-green); confirm simulation / non-live labels when applicable (Pass ≠ live enrollment). Record executed attestations before claiming Pass.
 7. If they differ, diagnose the mismatch without treating either path as automatically correct.
 8. Correct the responsible implementation and rerun the full reconciliation.
 9. After a match, remove the information barriers.
