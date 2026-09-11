@@ -8,9 +8,11 @@ Priority order: correctness → required analytical functionality → validation
 
 ## What this is
 
-R Workflow Engine is a one-file paste. A human pastes this document into an AI. The model outputs one complete R script: thin CONFIG + stage functions + runner.
+R Workflow Engine is a one-file paste. A human pastes this document into an AI. The model outputs one complete R script: thin CONFIG + modular stage functions + runner.
 
 It is a prompt-engine, not an installable R package, not a multi-prompt system, not Airflow, not a reasoning engine, not a job scheduler.
+
+Owner workplace scripts were linear reports (reload files, copy-paste `summarize`, one Excel pack, `rm(list = ls())` between reports). Generated code must still be modular functions even though the owner did not write that way. Familiarity is pipes, `clean_names`, named CONFIG, and visible openxlsx — not a 2000-line script with no functions. Do not emit a linear copy of the old reports. Do not require a second `helpers.R` or a package layout; keep the nine functions in the one emitted `.R` file.
 
 Product surface: files + thin CONFIG in; Excel and/or classic Shiny and/or shinydashboard out. Same tibbles. No recomputation at Publish.
 
@@ -32,11 +34,13 @@ Default to this visible style:
 - Use familiar `purrr` patterns: `map()` plus `set_names()` for grouped analysis, `imap()` for named workbook sheets, and `pmap()` only when several parallel inputs are truly needed.
 - Build Excel outputs directly and visibly: `createWorkbook()` → `addWorksheet()` → `freezePane()` → `writeData()` / `addStyle()` → `insertPlot()` → `saveWorkbook()`.
 - Prefer explicit formulas and visible denominator protection over compact metaprogramming.
-- Keep the nine required stage functions, but do not create a large layer of tiny mechanical helpers. A helper is justified only when logic is repeated, technically delicate, or materially clearer in isolation.
+- Keep the nine required stage functions. That modularity is required even though the owner source was linear. Do not create a large layer of tiny mechanical helpers. Extra helpers are justified when logic is repeated, technically delicate, or materially clearer in isolation — including one named list of metric functions (the pack).
 - Do not hide ordinary workflow state in attributes when a plainly named object or named list is easier to follow. The required nested Measure result is the only deliberate deep structure.
 - When an unfamiliar function or technique is necessary, isolate it in the smallest practical helper or block and add one concise comment: what it does, why it is needed, and what it returns.
 
 Familiarity does not authorize fragile practices. Continue to use named columns, named input types, denominator checks, join checks, explicit quality gates, and reproducible output paths. Do not reproduce positional column selection, per-entity panel completion, deprecated tidy evaluation, or unchecked division merely because an older script used it.
+
+**Better-function rule.** If a tidyverse / tidymodels function is clearly more correct or less error-prone than an owner habit, use the better one. New functions are allowed. Accuracy first. The owner specifically called out list construction as weak: do not copy it.
 
 ---
 
@@ -71,7 +75,7 @@ Optional, only if the owner stated it:
 
 Rules:
 
-- Code MUST `map(CONFIG$groups, ...)`. Never positional indexes. Never `names(df[, c(1, 2, 3)])`. Never `df[[1]]`, `names(df)[1]`, or `names(measured)[1]` as a key.
+- Code MUST map from `CONFIG$groups` with names taken from that vector once: `CONFIG$groups %>% set_names() %>% map(...)`. Never positional indexes. Never `names(df[, c(1, 2, 3)])`. Never `df[[1]]`, `names(df)[1]`, or `names(measured)[1]` as a key. Never `map(c("entity","class","groups"), ...) %>% setNames(c("entity","class","groups"))` (the grouping vector written twice).
 - `CONFIG$groups` is a character vector of column names.
 - `CONFIG$publish` is a character vector. Legal tokens: `"excel"`, `"shiny"`, `"shinydashboard"`. Combinations are allowed.
 - `CONFIG$expand` is `TRUE`/`FALSE`. Forecasts yes/no from the brief.
@@ -90,7 +94,7 @@ Owner never says nine names. Generated code may still be nine functions so Compl
 |-----------|-------------------|--------------|
 | Configure | `configure(CONFIG)` | Accept/validate the list. Default `pack` to `"usual"` if missing. Not a run step the owner requests. |
 | Prep | `load()` → `clean()` → `complete()` | Read, join, tidy, fill panel grid, cut window. |
-| Analyze | `shape()` → `measure()` | Split by groups; one metric function; nested named list of tibbles. |
+| Analyze | `shape()` → `measure()` | Split by groups; named list of metric functions; nested named list of tibbles. |
 | Expand | `expand()` | Optional. Bind `.pred` onto existing rolling/monthly rows. |
 | Assure | `assure()` | Automatic. After Complete and after Measure. Owner sees it only on fail. |
 | Publish | `publish()` | Same tibbles to the requested mix. Flatten for sheets here only. You pick charts. |
@@ -115,7 +119,7 @@ Publish:  publish(measured, CONFIG)
 
 If `paths$daily` or `paths$lookup` is missing, build a generic entity-day daily tibble plus a one-row-per-entity lookup **in memory**, using CONFIG column names. Do not write those files to the cwd. Then join.
 
-**Clean.** `janitor::clean_names`. Types and dates (`lubridate`); apply only owner recodes from the named `CONFIG$recodes` list. For each replacement-vector entry, recode its target column by old/new names and values; never execute recode functions. Do not change grain. If a grouping column is character (e.g. pipe-separated), `str_split` it here; that already yields a list-column — do **not** wrap with `as.list`. Do not invent flags or business meaning.
+**Clean.** `janitor::clean_names`. Types and dates (`lubridate`); apply only owner recodes from the named `CONFIG$recodes` list. For each replacement-vector entry, recode its target column by old/new names and values; never execute recode functions. Do not change grain. If a grouping column is character and **identified as multivalued** (e.g. pipe-separated), `str_split` it here; that already yields a list-column — do **not** wrap with `as.list`. Prefer `tidyr::separate_longer_delim()` when the next step is expand-for-grouping. Do not split every character grouping column. Do not invent flags or business meaning.
 
 **Complete.** If `CONFIG$grain` is a panel (entity-day / entity-time), fill the entity-time grid then cut to `CONFIG$window_days`. If not a panel, skip and return the cleaned frame unchanged.
 
@@ -124,21 +128,50 @@ Efficient complete — **not** `map_df` per entity:
 ```r
 daily %>%
   group_by(.data[[CONFIG$entity_key]]) %>%
-  complete(!!sym(CONFIG$time_key) := seq.Date(min(.data[[CONFIG$time_key]]),
-                                              max(.data[[CONFIG$time_key]]),
-                                              by = "day")) %>%
-  fill(everything(), .direction = "downup") %>%
+  tidyr::complete(!!sym(CONFIG$time_key) := seq.Date(min(.data[[CONFIG$time_key]]),
+                                                     max(.data[[CONFIG$time_key]]),
+                                                     by = "day")) %>%
+  fill(all_of(attribute_cols), .direction = "down") %>%  # entity / class / groups / lookup only
   ungroup() %>%
   filter(.data[[CONFIG$time_key]] >= max(.data[[CONFIG$time_key]]) - (CONFIG$window_days - 1L))
 ```
+
+Call `tidyr::complete()` inside the engine `complete()` function so the names do not collide. `attribute_cols` are entity, class, groups, and lookup fields — not events, exposure, or flags. Do **not** `fill(everything())`. New calendar days must not carry last-observation-forward for events; those stay `NA` unless an explicit zero rule is stated. Sort by entity then date before rolling or spells. Row-based rolling windows represent days only on this consecutive daily grid.
 
 ### Analyze = Shape + Measure
 
 Owner names which groups count (already in `CONFIG$groups`) and usual pack vs shorter cut.
 
-**Shape.** For each name in `CONFIG$groups`, prepare a frame so one metric function can run on any group. If the grouping column is a list-column, `unnest` it first. `map(CONFIG$groups, ...)` then `set_names(CONFIG$groups)`.
+**Shape.** For each name in `CONFIG$groups`, prepare a frame so one metric function can run on any group. If the grouping column is a list-column, `unnest` / `separate_longer_delim` it first — only columns identified as multivalued, not every character grouping column. Deduplicate memberships before aggregation. Names come from the vector once:
 
-**Measure.** One reusable metric function. No copy-pasted `summarize` blocks. Return a **nested named list of tibbles**: `measured[[group]][[metric]]` (e.g. `measured$entity$counts`, `measured$entity$rolling`). Do **not** `list_flatten` here. Flatten only at Publish when naming Excel sheets.
+```r
+pieces <- CONFIG$groups %>%
+  set_names() %>%
+  map(\(group) shape_one(daily, group, CONFIG))
+```
+
+Do not `map(c("entity","class","groups"), ...) %>% setNames(c("entity","class","groups"))`.
+
+**Measure.** One reusable **named list of metric functions** (the pack), mapped once per group. No copy-pasted `summarize` blocks and no hand-written `list(counts = summarize(...), rates = summarize(...))` per group. Return a **nested named list of tibbles**: `measured[[group]][[metric]]` (e.g. `measured$entity$counts`, `measured$entity$rolling`). Do **not** `list_flatten` here. Flatten only at Publish when naming Excel sheets.
+
+```r
+pack_funs <- list(
+  counts   = metric_counts,
+  rates    = metric_rates,
+  rolling  = metric_rolling,
+  spells   = metric_spells,
+  episodes = metric_episodes,
+  monthly  = metric_monthly
+)
+if (inherits(CONFIG$recodes$intervention_date, "Date")) {
+  pack_funs$before_after <- metric_before_after
+}
+if (identical(CONFIG$pack, "short")) {
+  pack_funs <- pack_funs[c("counts", "rates")]
+}
+measured <- pieces %>%
+  imap(\(df, group) map(pack_funs, \(fn) fn(df, group, CONFIG)))
+```
 
 Usual pack (`configure()` default `"usual"`):
 
@@ -148,11 +181,11 @@ Usual pack (`configure()` default `"usual"`):
 - `rolling` — first aggregate events and exposure to one row per group/date; then `zoo::rollapplyr` rolling event totals and rolling exposure totals for 30 / 90 / 180 / 360 / 540; `fill = NA`; rate = rolling events / rolling exposure; annualized rate = rate `* 365.25`; keep `NA` until the window is full; never `sum(..., na.rm = TRUE)` across those NAs and never collapse incomplete-window NAs to 0
 - `spells` — run-length of a flag; emit start/end; mark `OPEN` when spell `end` equals `max(time_key)` of the **completed window** (window end, not the last spell-end in the table)
 - `episodes` — spell rows with day-before / day-after as **columns on those rows** (join to adjacent dates per episode, not a global ±1 filter)
-- `monthly` — monthly grids
+- `monthly` — monthly grids via `tidyr::complete` / `tidyr::expand`, not `expand.grid`
 
 Shorter cut (`CONFIG$pack == "short"`): `counts` + `rates` only.
 
-Owner does not specify every `summarize`. You write the one metric function.
+Owner does not specify every `summarize`. You write the named list of metric functions (the pack).
 
 ### Expand (optional)
 
@@ -195,7 +228,7 @@ Assistant picks charts (bar vs line vs dodge, which sheet, which dashboard box).
 
 **Owner briefs, then keep/cuts.** Files, join key, date column, window, grouping columns, forecasts yes/no, publish mix, BUSINESS recodes. Then usual pack vs shorter cut. That is the whole brief.
 
-**Assistant inspects and implements.** Glimpse, `clean_names`, draft **named** `col_types` (numeric-looking IDs stay character), join, complete, one metric function, Expand method if on, Assure, charts, layout, pipe.
+**Assistant inspects and implements.** Glimpse, `clean_names`, draft **named** `col_types` (numeric-looking IDs stay character), join, complete, named metric-pack list, Expand method if on, Assure, charts, layout, pipe.
 
 Standing rule: business meaning = owner. Names, types, charts, layout, mechanical pipeline = assistant, with keep/cut.
 
@@ -217,8 +250,9 @@ Must:
 - use hardcoded **named** `cols(...)` on every CSV read; for Excel, a single recycled `col_types = "text"` followed by named casting in Clean; never positional `c("text", "text", "text")`
 - use `group_by` + `complete` + `fill` for the panel grid — **not** `map_df` over `unique(entity)`
 - recognize that `str_split` already creates list-columns — **no** `as.list(str_split(...))`
-- use `map(CONFIG$groups, ...)` and `unnest` when grouping on a list-column
-- use one clearly named metric function and return `measured[[group]][[metric]]`; flatten only at Publish
+- name lists from the object once: `CONFIG$groups %>% set_names() %>% map(...)`; never a second hardcoded `setNames(c(...))`
+- use `unnest` / `separate_longer_delim` only on identified multivalued grouping columns
+- use one named list of metric functions (the pack) and return `measured[[group]][[metric]]`; flatten only at Publish
 - use `imap()` for repeated named workbook work and direct workbook verbs
 - protect every calculated rate against a zero or missing denominator
 - isolate and explain unfamiliar syntax when it is necessary
@@ -228,7 +262,7 @@ Must:
 Prefer:
 
 - one readable pipeline per logical transformation
-- a few substantial stage functions over many tiny helpers
+- the nine stage functions plus one named metric-pack list, even though the owner source was linear; still avoid many tiny helpers
 - explicit QA checks collected into a plainly named `qa_results` or `problems` tibble
 - explicit chart and workbook code over generic publishing abstractions
 - section banners similar to `# ---- Prep ------------------------------------------------`
@@ -286,6 +320,10 @@ Do not use caret. Do not use data.table as the dialect. Do not use Shiny modules
 - Namespacing every ordinary tidyverse or openxlsx call after its library is attached
 - Scattering unfamiliar metaprogramming through stage bodies instead of isolating and explaining it
 - Unnecessary helper functions, hidden attributes, or generic framework layers that make a linear analysis harder to follow
+- A linear no-function script that copies owner workplace reports
+- `map(...) %>% setNames(c("entity","class","groups"))` or any duplicated grouping-name vector
+- `fill(everything())` (fill attribute columns only)
+- `expand.grid` for monthly grids (use `tidyr::complete` / `tidyr::expand`)
 
 Domain-agnostic HARD. Generic `entity` / `class` / `groups` / `event_date` / `exposed` / `events` only. Metric columns and values must also remain generic. No industry examples or copied scripts.
 
@@ -299,7 +337,7 @@ Done means all of the following, from one CONFIG, with no questions asked:
 2. Nine internal functions exist. Owner never has to say their names.
 3. `run_report(CONFIG)` executes Prep → Analyze → optional Expand → Assure → Publish.
 4. Complete used `group_by` + `complete` + `fill` (or skipped).
-5. Measure used one metric function, `map(CONFIG$groups, ...)`, and returned `measured[[group]][[metric]]` (counts/rates/rolling/spells/episodes/monthly; `before_after` only when a Date exists). Flatten only at Publish.
+5. Measure used a named list of metric functions, `CONFIG$groups %>% set_names() %>% map(...)` (no duplicated name vector), and returned `measured[[group]][[metric]]` (counts/rates/rolling/spells/episodes/monthly; `before_after` only when a Date exists). Flatten only at Publish. Complete used `tidyr::complete()` and filled attribute columns only.
 6. Expand, if on, used parsnip, trained before the final horizon, and bound `.pred` onto those existing rolling/monthly scoring rows only — no future `bind_rows`, no preds on counts.
 7. Assure ran after Complete and after Measure; join-explode used Load metadata and failed at Complete, not Load.
 8. Publish wrote the requested mix from the same nested tibbles into `results/<YYYY-MM-DD>/` with `insertPlot` + percent; Shiny saved the tibbles once as one RDS and wrote `fluidPage`+`sidebarLayout` to disk; `runApp` only if `interactive()`.
@@ -317,7 +355,7 @@ Emit one R script in this order:
 
 1. Library calls and `%not_in%`, followed by clear section-divider comments.
 2. `CONFIG` list (generic panel defaults if no owner brief was attached; `recodes = list(intervention_date = NULL)`).
-3. Internal functions: `configure`, `load`, `clean`, `complete`, `shape`, `measure`, `expand`, `assure`, `publish`. Keep their bodies linear and use only a small number of justified helpers.
+3. Internal functions: `configure`, `load`, `clean`, `complete`, `shape`, `measure`, `expand`, `assure`, `publish`. Required modularity even if the owner source was linear. Keep stage bodies readable. Measure's pack is a named list of functions. Use only a small number of other justified helpers.
 4. `run_report(CONFIG)` mapping Prep / Analyze / Expand / Assure / Publish onto those functions.
 5. A generic entity-day demo that builds synthetic daily + lookup **in memory** if files do not exist, then calls `run_report(CONFIG)`.
 
