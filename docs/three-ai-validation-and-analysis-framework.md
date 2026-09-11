@@ -838,6 +838,8 @@ For example, if customer-review data is added during deeper analysis, earlier va
 
 ## 11. Deeper R analysis
 
+Stage 4 R execution (deeper analysis after the validation gate, and optionally the R(B) rebuild path when a full modular report script is appropriate) may use [docs/ENGINE.md](ENGINE.md) — the one-file R Workflow Engine prompt (thin CONFIG, nine stage functions, Prep / Analyze / Expand / Assure / Publish). It is an optional execution aid, not a substitute for the locked measurement design or the dual-path validation gate.
+
 ### R's role changes
 
 Before the validation gate, R serves as the second computational clerk. Its job is to independently rebuild the core KPI.
