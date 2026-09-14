@@ -2,7 +2,7 @@
 
 This framework governs Stage 3, **Design**, of the five-stage AI-Augmented Analyst process.
 
-Its purpose is to convert an approved business decision and analytical question into a complete measurement contract before any production SQL or R code is written.
+Its purpose is to convert an approved business decision and analytical question into a complete measurement contract before any production implementation code is written.
 
 Stage 3 defines:
 
@@ -15,7 +15,7 @@ Stage 3 defines:
 - data-quality and sample-size rules;
 - decision rules;
 - measurement risks;
-- and the output contract required by Stage 4.
+- and the technology-neutral handoff contract required by Stage 4.
 
 The three AIs perform different functions:
 
@@ -82,7 +82,11 @@ The AIs do not vote on a design. Each disagreement is resolved through the appro
 
 Stage 3 is the contract between the business question and the code.
 
-It must be precise enough that independent builders can implement it without silently making different analytical decisions. It must not be so implementation-specific that it becomes disguised SQL.
+It must be precise enough that independent builders can implement it without silently making different analytical decisions. It must not be so implementation-specific that it becomes disguised SQL, R, Python, or any other execution plan.
+
+**Stage 3 is technology-neutral with respect to Stage 4 architecture.** It defines what concepts mean, what source evidence is required, what judged outputs must exist, and what must reconcile. Stage 4 determines which authorized technologies and independent paths implement those contracts.
+
+Changing Stage 4 architecture does not by itself reopen a locked Stage 3 measurement design. A Stage 3 reopen is required only if the architecture change reveals that the measurement contract itself is ambiguous, infeasible, incomplete, or materially altered.
 
 ## 2. What the design must establish
 
@@ -122,7 +126,7 @@ All three AIs receive the same versioned Design Input Package.
 
 ### Required data inputs
 
-- database context;
+- database or source-system context;
 - schema or data dictionary;
 - table and column descriptions;
 - primary and foreign-key expectations;
@@ -130,7 +134,7 @@ All three AIs receive the same versioned Design Input Package.
 - current data profile;
 - known missingness, duplication, range, and anomaly findings;
 - available time coverage;
-- and database dialect for the eventual Stage 4 implementation.
+- and relevant source-system or dialect constraints for eventual Stage 4 implementation.
 
 ### Missing-input rule
 
@@ -138,7 +142,7 @@ If a required business input is missing, return to Start or Framing.
 
 If a required data fact is missing, record a targeted profiling question. Do not invent a field, cardinality, coverage period, or data-quality condition.
 
-Targeted profiling may inform Stage 3. Production KPI SQL and deeper analysis remain prohibited until the design passes.
+Targeted profiling may inform Stage 3. Production implementation and deeper analysis remain prohibited until the design passes.
 
 ## 4. Human authority and AI boundaries
 
@@ -174,7 +178,7 @@ No AI may:
 - treat an operational concept as a database column without verification;
 - select a desired conclusion in advance;
 - silently change the population or grain;
-- or begin production SQL or R.
+- or begin production implementation code.
 
 ## 5. The three AI roles
 
@@ -193,7 +197,7 @@ Its responsibilities include:
 - identifying confounders and measurement risks;
 - defining data-quality, sample-size, and sensitivity rules;
 - constructing decision rules;
-- and producing the Stage 4 output contract.
+- and producing the Stage 4 handoff contract.
 
 AI 1 must distinguish business requirements from its own proposed analytical choices.
 
@@ -393,7 +397,7 @@ For each transition, record:
 
 ### Join cardinality contract
 
-Before SQL, declare the expected relationship for every required join:
+Before implementation, declare the expected relationship for every required join:
 
 - one-to-one;
 - one-to-many;
@@ -701,11 +705,11 @@ High-impact risks cannot be buried in prose. They must appear in the register an
 
 ## 19. Non-executable implementation blueprint
 
-Stage 3 must describe the required transformation logic without writing production SQL or R.
+Stage 3 must describe the required transformation logic without writing production implementation code.
 
 The blueprint should identify:
 
-1. source tables;
+1. source tables or source objects;
 2. required fields;
 3. expected keys;
 4. join relationships;
@@ -723,63 +727,65 @@ Acceptable blueprint language:
 
 > Join orders to order items on the verified order key, establish one row per seller-order before lateness classification, then aggregate eligible seller-orders to the seller-window level.
 
-Not acceptable during Stage 3: executable query syntax, CTE construction, database-specific implementation, or code written to produce the result.
+Not acceptable during Stage 3: executable query syntax, CTE construction, language-specific implementation, or code written to produce the result.
 
-The design defines what the code must do. Stage 4 independently determines how to implement it.
+The design defines what the code must do. Stage 4 independently determines how to implement and validate it.
 
-## 19A. Spec→builder translation and known-case fixtures (V3)
+## 19A. Spec→builder translation and known-case fixtures
 
-Stage 3 must be precise enough that independent builders implement the *same* decision rules. Prose design locks can still under-translate into SQL/R: omitted half-window persistence, faked dual-clock action-override, or an incomplete analytical-unit universe produce decision-changing diffs until repaired toward the locked design. Worked evidence (FulfillIQ Olist dual-path recon + known-case fixtures) confirmed that translation drift is real and that fixtures catch *translation* misses — they do not erase correlated shared-design error.
+Stage 3 must be precise enough that independent judged builders implement the *same* decision rules. Prose design locks can still under-translate into implementation: omitted persistence logic, faked twin-action logic, or an incomplete analytical-unit universe can produce decision-changing differences until repaired toward the locked design. Worked evidence from earlier projects confirmed that translation drift is real and that fixtures can catch *translation* misses — they do not erase correlated shared-design error.
 
 ### Translation requirement (Spec→builder packet)
 
-Every decision-changing rule in the locked design must map to a **builder attestation** with an exact clause cite (section/ID). Builders may not treat unnamed “spirit of the design” as authority.
+Every decision-changing rule in the locked design must map to a **judged-builder attestation** with an exact clause cite (section/ID). Builders may not treat unnamed “spirit of the design” as authority.
 
-Stage 3 approves the **complete translation contract** and frozen fixture pack **without requiring production code**. Pre-build commitments, executed attestations, and frozen-fixture results are Stage 4 records (diagnostic comparison may occur earlier than an authorized reconciliation Pass).
+Stage 3 approves the **complete translation contract** and frozen fixture pack **without requiring production code**. Pre-build commitments, executed attestations, source-delivery checks, and frozen-fixture results are Stage 4 records.
 
-Before Stage 4 is treated as ready, builders must produce a **Spec→builder translation packet** covering **ALL** locked Stage 3 decision-changing gates used by the design — not one-rule-at-a-time only. **Fail** Stage-4-ready if any locked gate lacks translation (exact clause cite + known-case fixture map entry that fails the build if the rule is omitted or faked).
+Before Stage 4 is treated as ready, the handoff must contain a **Spec→builder translation packet** covering **ALL** locked Stage 3 decision-changing gates used by the design — not one-rule-at-a-time only. **Fail** Stage-4-ready if any locked gate lacks translation through an exact clause cite and fixture-map entry where a known-case test is applicable.
 
-Each path attests its **own** locked contract:
+Stage 3 defines two different contract classes:
 
-- **SQL B** supplies the required source grain and reconstruction-input fields.
-- **SQL A** and **R(B)** independently implement the judged / final decision logic.
+- **Source-delivery contract:** identifies the source evidence Stage 4 must faithfully make available, including required source fields, source grain, lineage, and permitted mechanical transformations. It does not assign final judged meaning to those fields.
+- **Judged-output contract:** identifies the fields, classifications, metrics, actions, and audit components that each independent judged builder must construct from the authorized source package.
 
-Minimum gate classes when the design uses them (general language). Optional persistence, twin, capacity, and simulation mechanics may be marked **N/A** only with an explicit design cite that the mechanic is unused. Packet completeness, lineage mapping, and independence remain mandatory.
+Stage 3 does **not** prescribe whether a source-delivery contract is implemented in SQL, another query language, files, or another controlled mechanism; nor does it prescribe whether judged builders use R, SQL, Python, or another approved language. The current Stage 4 framework may set a project-standard architecture, but that is an execution-layer choice rather than a measurement-definition requirement.
 
-| Gate class | Mechanic builders must translate |
+Minimum gate classes when the design uses them follow below. Optional persistence, twin, capacity, and simulation mechanics may be marked **N/A** only with an explicit design cite that the mechanic is unused. Packet completeness, lineage mapping, and independence remain mandatory.
+
+| Gate class | Mechanic independent judged builders must translate |
 |---|---|
-| Half-window / persistence | Split-window **half-rate persistence**: each non-overlapping analysis half meets locked floors (eligible≥N, event≥M) and half-rate ≥ that half’s comparator (equality passes); thin half fails persistence; overall persistence gate = AND of half passes; emit half audit fields. Do **not** collapse halves into one pooled window. |
-| Dual-clock / twin action-override | Real **dual-clock / twin-timestamp** pipelines through gates → provisional membership → rank → capacity → provisional actions. Any post-capacity **action disagree** between clocks → final **INCONCLUSIVE** (or locked non-enrolling action); refill rules as designed; emit twin/disagree evidence fields. No fake clocks; no forcing enroll despite disagree. |
-| Full analytical-unit universe | Judged grain = **full analytical-unit universe** required by design (including zero-eligible / non-qualifiers with reason fields). Exact membership-set recon later depends on this grain. |
-| Membership-first + capacity + no-pad | **Membership-first**, then rank only qualifiers under available slots; select `min(S,Q)`; **no padding** / no inventing entities to hit capacity. |
-| Non-enrolling actions | Non-enrolling actions (e.g. WATCH / INCONCLUSIVE) must **never** be enrolled by discretion. |
-| Lineage field mapping | Spec→builder maps freeze/lineage fields (`snapshot_id`, `source_version`, extraction / observation-boundary, or locked equivalents) from the design/freeze contract into builder outputs. Lineage mapping is **mandatory** for every judged/export package that will claim recon-green (cite here — enforcement is Stage 4). Capacity/simulation mapping remains conditional on those gates being used. |
+| Half-window / persistence | Split-window **half-rate persistence**: each non-overlapping analysis half meets locked floors and comparator rules; thin half fails persistence; overall persistence gate follows the locked combination rule; emit required half audit fields. Do not replace a locked split-window design with a weaker pooled-window proxy. |
+| Dual-clock / twin action-override | Real **dual-clock / twin** pipelines through all locked gates. Any locked action-disagreement treatment must be applied exactly; emit twin/disagreement evidence fields. No fake twins and no collapsing distinct locked definitions into one. |
+| Full analytical-unit universe | Judged grain = the **full analytical-unit universe** required by design, including zero-eligible / non-qualifiers when the design requires them. Exact universe reconciliation later depends on this grain. |
+| Membership-first + capacity + no-pad | **Membership-first**, then rank only qualifiers under available slots when that is the locked rule; select according to the locked capacity contract; **no padding** or inventing entities to hit capacity. |
+| Non-enrolling actions | Non-enrolling actions such as WATCH / INCONCLUSIVE must **never** be promoted to intervention by discretion when the design forbids it. |
+| Lineage field mapping | Map freeze/lineage fields (`snapshot_id`, `source_version`, extraction / observation-boundary, or locked equivalents) from the design/freeze contract into the Stage 4 package. Lineage mapping is mandatory for any judged/export package that will claim validation-green. |
 | Capacity / simulation labels | Capacity and simulation / occupancy labels required by the design are mapped into outputs so Stage 4 can enforce non-live labeling when applicable. Design-cited N/A is allowed when the design does not use capacity/simulation. |
 
-Packet completeness rule: every design-used gate class above must appear with (1) exact clause cite, (2) fixture map entry, (3) covering attestation on each builder path, following that path’s locked contract. Unused optional mechanics require an explicit design-cited N/A. Omitting any used gate, or omitting lineage mapping for a recon-green claim, → packet Fail → Stage 4 not ready.
+Packet completeness rule: every design-used gate class must appear with (1) exact clause cite, (2) fixture-map entry where applicable, and (3) covering attestation requirements for each independent judged builder. Unused optional mechanics require an explicit design-cited N/A. Omitting any used gate, or omitting required lineage mapping, means Stage 4 is not ready.
 
 ### Known-case / gold fixtures (Fixture Gate)
 
-Before Design Gate Pass is treated as Stage-4-ready, the design (or an attached fixture appendix) must include **tiny known cases** that:
+Before Design Gate Pass is treated as Stage-4-ready, the design or an attached fixture appendix must include **tiny known cases** that:
 
 1. Pass when the rule is implemented correctly; and
 2. **Fail the build** if the rule is omitted, faked, or replaced with a weaker proxy.
 
 **Known-case Fixture Gate (authority):**
 
-1. **Freeze before builders run.** Freeze the known-case fixture pack **before either builder begins implementation or execution** (identity: path + content hash and/or freeze timestamp). Freezing only before a readiness or first-freeze *claim* is not sufficient. Late-invented fixtures after builder churn do not count as Fixture Gate Pass. Stage 3 Fixture Gate Pass records pack-authority (freeze identity + pack present + no-greenwash); Stage 4 scores the frozen pack as an executed result.
-2. **No rewrite after Fail.** On fixture Fail, builders **repair toward locked Stage 3** and re-run. Builders / AIs must **not** rewrite fixture IDs, expected outcomes, or predicates to force green (greenwash). An explicitly owner-authorized fixture correction creates a **newly frozen version** and requires fresh validation; it cannot retroactively turn the failed version into a Pass. Silent AI edit is not owner authority.
-3. **Fixture Gate Pass before authoritative use.** Design Gate may treat the pack as authoritative only after Fixture Gate Pass (freeze identity + no-greenwash attestation + pack present). Scoring a mutable or post-fail-rewritten pack is Fail.
+1. **Freeze before judged builders run.** Freeze the known-case fixture pack **before any independent judged builder begins implementation or execution**. Record identity through path + content hash and/or freeze timestamp. Late-invented fixtures after builder churn do not count as Fixture Gate Pass.
+2. **No rewrite after Fail.** On fixture Fail, builders **repair toward locked Stage 3** and rerun. Builders / AIs must not rewrite fixture IDs, expected outcomes, or predicates to force green. An explicitly owner-authorized fixture correction creates a **newly frozen version** and requires fresh validation; it cannot retroactively turn the failed version into a Pass.
+3. **Fixture Gate Pass before authoritative use.** Design Gate may treat the pack as authoritative only after freeze identity, pack presence, and no-greenwash attestation are recorded. Stage 4 scores the frozen pack as an executed result.
 
 Fixtures are not optional color. They are the Stage 3→4 sieve for translation drift. Shared wrong design can still match across builders after fixtures pass — fixtures cut *translation* drift; they do not erase correlated design error.
 
-### Spec→builder independence (dual-path)
+### Spec→builder independence (dual judged paths)
 
-Dual builders (e.g. SQL A and R(B)) must each implement from the **locked grain + design** and that path’s **authorized source package only**.
+Independent judged builders must each implement from the **locked grain + design** and that path's **authorized source package only**.
 
-- Paths must **not** share a judged ID list, selected set, ENROLL list, or membership-YES list as a **build input**.
-- Shared Stage 3 design + freeze identity is allowed; sharing *results* / answer-key ID lists is not.
-- Cross-path agreement is established **only** by Stage 4 recon of independently produced outputs.
+- Paths must **not** share a judged ID list, selected set, intervention list, membership-YES list, final action table, or equivalent answer-key result as a build input.
+- Shared Stage 3 design, frozen fixture pack, source contract, and freeze identity are allowed; sharing the other path's judged results before first-pass freeze is not.
+- Cross-path agreement is established only by Stage 4 reconciliation of independently produced outputs.
 
 This is a Design Gate / Spec→builder independence requirement. Stage 4 deepens the same rule as build-time independence + repair-time never-copy.
 
@@ -787,70 +793,92 @@ This is a Design Gate / Spec→builder independence requirement. Stage 4 deepens
 
 Gate 10 / Stage 4 contract is incomplete unless **all** of the following are listed and satisfied:
 
-1. Spec→builder **translation packet** is complete for every decision-changing gate the design uses (§19A Translation requirement) — not one-rule-only. Stage 3 records the contract and freeze; it does not require production code.
-2. Known-case fixtures are present **and** Fixture Gate Pass is recorded (freeze identity **before builders run** + no-greenwash) before fixtures are treated as authoritative.
-3. Dual-path Spec→builder **independence** is attested (no shared judged/selected/membership ID list as build input).
-4. **Lineage field mapping is mandatory** for any judged/export package that will claim recon-green. Capacity/simulation label mapping appears in the packet when those gates are used (design-cited N/A otherwise).
+1. Spec→builder **translation packet** is complete for every decision-changing gate the design uses — not one-rule-only. Stage 3 records the contract and freeze; it does not require production code.
+2. Known-case fixtures are present and Fixture Gate authority is recorded before fixtures are treated as controlling.
+3. Independent judged-path Spec→builder **independence** is required: no shared judged/selected/membership ID list or final action table as build input.
+4. **Lineage field mapping is mandatory** for any judged/export package that will claim validation-green. Capacity/simulation label mapping appears in the packet when those gates are used.
+5. Source-delivery requirements and permitted mechanical transformations are explicit enough that Stage 4 can validate delivery without inventing new measurement rules.
 
-## 20. Stage 4 output contract
+## 20. Stage 4 handoff contract
 
-The locked design must support the three-AI execution architecture.
+The locked design must support independent Stage 4 execution without prescribing a particular technology architecture.
 
-### SQL A contract
+The handoff has four contracts.
 
-Define the required final KPI table:
+### 20.1 Source-delivery contract
 
-- exact grain;
+Define what source evidence Stage 4 must make available to the independent judged builders:
+
+- required source objects / tables;
+- source grain;
+- required source keys;
+- required source fields;
+- timestamps and temporal fields;
+- source fields needed to evaluate inclusion / exclusion rules;
+- source fields needed to evaluate missingness and contradiction rules;
+- duplicate / identity evidence;
+- lineage fields;
+- permitted mechanical transformations;
+- permitted broad extraction envelope, if any;
+- and transformations the delivery layer must **not** precompute because they constitute judged analytical logic.
+
+This contract defines **what must arrive**, not which language must retrieve it.
+
+### 20.2 Judged-output contract
+
+Define the complete result that each independent judged builder must construct:
+
+- exact decision grain;
 - required keys;
-- numerator and denominator columns;
-- unrounded metric columns;
-- eligibility flags;
-- decision-rule fields;
+- population / universe membership fields;
+- eligibility and exclusion fields;
+- event or outcome classifications;
+- numerator and denominator components when applicable;
+- unrounded metric fields when applicable;
+- thresholds and rule-result fields;
+- final decision / action fields;
+- selected / capacity fields when applicable;
+- sensitivity / twin / persistence fields when locked;
 - audit fields;
-- and expected uniqueness.
+- expected uniqueness or duplicate behavior;
+- and required lineage references.
 
-### SQL B contract
+This contract defines **what both independent judged paths must produce**, not which language computes it.
 
-Define the lower-grain analytical extract required for independent reconstruction:
+### 20.3 Reconciliation contract
 
-- exact grain;
-- raw or minimally transformed fields;
-- source keys;
-- timestamps;
-- inclusion and exclusion evidence;
-- fields required to rebuild the KPI;
-- and fields SQL B must not precompute.
-
-### R(B) reconstruction contract
-
-Define what R must independently reconstruct from SQL B:
-
-- population rules not irrevocably applied upstream;
-- eligibility;
-- event classification;
-- numerator;
-- denominator;
-- rate;
-- volume floor;
-- segments;
-- decision classification;
-- and audit totals.
-
-### Reconciliation contract
-
-Define exact comparison requirements:
+Define exact comparison requirements between independent judged outputs:
 
 - key coverage;
+- universe coverage;
 - row counts;
-- uniqueness;
+- uniqueness or locked duplicate behavior;
 - numerator equality;
 - denominator equality;
-- flag equality;
-- decision equality;
+- classification / flag equality;
+- action equality;
+- selected / membership equality when applicable;
 - global control totals;
-- and numerical tolerance for unrounded rates.
+- required audit-field equality;
+- lineage alignment;
+- and any predetermined machine-level numerical tolerance for continuous values.
 
-This output contract allows Stage 4 to build independent implementations without forcing the builders to copy one another.
+“Close” is not a substitute for the locked reconciliation standard.
+
+### 20.4 Fixture and lineage contract
+
+Define:
+
+- fixture-pack identity;
+- expected known-case judgments;
+- rules for owner-authorized fixture correction;
+- snapshot identity;
+- source version;
+- extraction / observation-boundary identity;
+- required simulation or non-live labels;
+- and the evidence needed to show that all Stage 4 paths used the same authorized freeze.
+
+These four contracts allow Stage 4 to choose or evolve its technical architecture without reopening the substantive measurement design, provided the architecture satisfies the same locked source, judged-output, reconciliation, fixture, lineage, and independence requirements.
 
 ## 21. Phase 1 — Lock and inspect the input package
 
@@ -859,7 +887,7 @@ Before independent design begins, all three AIs confirm:
 - the same approved decision;
 - the same analytical question;
 - the same source versions;
-- the same database context;
+- the same database or source context;
 - the same data profile;
 - and the same stated constraints.
 
@@ -870,7 +898,7 @@ Examples:
 - the question requires customer behavior, but only seller and order data are available;
 - the stakeholder requests a causal recommendation, but the planned evidence is observational;
 - the decision horizon lies outside data coverage;
-- or an operational concept such as “featured placement” is not a database field.
+- or an operational concept such as “featured placement” is not a source field.
 
 ## 22. Phase 2 — Independent first-pass designs
 
@@ -937,7 +965,7 @@ AI 3 identifies:
 - hidden filters;
 - impossible audit requirements;
 - untestable decision rules;
-- and designs that cannot feed independent SQL A versus R(B) reconciliation.
+- and designs that cannot support faithful source delivery plus independent judged-path reconstruction and reconciliation in Stage 4.
 
 Every criticism must target an exact design field, proposition, or ledger entry.
 
@@ -1056,10 +1084,11 @@ Check:
 - missingness rules;
 - anomaly rules;
 - audit counts;
-- SQL A contract;
-- SQL B lower-grain contract;
-- R(B) reconstruction contract;
-- and reconciliation requirements.
+- source-delivery contract;
+- judged-output contract;
+- fixture and lineage contract;
+- reconciliation requirements;
+- and whether Stage 4 can implement the design without inventing new analytical meaning.
 
 Each audit returns:
 
@@ -1137,17 +1166,18 @@ The design passes only when all of the following are satisfied.
 - Insufficient-evidence path defined.
 - Thresholds not misrepresented as natural facts or SLAs.
 
-### Gate 10 — Stage 4 contract
+### Gate 10 — Stage 4 handoff contract
 
-- SQL A final-table contract complete.
-- SQL B lower-grain contract complete.
-- R(B) independent-reconstruction contract complete.
-- Reconciliation requirements complete.
-- Spec→builder **translation packet** complete for **all** locked decision-changing gates the design uses (§19A) — not one-rule-only. Stage 3 records the contract without production code.
-- Known-case Fixture Gate Pass recorded (freeze identity **before builders run** + no rewrite after Fail) before fixtures are treated as authoritative (§19A).
-- Dual-path Spec→builder independence attested (no shared judged/selected/membership ID list as build input) (§19A).
-- Lineage field mapping present (mandatory for recon-green claims). Capacity/simulation label mapping present in the packet when those gates are used.
-- No production SQL or R has been written in Stage 3.
+- Source-delivery contract complete.
+- Judged-output contract complete.
+- Reconciliation contract complete.
+- Fixture and lineage contract complete.
+- Spec→builder **translation packet** complete for **all** locked decision-changing gates the design uses — not one-rule-only.
+- Known-case Fixture Gate authority recorded before judged builders run.
+- Independent judged-path Spec→builder independence required: no shared judged/selected/membership ID list or final action table as build input.
+- Lineage field mapping present for validation-green claims. Capacity/simulation label mapping present when those gates are used.
+- Permitted mechanical source transformations are explicit and separated from judged analytical logic.
+- No production implementation code has been written in Stage 3.
 
 ### Gate 11 — Review and ownership
 
@@ -1165,14 +1195,14 @@ The design passes only when all of the following are satisfied.
 | Independent reviewers tested the design | Every reviewer prefers the same design |
 | Population, grain, KPI, and rules are explicit | The eventual code will implement them correctly |
 | Known measurement risks are controlled or disclosed | No unknown data problem exists |
-| Stage 4 outputs and validation targets are defined | SQL A and R(B) will reconcile on the first attempt |
+| Stage 4 source and judged-output contracts are defined | Independent judged paths will reconcile on the first attempt |
 | The intended conclusion ceiling is defined | The evidence will support the preferred conclusion |
 
-Stage 3 validates the specification. Stage 4 validates its implementation and the evidence produced from it.
+Stage 3 validates the specification. Stage 4 validates source delivery, implementation, reconciliation, and the evidence produced from the locked specification.
 
 ## 30. Illustrative FulfillIQ design fragment
 
-The following illustrates the level of precision required. It is not a universal template.
+The following illustrates the level of precision required. It is not a universal template and does not prescribe the Stage 4 architecture used by future projects.
 
 ### Approved decision context
 
@@ -1211,13 +1241,13 @@ A minimum of 30 usable seller-orders is provisional. It is not an SLA and must b
 
 ### Primary source path
 
-The primary KPI path uses orders, order items, and sellers. Reviews, payments, product categories, and raw geolocation do not enter the primary KPI joins merely because they are available.
+The primary KPI path uses orders, order items, and sellers. Reviews, payments, product categories, and raw geolocation do not enter the primary source requirements merely because they are available.
 
 ### Operational constraints
 
 Program capacity is a business constraint, not a database column. Featured placement, intervention status, or plan capacity must not be invented as source fields.
 
-This fragment is strong enough to control implementation while leaving SQL A, SQL B, and R(B) free to be independently constructed.
+This fragment is strong enough to control implementation while leaving Stage 4 free to select an authorized independent-validation architecture.
 
 ## 31. Required structure of `Stage_03_Measurement_Design.md`
 
@@ -1242,10 +1272,10 @@ The final Stage 3 artifact must contain:
 17. Decision rules and capacity constraints.
 18. Measurement-risk register.
 19. Non-executable implementation blueprint.
-20. SQL A output contract.
-21. SQL B lower-grain output contract.
-22. R(B) reconstruction contract.
-23. Exact reconciliation contract.
+20. Source-delivery contract.
+21. Judged-output contract.
+22. Exact reconciliation contract.
+23. Fixture and lineage contract.
 24. Multi-AI review and resolution record.
 25. Assumptions, open questions, and accepted limitations.
 26. Stage 4 handoff and lock approval.
@@ -1254,7 +1284,7 @@ The final Stage 3 artifact must contain:
 
 The process fails if:
 
-- production SQL or R is written before the design is locked;
+- production implementation code is written before the design is locked;
 - the requested metric substitutes for the approved decision;
 - the approved analytical question is silently changed;
 - all three AIs edit one initial design instead of producing independent first passes;
@@ -1279,15 +1309,16 @@ The process fails if:
 - decision rules are written after seeing which entities rank highest;
 - operational concepts are treated as database columns without verification;
 - data convenience silently narrows the business question;
-- the Stage 4 output contract does not preserve independent reconstruction;
+- the Stage 4 handoff contract does not preserve faithful source delivery and independent judged reconstruction;
 - an AI disagreement is resolved by voting;
 - a blocking risk is hidden;
 - a material business change is not returned to the stakeholder;
 - the Spec→builder translation packet omits any locked decision-changing gate the design uses;
 - known-case fixtures are rewritten after a Fail to greenwash a build;
-- Design Gate treats fixtures as authoritative without Fixture Gate Pass (freeze identity recorded before builders run);
-- dual builders share a judged / selected / membership ID list as a build input;
-- Stage 4 is declared ready without lineage field mapping for a recon-green claim, or without capacity/simulation label mapping when those gates are used;
+- Design Gate treats fixtures as authoritative without frozen Fixture Gate authority;
+- independent judged builders share a judged / selected / membership ID list or final action table as a build input;
+- Stage 4 is declared ready without required lineage field mapping, or without capacity/simulation label mapping when those gates are used;
+- the handoff prescribes a technology where only analytical meaning should be locked;
 - or Stage 4 cannot implement the design without making new analytical decisions.
 
 ## 33. Required deliverables
@@ -1327,7 +1358,7 @@ These may be combined into one controlled document when every component remains 
 15. Resolve or disclose every material objection.
 16. Complete all eleven Design Gates.
 17. Lock `Stage_03_Measurement_Design.md` through human approval.
-18. Deliver the output contracts to the three independent Stage 4 builders.
+18. Deliver the source-delivery, judged-output, reconciliation, fixture, and lineage contracts to Stage 4.
 
 ## 35. Final completion standard
 
@@ -1348,16 +1379,18 @@ Stage 3 is complete only when:
 - AI 1 and AI 2 completed independent designs;
 - AI 3 independently audited data feasibility;
 - cross-review disagreements were resolved through evidence rather than voting;
-- the SQL A, SQL B, R(B), and reconciliation contracts are complete;
-- no production SQL or R was written during Stage 3;
+- the source-delivery, judged-output, reconciliation, fixture, and lineage contracts are complete;
+- no production implementation code was written during Stage 3;
 - the Spec→builder translation packet covers every locked decision-changing gate the design uses;
-- known-case Fixture Gate Pass is recorded (freeze before builders run) before fixtures are treated as authoritative;
-- dual-path Spec→builder independence is attested;
-- lineage field mapping is present for recon-green claims; capacity/simulation label mappings are present when those gates are used;
+- known-case Fixture Gate authority is recorded before judged builders run;
+- independent judged-path Spec→builder independence is required;
+- lineage field mapping is present for validation-green claims; capacity/simulation label mappings are present when those gates are used;
 - the human analyst approved the lock;
 - and Stage 4 can begin without making new measurement decisions.
 
-The final governing rule is:
+The final governing rules are:
+
+> **Stage 3 defines analytical meaning and evidence contracts; Stage 4 chooses and validates the implementation architecture.**
 
 > If Stage 4 must decide what the population, grain, KPI, threshold, or action rule means, Stage 3 is not finished.
 
