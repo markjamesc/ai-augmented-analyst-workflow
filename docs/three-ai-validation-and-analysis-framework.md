@@ -2,31 +2,41 @@
 
 This framework describes an end-to-end system for using three independent AI systems to construct, validate, review, analyze, and interpret business data. It begins with a locked measurement design and ends with an evidence-traceable recommendation.
 
+From this version forward, the default Stage 4 validation architecture is:
+
+> **controlled SQL source delivery → SQL Source Gate → independent R-A and R-B judged implementations → exact reconciliation → structural cross-review → validated-data freeze**
+
 The three AIs perform different functions as the type of error risk changes:
 
-- During data construction, they act as independent builders.
-- During cross-review, they inspect one another's work for hidden structural weaknesses.
+- During source delivery, one AI constructs and audits a thin, nonjudgmental SQL source extract.
+- During judged construction, two AIs independently implement the locked Stage 3 logic in R.
+- During cross-review, the AIs inspect one another's work for hidden structural weaknesses and shared-source risk.
 - During deeper R analysis, they become a builder, a methodological critic, and an implementation critic.
 - During interpretation, they test whether the recommendation is genuinely supported by the validated evidence.
 
 The governing principle is:
 
-> Agreement between independent implementations tests whether the data was constructed correctly. Cross-review tests whether the implementations share hidden weaknesses. Deeper-analysis review tests whether the conclusions drawn from the validated data are sound.
+> Agreement between two independent judged implementations tests whether the locked analytical logic was translated consistently. The SQL Source Gate tests whether both implementations received a faithful source delivery. Cross-review tests whether the implementations share hidden weaknesses. Deeper-analysis review tests whether the conclusions drawn from the validated data are sound.
 
 ```mermaid
 flowchart TD
-    D["Locked measurement design"] --> A["AI 1: SQL A<br/>Final KPI table"]
-    D --> B["AI 2: SQL B<br/>Lower-grain extract"]
-    B --> C["AI 3: R(B)<br/>Rebuilt KPI table"]
+    D["Locked measurement design"] --> S["AI 2: Controlled SQL source<br/>Thin, nonjudgmental delivery"]
+    S --> SG{"SQL Source Gate"}
+
+    SG -->|Fail| SF["Repair source delivery<br/>and rerun Source Gate"]
+    SF --> SG
+
+    SG -->|Pass| A["AI 1: R-A<br/>Independent judged implementation"]
+    SG -->|Pass| B["AI 3: R-B<br/>Independent judged implementation"]
 
     A --> R["Exact reconciliation"]
-    C --> R
+    B --> R
 
     R -->|Fail| F["Diagnose mismatch<br/>Correct and rerun"]
     F --> R
 
-    R -->|Pass| X["Cross-review"]
-    X --> G{"Structural gate"}
+    R -->|Pass| X["Structural cross-review"]
+    X --> G{"Validation gate"}
 
     G -->|Issues remain| F2["Resolve issues<br/>Rerun affected validation"]
     F2 --> X
@@ -38,31 +48,35 @@ flowchart TD
     IC --> ID["Interpretation and decision"]
 ```
 
+Earlier projects that used a different independent-validation architecture remain valid historical artifacts. They do not need to be retrofitted merely for conformity. The governing requirement is methodological independence and exact validation, not preservation of one old technology pattern.
+
 ## 1. What the system is designed to establish
 
-There are five separate questions. No single test answers all five.
+There are six separate questions. No single test answers all six.
 
 | Validation layer | Central question |
 |---|---|
 | Measurement validity | Did we define the right population, grain, KPI, comparison, and decision rules? |
-| Construction validity | Did the SQL and R implementations correctly construct those definitions? |
-| Structural robustness | Could the implementations agree while still containing a hidden weakness? |
-| Analytical validity | Are the statistical, descriptive, or predictive methods appropriate? |
+| Source-delivery validity | Did SQL faithfully deliver the authorized source records without silently deciding the answer? |
+| Construction validity | Did R-A and R-B independently implement the locked judged logic correctly? |
+| Structural robustness | Could the two R implementations agree while still containing a hidden weakness or shared misunderstanding? |
+| Analytical validity | Are later statistical, descriptive, or predictive methods appropriate? |
 | Decision validity | Does the final recommendation actually follow from the validated evidence? |
 
-An exact match between SQL and R does not automatically prove that:
+An exact match between R-A and R-B does not automatically prove that:
 
 - the original measurement design was correct;
-- the queries are safe under every boundary condition;
+- the shared SQL source extract was faithful;
+- both paths are safe under every boundary condition;
 - later statistical methods are appropriate;
 - a predictive association is causal;
 - or the final recommendation is justified.
 
-Each phase contributes a different kind of assurance.
+That is why Stage 4 separates **source delivery**, **independent judged construction**, **reconciliation**, and **structural review**.
 
 ## 2. Phase 0: Lock the measurement design
 
-Before any AI writes SQL or R, all three must receive the same controlling measurement design.
+Before SQL source delivery or either R builder begins, all three AIs must receive the same controlling measurement design.
 
 The design must specify at least:
 
@@ -71,31 +85,20 @@ The design must specify at least:
 - The unit of analysis
 - The population
 - Inclusion and exclusion rules
-- The primary KPI
-- KPI numerator
-- KPI denominator
+- The primary KPI or decision evidence
+- Numerator and denominator when applicable
 - Date and time rules
 - Required segments
 - Thresholds and volume floors
 - Treatment of missing values
+- Duplicate / identity rules when material
 - Comparison groups or baselines
 - Decision rules
 - Required output columns
+- Reconciliation-critical fields
 - Known limitations
 - Database dialect and source tables
-
-For a seller late-fulfillment analysis such as FulfillIQ, this could include:
-
-- Delivered orders only
-- The precise purchase-date window
-- An inclusive lower date boundary
-- An exclusive upper date boundary
-- Both required delivery timestamps must be non-null
-- Seller-order as the operational grain
-- Date-based lateness as the primary definition
-- Timestamp-based lateness as a secondary twin
-- A minimum usable denominator of 30 seller-orders
-- Seller Late-Fulfillment Rate as the primary KPI
+- Source-delivery requirements
 
 ### What “locked” means
 
@@ -108,11 +111,20 @@ If an AI finds ambiguity, it must report it. It cannot independently change:
 - the grain;
 - the date window;
 - the threshold;
+- duplicate treatment;
 - or the decision rule.
 
-For example, an AI cannot decide that timestamp-based lateness is more accurate and replace the locked date-based definition. It should instead implement the locked definition and separately flag the alternative for review.
+An AI may flag a potentially better alternative, but it must still implement the locked definition unless the owner formally changes the design.
 
 This preserves the difference between implementing the owner's decision and reviewing a potential limitation in that decision.
+
+### Freeze known-case fixtures before builders run
+
+Known-case fixtures or equivalent tiny gold cases must be frozen **before R-A or R-B begins implementation or execution**.
+
+The freeze identity should include a path plus content hash and/or freeze timestamp.
+
+A failed fixture is evidence against the implementation, not permission to rewrite the fixture until it passes.
 
 ### Version control before construction
 
@@ -122,431 +134,468 @@ Every AI must work from the same versions of:
 - the database context;
 - the schema or data dictionary;
 - the data profile;
-- and any source extracts.
+- the source snapshot;
+- the authorized source-delivery contract;
+- and the frozen fixture pack.
 
 At minimum, record:
 
 - source-data version or extraction time;
 - measurement-design version;
-- SQL script version;
-- R script version;
+- SQL source script version;
+- SQL Source Gate report version;
+- R-A script version;
+- R-B script version;
 - row counts;
+- fixture freeze identity;
 - and output creation time.
 
-For a rigorous workflow, also calculate file hashes for the major inputs and outputs.
+For a rigorous workflow, also calculate file hashes for major inputs and outputs.
 
 ## 3. Preserve independence during initial construction
 
 Independence is what makes agreement valuable.
 
-If AI 2 sees SQL A and rewrites it with different formatting, SQL B is not independent. It is merely a translation of SQL A.
+The two judged R paths may both use tidyverse. Independence does **not** require different programming languages, unfamiliar packages, or artificial stylistic differences.
 
-If AI 3 sees the SQL A results before writing R(B), it may consciously or unconsciously modify the R logic until the outputs match.
+Independence comes from separate construction and information barriers.
 
-The three AIs should initially share:
+Before reconciliation, R-A and R-B may share:
 
 - the locked measurement design;
-- the source schema;
-- the database context;
-- and the required output contract.
+- the same verified SQL source extract;
+- the same schema and column definitions;
+- the same frozen fixture pack;
+- and the same required output contract.
 
-Before reconciliation, they should not share their implementation decisions.
+Before first-pass freeze, they must not share:
+
+- each other's code;
+- each other's judged outputs;
+- final action or membership ID lists;
+- selected sets;
+- common prewritten decision functions;
+- copied helper functions that encode judged logic;
+- or mismatch results that could steer one builder toward the other's answer.
 
 | AI | Initial responsibility | Primary output | Should not see initially |
 |---|---|---|---|
-| AI 1 | Construct the KPI directly in SQL | SQL A final KPI table | SQL B and R(B) |
-| AI 2 | Construct a lower-grain analytical extract | SQL B lower-grain table | SQL A and R(B) |
-| AI 3 | Rebuild the KPI from SQL B's extract in R | R(B) final KPI table | SQL A and its results |
+| AI 1 | Independently implement locked judged logic in R | R-A judged table | R-B code or judged output |
+| AI 2 | Build and audit controlled SQL source delivery | SQL source extract + Source Gate report | No need for judged output before source freeze |
+| AI 3 | Independently implement locked judged logic in R | R-B judged table | R-A code or judged output |
 
-The three systems are not doing the same job:
-
-- SQL A calculates the final result inside the database.
-- SQL B constructs a lower-grain dataset.
-- R(B) independently applies the metric logic to that lower-grain dataset.
-
-The final comparison is:
+The final judged comparison is:
 
 $$
-\text{SQL A KPI table} \quad \text{versus} \quad \text{R(B) KPI table}
+\text{R-A judged table} \quad \text{versus} \quad \text{R-B judged table}
 $$
 
-## 4. AI 1: SQL A
+The shared SQL extract is not treated as a third judged answer. It is a controlled input whose fidelity must be proven separately.
+
+## 4. AI 2: Controlled SQL source delivery
 
 ### Purpose
 
-SQL A is the direct database implementation of the locked measurement design. It moves from the approved source tables to the final KPI table.
+The SQL layer is a **data-delivery and source-verification layer**, not a competing analytical decision path.
 
-For a seller-level KPI, its output might contain one row per seller with columns such as:
+Its job is to deliver the source fields required by Stage 3 as faithfully and transparently as practical.
 
-- `seller_id`
-- `eligible_seller_orders`
-- `late_seller_orders_date`
-- `late_fulfillment_rate_date`
-- `late_seller_orders_timestamp`
-- `late_fulfillment_rate_timestamp`
-- `volume_floor_pass`
-- relevant audit counts
+The preferred extract is:
 
-SQL A performs:
+- thin;
+- traceable to raw source tables;
+- minimally transformed;
+- broad enough for the R builders to apply the important analytical rules themselves;
+- and nonjudgmental with respect to the final Stage 3 decision.
 
-1. Population filtering
-2. Grain construction
-3. Eligibility determination
-4. Lateness classification
-5. Numerator calculation
-6. Denominator calculation
-7. Seller-level aggregation
-8. Volume-floor classification
+```mermaid
+flowchart LR
+    RAW["Raw source tables"] --> SQL["Controlled SQL source extract"]
+    SQL --> GATE["SQL Source Gate"]
+    GATE --> RA["R-A decides meaning"]
+    GATE --> RB["R-B decides meaning"]
 
-### Required SQL A controls
+    J["Judged logic:<br/>window / open / eligible / event / action / selected"] -. "must not be baked into SQL" .-> SQL
+```
 
-#### Grain
+### The bright-line rule
 
-The intermediate table must contain one row per approved analytical unit.
+SQL should answer:
 
-In FulfillIQ, the critical grain is seller-order, not order item. An order with three item rows from the same seller must not accidentally count as three seller-orders.
+> **Did we faithfully deliver the authorized source records and fields?**
 
-#### Join cardinality
+R-A and R-B should independently answer:
 
-Every join must be assessed for possible duplication:
+> **What do those records mean under the locked Stage 3 rules?**
 
-- Is the seller table unique by `seller_id`?
-- Can an order contain multiple item rows from the same seller?
-- Can a lookup table contain duplicate keys?
-- Does a one-to-many join occur before or after the seller-order grain is established?
+Therefore, unless Stage 3 explicitly classifies a transformation as mechanical source plumbing, the SQL source layer should not precompute judged fields equivalent to:
 
-#### Population
+- `is_in_window`
+- `is_open`
+- `is_eligible`
+- `is_late`
+- membership qualification
+- `action`
+- `selected`
+- priority rank
+- final KPI classification
 
-AI 1 must apply the exact locked filters. The query should not substitute:
+If SQL begins deciding the same substantive rules that R-A and R-B are supposed to validate independently, stop and redesign the source extract.
 
-- shipment date for purchase date;
-- order creation date for purchase timestamp;
-- `BETWEEN` for a required half-open time interval;
-- or all orders for delivered orders.
+### Raw-ish does not mean careless
 
-#### Eligibility
+SQL may still perform necessary mechanical work, including:
 
-The denominator must contain only the records authorized by the design. A missing actual-delivery timestamp cannot be silently classified as on time.
+- selecting required source columns;
+- joining source tables when the source is relational;
+- constructing a documented mechanical source grain when R cannot reasonably consume the raw topology;
+- standardizing purely technical encodings;
+- attaching lineage fields;
+- or applying a broad mechanical extraction envelope when the full source is too large for downstream R.
 
-#### Arithmetic
+But every such transformation must be documented and covered by the Source Gate.
 
-The KPI must use the correct components:
+### Mechanical extraction envelopes
 
-$$
-\text{Late-Fulfillment Rate}
-=
-\frac{\text{Late eligible seller-orders}}
-{\text{All eligible seller-orders}}
-$$
+If data volume makes a full extract impractical, SQL may apply a **broad mechanical envelope** that is intentionally wider or more primitive than the final analytical rule.
 
-AI 1 must preserve numerator and denominator counts. A final percentage alone is insufficient for validation.
+For example, SQL may extract records from a broad date range for performance reasons while leaving the actual locked decision window to R-A and R-B.
 
-## 5. AI 2: SQL B
+The Source Gate must then verify that the envelope contains every raw record that satisfies the mechanical extraction condition.
+
+The mechanical envelope must not quietly become the Stage 3 population rule.
+
+## 5. SQL Source Gate
 
 ### Purpose
 
-SQL B is not supposed to imitate SQL A. Its purpose is to construct a lower-grain analytical dataset from which the KPI can be independently rebuilt in R.
+R-A and R-B share one upstream source package. That is efficient and auditable, but it creates a common-dependency risk.
 
-For FulfillIQ, SQL B would normally produce one row per seller-order containing the raw or minimally transformed fields necessary for AI 3 to determine:
+The SQL Source Gate compensates for that risk by establishing that the shared R input is a faithful delivery of the authorized source material.
 
-- whether the seller-order is eligible;
-- whether it is late under the date definition;
-- whether it is late under the timestamp definition;
-- which seller receives the seller-order;
-- and whether it falls inside the approved population and window.
+**Source Gate Pass is required before final validation may be claimed.**
 
-Possible columns include:
+### Minimum Source Gate checks
 
-- `seller_id`
-- `order_id`
-- `order_status`
-- `order_purchase_timestamp`
-- `order_delivered_customer_date`
-- `order_estimated_delivery_date`
-- item-row audit count
-- seller-order key
+At minimum, preserve evidence for:
+
+1. Source and extract row counts
+2. Identifier coverage
+3. Duplicate / repeated-identifier characterization
+4. Critical-field value preservation
+5. Null / blank profiles for critical source fields
+6. Domain checks for important categorical fields
+7. Date/time range and parseability checks
+8. Join cardinality and row-loss checks when joins exist
+9. Mechanical-envelope completeness when an envelope is used
+10. Source lineage and exact snapshot identity
+
+### Do not assume the business ID is a physical-row key
+
+A request ID, order ID, seller ID, customer ID, or similar business identifier may repeat.
+
+If a repeated identifier is used as the sole equality-join key during Source Gate validation, the comparison can multiply rows and produce misleading results.
+
+Therefore:
+
+- use a stable raw-row identifier when one exists; or
+- compare delivered source rows as a **multiset**, using a reproducible full-row or critical-field fingerprint plus occurrence counts; or
+- use another explicitly justified physical-row identity method.
+
+The Source Gate must validate both **value equality** and **multiplicity**.
+
+If the same raw row occurs three times, the delivered extract must preserve three occurrences unless the locked source contract explicitly authorizes otherwise.
+
+### Critical-field equality
+
+For every source field that materially supports Stage 3 logic, the gate should establish that the delivered value matches the raw source value unless a documented mechanical transformation was authorized.
+
+Examples may include:
+
+- entity/request/order ID
+- source status
+- source type
+- creation timestamp
+- modification timestamp
+- closure timestamp
+- duplicate / legacy indicators
+- parent identifiers
+- geography fields
 - source-presence indicators
 
-### Why SQL B should retain lower-grain fields
+Any authorized transformation must have its own reproducible check.
 
-If SQL B calculates the final seller-level rate and AI 3 merely reads that rate into R, there is no independent R reconstruction.
+### Source Gate output
 
-The stronger design is:
+The Source Gate should mechanically produce a report such as:
 
-- SQL B handles database extraction and necessary joins.
-- R independently applies the eligibility, classification, and aggregation logic.
+| Check | Expected | Actual | Result |
+|---|---:|---:|---|
+| Missing delivered rows | 0 | 0 | PASS |
+| Extra delivered rows | 0 | 0 | PASS |
+| Critical-field mismatches | 0 | 0 | PASS |
+| Multiplicity mismatches | 0 | 0 | PASS |
+| Unexpected row loss from joins | 0 | 0 | PASS |
+| Mechanical-envelope omissions | 0 | 0 | PASS |
+| Lineage mismatch | 0 | 0 | PASS |
 
-Where practical, SQL B should retain raw timestamps instead of handing R only a precomputed late flag. This allows AI 3 to independently implement the date and timestamp rules instead of trusting a classification created in SQL.
+The exact checks depend on the source topology, but “close” is not a Source Gate pass.
 
-### How broad SQL B should be
+### Source Gate failure
 
-Ideally, SQL B should be broad enough for AI 3 to apply the important analytical filters independently.
+If the Source Gate fails:
 
-If SQL B removes null delivery timestamps before export, R cannot check whether the null-exclusion rule was implemented correctly because the excluded records have disappeared.
+- do not treat either R path as validated;
+- repair the SQL source delivery or the gate itself;
+- regenerate the source package;
+- rerun the entire Source Gate;
+- preserve the failed report;
+- and invalidate downstream R outputs if their source package changed.
 
-The best practical design is therefore to:
-
-- preserve raw fields needed for the rules;
-- preserve stable keys;
-- avoid premature aggregation;
-- retain exclusion indicators where feasible;
-- and provide filter-stage audit counts.
-
-If data volume forces SQL B to apply some filters, those filters must be documented and included in cross-review.
-
-### Required SQL B controls
-
-AI 2 should verify:
-
-- one row per lower-grain analytical unit;
-- no duplicate seller-order keys;
-- required timestamps preserved;
-- relevant boundary records retained or audited;
-- no hidden aggregation;
-- no accidental loss through inner joins;
-- source counts before and after major filters;
-- and a clear explanation of every transformation performed in SQL rather than R.
-
-## 6. AI 3: R(B)
+## 6. AI 1 and AI 3: independent judged R builders
 
 ### Purpose
 
-AI 3 receives SQL B's lower-grain dataset and independently reconstructs the final KPI table in R.
+R-A and R-B independently implement the complete judged logic defined by Stage 3.
 
-R is acting here as a second computational path, not yet as the deeper analytical engine.
+They receive the same verified source package, but neither is allowed to use the other as a template or answer key.
 
-AI 3 should use:
+Both may use tidyverse and owner-familiar R idioms.
 
-- the locked measurement design;
-- the lower-grain SQL B extract;
-- the required output schema;
-- and the relevant column definitions.
+### R-A responsibilities
 
-It should not use SQL A as a template.
+AI 1 should independently:
 
-### R(B) responsibilities
+1. Load and verify the authorized source package.
+2. Confirm expected keys and duplicate behavior.
+3. Parse dates and timestamps.
+4. Apply the locked decision window.
+5. Apply the locked population and eligibility rules.
+6. Apply duplicate / identity logic where specified.
+7. Construct required events, flags, numerators, denominators, or scores.
+8. Apply thresholds, floors, membership rules, and capacity logic when used.
+9. Produce the complete required judged table.
+10. Preserve intermediate audit counts.
 
-R(B) must independently:
+A direct sequential tidyverse pipeline is acceptable if it faithfully implements the design.
 
-1. Confirm the expected lower-grain keys.
-2. Check for duplicates.
-3. Check data types.
-4. Parse timestamps.
-5. Apply locked population rules not already applied.
-6. Determine eligibility.
-7. Construct date-based lateness.
-8. Construct timestamp-based lateness.
-9. Aggregate seller-orders to seller-window.
-10. Calculate numerator, denominator, and rate.
-11. Apply the volume floor.
-12. Produce the required comparison table.
+### R-B responsibilities
+
+AI 3 independently performs the same Stage 3 contract but should construct it from its own reasoning and code.
+
+It may use a different internal strategy, such as:
+
+- separate rule tables;
+- independently constructed helper functions;
+- staged joins of rule components;
+- explicit assertions between steps;
+- or another clear tidyverse structure.
+
+Different syntax is not the goal. Independent reasoning and construction are the goal.
 
 ### Preserve audit information
 
-AI 3 should produce more than a final rate. Recommended validation outputs include:
+Both R paths should preserve enough intermediate evidence to locate divergence, such as:
 
 - input row count;
-- distinct seller count;
-- distinct order count;
-- distinct seller-order count;
-- duplicate-key count;
-- excluded-null count;
-- eligible seller-order count;
-- late seller-order count;
-- seller count before the volume floor;
-- seller count after the volume floor;
-- date/timestamp disagreement count;
-- and the final KPI table.
+- key counts;
+- duplicate counts;
+- parse-failure counts;
+- window inclusion counts;
+- eligibility counts;
+- exclusion counts by reason;
+- numerator / denominator totals when applicable;
+- threshold-pass counts;
+- action counts;
+- selected counts;
+- and any Stage 3-specific twin, persistence, or capacity audit fields.
 
-These intermediate totals help identify the point at which two paths diverge.
+## 6A. Pre-build enforcement checklist
 
-## 6A. Pre-build enforcement checklist (V3)
+Keep the dual-builder + exact-recon architecture. Harden checklist enforcement so Stage 3 translation gaps are less likely to ship uncaught.
 
-Keep the dual-builder + exact-recon architecture. Harden **checklist enforcement** so Stage 3 translation gaps are less likely to ship uncaught. The checklist below is **mandatory** before Validation Gate Pass — soft “we meant to” ticks do not count. Worked evidence (FulfillIQ Olist dual-path recon + fixtures) showed that checklist enforcement caught translation drift in that pack; it does not prove exhaustive detection or that architecture change is never needed.
+The checklist below is mandatory before Validation Gate Pass.
 
-### Pre-build attestation (each of SQL A, SQL B, R(B))
+### Pre-build attestation
 
-Before either builder begins implementation or execution, and before claiming a first freeze, each builder must tick **its own locked contract** — with Stage 3 clause cites — and the Stage 3 **Spec→builder translation packet must be packet-complete** (all locked decision-changing gates the design uses; not one-rule-only).
+Before implementation or execution begins, each path must attest to its own locked contract with Stage 3 clause cites.
 
-**Path-contract split (attestations follow each path’s locked contract):**
+**Path-contract split:**
 
-- **SQL B** attests that it supplies the required source grain and reconstruction-input fields.
-- **SQL A** and **R(B)** independently attest that they implement the judged / final decision logic.
+- **SQL source path** attests that it supplies the required source fields / mechanical grain, preserves authorized values, contains no prohibited judged logic, and can pass the SQL Source Gate.
+- **R-A** independently attests that it implements the complete judged / final decision logic.
+- **R-B** independently attests that it implements the complete judged / final decision logic.
 
-Optional persistence, twin, capacity, and simulation mechanics may be marked **N/A** only with an explicit design cite that the mechanic is unused. Packet completeness, lineage, and independence remain mandatory.
+Optional persistence, twin, capacity, and simulation mechanics may be marked **N/A** only with an explicit design cite that the mechanic is unused. Packet completeness, lineage, source fidelity, and judged-path independence remain mandatory.
 
-**SQL A and R(B) decision-logic items (SQL B does not substitute for these):**
+### Judged-path decision-logic items
 
-1. **Half-rate / persistence** implemented as locked (split-window halves; per-half floors + comparator; AND-of-halves; half audit fields; not a weaker pooled-window proxy), or design-cited N/A.
-2. **Real dual-clock / twin-timestamp** pipelines with **locked dual-clock / action-override** semantics when the design requires it (post-capacity action disagree → INCONCLUSIVE / non-enrolling; twin evidence fields; no fake clocks), or design-cited N/A.
-3. **Full analytical-unit universe** required by the design (including zero-eligible / non-qualifiers when recon demands them).
-4. **Membership-first** selection; no padding; simulation or occupancy labels as locked; select `min(S,Q)` — or design-cited N/A for capacity/simulation labels when unused.
-5. **Non-enrolling actions** (e.g. INCONCLUSIVE / WATCH) never promoted to enroll by discretion.
+R-A and R-B must independently attest to every Stage 3 decision-changing rule that applies, including when relevant:
 
-**All paths (SQL A, SQL B, R(B)):**
+1. Full analytical-unit universe
+2. Window semantics and exact boundaries
+3. Open / closed or state semantics
+4. Eligibility and exclusion logic
+5. Duplicate / entity identity treatment
+6. Numerator / denominator construction
+7. Persistence / split-window mechanics
+8. Dual-clock / twin semantics
+9. Membership-first selection
+10. Capacity and no-padding rules
+11. Non-enrolling / inconclusive actions
+12. Final action and selected logic
 
-6. **Lineage field mapping** present (`snapshot_id`, `source_version`, extraction / equivalent) per Stage 3 Spec→builder cite — **mandatory** for any judged/export package claiming recon-green.
-7. **Dual-path independence** attested: this path does not import the other path’s judged / selected / membership ID list as a build input.
+No single-rule attestation is sufficient when multiple gates are locked.
 
-Stage 4 first records these **pre-build commitments**, then records **executed attestations** and frozen-fixture results before reconciliation may claim Pass. Diagnostic comparison may occur earlier; it is not an authorized Pass.
+### All-path lineage requirements
 
-**Stage 4 entry fail:** Missing translation packet; one-rule-only attestation when multiple gates are locked; any used gate above unticked; lineage omitted on a recon-green claim; SQL B treated as implementing judged decision logic in place of source-grain supply, or SQL A / R(B) omitting judged decision logic.
+All paths must carry or reference the same frozen-source identity:
+
+- `snapshot_id` or locked equivalent;
+- `source_version` or locked equivalent;
+- extraction / observation-boundary equivalent;
+- and fixture-pack freeze identity when fixtures are used.
+
+Blank, `PENDING`, or placeholder lineage fails Stage 4 readiness.
 
 ### Known-case fixtures before recon (Fixture Gate)
 
-**Fixture Gate Pass is required** before Design/Validation treats fixtures as authoritative and before reconciliation may claim Pass.
+**Fixture Gate Pass is required before reconciliation may claim Pass.**
 
-1. **Freeze before builders run.** Record fixture-pack freeze identity (path + content hash and/or freeze timestamp) **before either builder begins implementation or execution**. Freezing only before a Stage-4-ready or first-freeze *claim* is not sufficient.
-2. **Score the frozen pack.** Run the Stage 3 gold fixtures (or equivalent tiny cases) against each build using the **frozen** text.
-3. **No rewrite after Fail.** On fixture Fail, repair toward locked Stage 3 and re-run. Builders / AIs must **not** rewrite fixture IDs, expected outcomes, or predicates to greenwash. An explicitly owner-authorized fixture correction creates a **newly frozen version** and requires fresh validation; it cannot retroactively turn the failed version into a Pass.
-4. **Block recon-green.** A fixture Fail, missing freeze identity, or post-fail-rewritten pack **blocks** Validation Gate Pass.
+1. **Freeze before builders run.** Record fixture-pack freeze identity before R-A or R-B begins implementation or execution.
+2. **Score the frozen pack.** Run the Stage 3 gold fixtures against both R-A and R-B using the frozen text.
+3. **No rewrite after Fail.** On fixture Fail, repair the implementation toward locked Stage 3 and rerun. Builders must not rewrite fixture IDs, expected outcomes, or predicates to greenwash.
+4. **Owner-authorized correction = new freeze.** A legitimate fixture correction creates a new version and requires fresh validation.
+5. **Block recon-green.** A fixture Fail, missing freeze identity, or post-fail rewritten pack blocks Validation Gate Pass.
 
-Fixture Gate is an additional authority/freeze gate — not a substitute for decision-field recon. Scoring the frozen pack is an **executed** Stage 4 result; diagnostic comparison may occur earlier and is not an authorized reconciliation Pass.
+The SQL source path does not need to predict fixture actions. Its fixture-related responsibility is to faithfully deliver fixture/source fields when fixture delivery is part of the test harness.
 
 ### Hard recon contract
 
-Validation Gate Pass requires **exact** match on the locked decision grain fields. No “close enough” on action or membership.
+Validation Gate Pass requires **exact** match between R-A and R-B on the locked decision-grain fields.
 
 At minimum, when present in the design:
 
 | Field class | Exact-match expectation |
 |---|---|
-| Components | Numerator, denominator (and secondary twin components when locked) |
-| Action | Final action codes; identical enroll and inconclusive / non-enrolling sets |
-| Membership / selected | Membership and selected / capacity outcome sets |
-| Universe | Full analytical-unit universe overlap (including zero-eligible when required) |
-| Half audit (if used) | Half eligible/event/rate/pass fields and overall half-persistence gate |
-| Twin / disagree (if used) | Twin provisional actions + action-disagree flag / evidence fields |
-| Lineage | Shared freeze identity (`snapshot_id` / source_version / extraction equivalents) |
+| Universe | Same analytical-unit universe, including zero-eligible / non-qualifiers when required |
+| Components | Numerator, denominator, counts, and secondary components when locked |
+| State / eligibility | Same window, open/state, eligibility, and exclusion classifications |
+| Action | Identical final action codes |
+| Membership / selected | Identical membership and selected/capacity outcome sets |
+| Persistence audit | Same half / persistence components when used |
+| Twin / disagree | Same twin actions, evidence fields, and disagreement flags when used |
+| Lineage | Same frozen source and fixture identities |
 
-Identical enroll and inconclusive sets are required when those actions exist. Soft rate-only twin diagnostics do **not** satisfy an action-override dual-clock lock.
+No “close enough” on classifications, membership, action, selected status, or identifiers.
 
-### Mismatch diagnosis / never-copy + dual-path independence
+### Mismatch diagnosis / never-copy
 
-**Build-time independence (before mismatch):** Dual builders must not share a judged ID list / selected set / ENROLL list / membership-YES list as a build input. Each path builds independently from locked grain+design (+ its authorized source package only). Recon is the sole authorized cross-path compare of independently produced outputs.
+**Build-time independence:** R-A and R-B must not share a judged ID list, action list, selected set, or membership list as an input.
 
-**Repair-time never-copy (on mismatch):** On action, membership, selected, universe, or capacity-outcome split:
+**Repair-time never-copy:** On any mismatch:
 
-1. Diagnose against the **locked Stage 3** design (independent path review; neither path is automatically the answer key).
-2. Repair by **re-implement + re-run** (preserve failed recon report; create a new report).
-3. **Never copy** the other path’s winner ID / selected / membership list into the failing path.
-4. **Never invent pad membership** / fill-to-cap rows.
-5. No manual result-table edits.
-6. Log root-cause class: translation miss vs plumbing vs shared design error vs recon bug.
-
-Build-time independence strengthens repair-time never-copy; both are required.
-
-### Snapshot / lineage checklist (freeze fields)
-
-Judged/export packages that claim freeze / recon-green must carry:
-
-- **`snapshot_id`** (or locked equivalent freeze identity);
-- **`source_version`** (or locked equivalent);
-- **extraction** timestamp and/or locked observation-boundary equivalent;
-
-or a documented **equivalent lineage** set that uniquely identifies the frozen source.
-
-Rules:
-
-1. Dual-path freeze identity must **align** before final recon (`snapshot_id` equal; source_version / extraction equivalents aligned to the same freeze).
-2. Blank / `PENDING` / placeholder lineage **fails** Pass — builders halt or Fail Stage-4-ready when required lineage is unverified.
-3. Spec→builder must have mapped these lineage fields from the locked freeze/design contract (Stage 3 §19A cite).
-4. Lineage is an **additional** recon-green gate, not a substitute for decision-field recon.
-
-### Plumbing adaptations
-
-Privilege, temporary-table, or dialect adaptations are allowed only if judged logic is unchanged; document them in the validation packet. Do not hide them.
+1. Diagnose against the locked Stage 3 design.
+2. Do not assume either R path is automatically correct.
+3. Repair by changing code and rerunning from source.
+4. Never copy the other path's judged IDs, selected set, or membership list into the failing implementation.
+5. Never manually edit result tables to force agreement.
+6. Never invent pad membership to fill a capacity target.
+7. Preserve the failed reconciliation report.
+8. Log root-cause class: source delivery, translation miss, plumbing, shared design error, or reconciliation bug.
 
 ### Simulation / release block
 
-When capacity/simulation settings imply **non-live enrollment** (e.g. full-capacity simulation with occupancy treated as zero (S=C-style), or an equivalent locked sim label):
+When the design is simulation-only or otherwise non-live:
 
-1. Judged/export outputs must be labeled **simulation-only / not live release** (explicit sim flag and/or capacity-scenario text and/or `operational_release_authorized_flag=0` / equivalent).
-2. Missing simulation / non-live label on a sim-capacity run → Fail recon-green / Fail live claim.
-3. **Validation Gate Pass ≠ live enrollment.** Pass on a simulation pack unlocks Stage 5 **interpretation of that pack only**. Claiming “live release Pass” from sim Validation is Fail.
-4. Live release remains a **separate owner decision** after current data, real occupancy, and operational prerequisites.
+1. Judged/export outputs must be labeled simulation-only / not live release.
+2. Missing non-live labeling blocks a live claim.
+3. Validation Gate Pass unlocks Stage 5 interpretation of the validated pack; it does not create operational release authority.
+4. Live release remains a separate owner decision after current data and operational prerequisites.
 
-When the design does not use capacity/simulation, this block is design-cited N/A; lineage and independence remain mandatory.
+When capacity/simulation is unused, this block is design-cited N/A.
 
-Simulation release block is an additional Pass-ceiling / labeling gate — not a substitute for decision-field recon. Worked evidence may use S=C simulation labels; the framework rule is the labeling + non-live ceiling, not any one project’s C/S numbers.
-
-### §6A checklist spine (must all Pass)
+### §6A checklist spine
 
 | # | Item | Blocking if missing / soft |
 |---|---|---|
-| 1 | Pre-build attestation + **packet-complete** Spec→builder translation (each path attests its own contract) | Yes |
-| 2 | **Fixture Gate** Pass (freeze identity **before builders run**; score frozen pack; no rewrite after Fail; owner correction = new freeze version) | Yes |
-| 3 | Hard exact recon on locked decision fields + universe / half / twin fields when used (design-cited N/A for unused optional mechanics) | Yes |
-| 4 | Build-time **independence** + repair-time **never-copy** / diagnose-toward-design | Yes |
-| 5 | Snapshot / lineage freeze fields present + cross-path aligned (no PENDING Pass) — **mandatory** for recon-green | Yes |
-| 6 | Plumbing adaptations disclosed; judged logic unchanged | Yes |
-| 7 | Simulation / release block labels + Pass ≠ live enrollment ceiling (design-cited N/A when unused) | Yes |
-
-Packet completeness, lineage, and independence are never N/A. Optional persistence, twin, capacity, and simulation mechanics may be design-cited N/A only.
+| 1 | Packet-complete Stage 3 → path translation | Yes |
+| 2 | SQL Source Gate Pass | Yes |
+| 3 | Fixture Gate Pass | Yes |
+| 4 | R-A and R-B independent judged construction | Yes |
+| 5 | Exact recon on locked decision fields | Yes |
+| 6 | Build-time independence + repair-time never-copy | Yes |
+| 7 | Snapshot / lineage fields present and aligned | Yes |
+| 8 | Plumbing adaptations disclosed | Yes |
+| 9 | Simulation / release ceiling honored when applicable | Yes |
 
 ## 7. Exact reconciliation
 
 ### What must be compared
 
-The reconciliation must compare more than the final KPI percentage.
+Reconciliation compares **R-A against R-B**, not the SQL source extract against a judged table.
+
+The reconciliation must compare more than a final percentage or summary count.
 
 #### Structure
 
 - Required column names
-- Data types
+- Data types where comparison-critical
 - Grain
 - Number of rows
-- Key uniqueness
+- Key uniqueness or locked duplicate behavior
 
 #### Entity coverage
 
-- Keys appearing only in SQL A
-- Keys appearing only in R(B)
+- Keys appearing only in R-A
+- Keys appearing only in R-B
 - Keys appearing in both
 
-#### KPI components
+#### Decision components
 
-For every seller or analytical entity:
+For every analytical entity, compare all Stage 3 reconciliation-critical fields, such as:
 
-- eligible denominator;
-- late numerator;
-- secondary numerator if applicable;
-- volume-floor status;
-- and final rate.
+- window inclusion;
+- open/state classification;
+- eligibility;
+- exclusion reason when locked;
+- numerator;
+- denominator;
+- primary metric;
+- threshold status;
+- membership;
+- action;
+- selected/capacity outcome;
+- and required audit/twin/persistence fields.
 
-#### Global control totals
+### Global control totals
 
-- Total eligible seller-orders
-- Total late seller-orders
-- Total sellers
-- Sellers passing the volume floor
-- Date-based late count
-- Timestamp-based late count
+Global controls should mirror the locked design and may include:
+
+- total analytical entities;
+- total eligible entities;
+- total event counts;
+- total denominators;
+- action counts;
+- selected counts;
+- inconclusive counts;
+- and any required segment totals.
 
 ### Exactness standard
 
-For identifiers, counts, logical flags, and eligibility classifications, exact means exact.
+For identifiers, counts, logical flags, action codes, membership, selected state, and eligibility classifications, exact means exact.
 
 There should be:
 
 - zero unmatched keys;
-- zero numerator differences;
-- zero denominator differences;
-- zero eligibility differences;
-- and zero volume-floor differences.
+- zero classification differences;
+- zero action differences;
+- zero selected differences;
+- and zero count-component differences.
 
-Rates should be compared using unrounded underlying values.
+Rates or continuous values should be compared using unrounded underlying values and a predetermined machine-level tolerance only when representation differences make that necessary.
 
-Because SQL and R can represent floating-point values differently, the comparison may use a very small, predetermined numerical tolerance. This is not permission to ignore meaningful differences.
-
-The proper rule is:
-
-- compare counts exactly;
-- compare classifications exactly;
-- compare rates using unrounded values and a defined machine-level tolerance;
-- round only for presentation.
-
-Two rates that both display as `7.6%` are not reconciled if their underlying numerators or denominators differ.
+Two displayed values that round to the same number are not reconciled if their underlying components differ.
 
 ### Reconciliation output
 
@@ -555,19 +604,22 @@ The reconciliation process should mechanically generate a report containing:
 - pass/fail status;
 - table-level row-count comparison;
 - unmatched-key count;
+- duplicate-key failure count when uniqueness is expected;
 - differing-row count;
 - differing-column count;
-- maximum numerical difference;
+- action mismatch count;
+- selected mismatch count;
+- maximum permitted numerical difference where applicable;
 - global-control-total comparison;
 - and a mismatch table when differences exist.
 
-It should not depend on an AI visually inspecting two spreadsheets and deciding that they look the same.
+It should not depend on an AI visually inspecting two spreadsheets and deciding they look the same.
 
 ## 8. What happens if reconciliation fails
 
-A mismatch does not immediately establish which implementation is wrong.
+A mismatch does not establish which implementation is wrong.
 
-SQL A could be wrong. SQL B could be wrong. R(B) could be wrong. The reconciliation code itself could also be comparing the outputs incorrectly.
+R-A could be wrong. R-B could be wrong. The reconciliation code could be wrong. A shared source-delivery defect could also be involved.
 
 The system must not automatically treat one path as the answer key.
 
@@ -576,105 +628,121 @@ The system must not automatically treat one path as the answer key.
 Common categories include:
 
 - different key sets;
-- different population filters;
-- grain duplication;
-- join loss;
+- different window filters;
+- duplicate treatment;
+- grain changes;
 - date-boundary handling;
 - timezone conversion;
-- null handling;
+- null / `NA` handling;
 - date-versus-timestamp logic;
 - denominator eligibility;
 - threshold handling;
 - aggregation order;
 - integer-versus-floating arithmetic;
+- source-delivery loss;
 - or comparison-format problems.
 
 ### Failure-investigation responsibilities
 
 #### AI 1
 
-AI 1 reviews SQL A against the locked design, mismatch keys, and its audit counts. It explains how SQL A produced the disputed rows without initially assuming SQL B or R is correct.
+AI 1 reviews R-A against the locked design, mismatch keys, fixtures, and intermediate audit counts. It explains how R-A produced the disputed rows without assuming R-B is correct.
 
 #### AI 2
 
-AI 2 reviews SQL B against the locked design, extraction counts, source-row examples, and disputed keys. It determines whether records were duplicated, removed, or transformed incorrectly.
+AI 2 reviews the SQL source delivery and Source Gate against raw source evidence. It determines whether shared input rows were lost, duplicated, transformed, or misidentified.
 
 #### AI 3
 
-AI 3 reviews the R transformations, reconciliation code, data types, grouping, date conversion, and disputed rows.
+AI 3 reviews R-B against the locked design, mismatch keys, fixtures, data types, grouping, date conversion, and intermediate audit counts without assuming R-A is correct.
 
 ### Evidence-based resolution
 
-After the independent diagnoses, the AIs may see one another's explanations and challenge them.
+After independent diagnoses, the AIs may see one another's explanations and challenge them.
 
-The mismatch is resolved using:
+Resolve mismatches using:
 
 - row-level source evidence;
+- Source Gate evidence;
 - intermediate counts;
+- frozen fixtures;
 - the locked specification;
 - and reproducible calculations.
 
-It is not resolved by a two-to-one vote.
+Do not resolve by two-to-one vote.
 
 ### Rerun rule
 
 After any material correction:
 
-1. Rebuild the affected output from the source.
-2. Rerun all integrity checks.
-3. Rerun the complete reconciliation.
-4. Create a new reconciliation report.
-5. Preserve the earlier failed report for the audit trail.
+1. Rebuild the affected output from its authorized source.
+2. Rerun relevant integrity checks.
+3. Rerun fixtures when judged logic changed.
+4. Rerun the complete reconciliation.
+5. Create a new reconciliation report.
+6. Preserve the earlier failed report for the audit trail.
 
-Manual edits to a result table are prohibited. A correction must be made in the SQL or R code and reproduced.
+If the SQL source package changes, rerun the Source Gate and rebuild **both** R paths from the new frozen source package.
 
-**Never-copy (repair-time):** Never copy the other path’s selected-ID / ENROLL / membership-YES list into a failing implementation to force a match; repair toward the locked Stage 3 design and re-run. Never invent pad membership. Log root-cause class (translation vs plumbing vs shared design vs recon).
-
-**Independence (build-time):** Dual paths must not have shared a judged ID list as a build input in the first place; recon remains the sole authorized cross-path compare (§6A).
+Manual edits to result tables are prohibited.
 
 ## 9. Cross-review after reconciliation
 
 ### Why cross-review is separate
 
-Suppose SQL A and R(B) match exactly. That is strong evidence that the two paths produced the same answer. It does not prove that the shared answer is structurally safe.
+Suppose R-A and R-B match exactly.
 
-Both paths might still contain:
+That is strong evidence that two independent R implementations translated the locked design to the same result. It still does not prove that the shared answer is structurally safe.
 
-- the same interpretation of an ambiguous filter;
-- a join that happens not to duplicate rows in the current dataset;
-- a date conversion that fails only under another timezone;
-- a null case absent from the current data;
-- or a threshold error that happens not to affect any current entity.
+Both paths might still share:
 
-Reconciliation tests actual agreement on the present data. Cross-review looks for weaknesses that may not have produced an observed difference.
+- the same misunderstanding of an ambiguous Stage 3 rule;
+- the same mistaken assumption about a source field;
+- the same date interpretation;
+- a shared-source defect not caught by an inadequate Source Gate;
+- a null case absent from current data;
+- or a threshold error that happens not to affect current entities.
+
+Reconciliation tests observed agreement. Cross-review looks for weaknesses that may not have produced an observed difference.
 
 ### Cross-review assignments
 
 Once reconciliation passes, the information barriers are removed.
 
-| Reviewer | Artifacts reviewed |
+| Reviewer | Primary artifacts reviewed |
 |---|---|
-| AI 1 | SQL B and the R(B) wrangling |
-| AI 2 | SQL A and the R(B) wrangling |
-| AI 3 | SQL A and SQL B |
+| AI 1 | R-B + SQL Source Gate / source-delivery assumptions |
+| AI 2 | R-A + R-B, especially judged-logic leakage from the common source |
+| AI 3 | R-A + SQL Source Gate / source-delivery assumptions |
 
-Each AI primarily reviews work it did not originally author.
+Each judged implementation must receive meaningful review from an AI that did not author it.
 
 ### Cross-review checklist
 
 #### Compliance with the locked design
 
-- Does the code implement every locked rule?
+- Does each R path implement every locked rule?
 - Was anything added, omitted, or reinterpreted?
+- Did either path rely on a field that already encoded the answer?
 - Are primary and secondary metrics correctly distinguished?
-- Is the volume floor applied at the correct stage?
+- Are thresholds and floors applied at the correct stage?
 
-#### Grain
+#### Source delivery
+
+- Is the SQL extract genuinely nonjudgmental?
+- Were required raw fields retained?
+- Did a mechanical envelope become an analytical filter by accident?
+- Were source joins cardinality-safe?
+- Were critical values preserved?
+- Does the Source Gate validate multiplicity as well as ID presence?
+
+#### Grain and identity
 
 - Is each intermediate table at its declared grain?
-- Can an order or seller-order appear more than once?
-- Is deduplication legitimate, or does it conceal a join problem?
-- Is aggregation occurring before all required dimensions are available?
+- Are repeated business IDs legitimate or accidental?
+- Is deduplication explicitly authorized?
+- Could aggregation hide duplicate records?
+- Is entity identity handled consistently across both R paths?
 
 #### Joins
 
@@ -683,59 +751,49 @@ Each AI primarily reviews work it did not originally author.
 - Could an inner join remove valid population members?
 - Could a left join create missing attributes?
 - Could future duplicate lookup keys multiply records?
-- Are join assertions present?
+- Are join assertions present where needed?
 
 #### Dates and time
 
 - Are timestamps parsed consistently?
-- Is the lower boundary inclusive?
-- Is the upper boundary exclusive?
-- Is date-based lateness distinguished from timestamp comparison?
-- Could timezone conversion change the calendar date?
+- Is the lower boundary inclusive when locked?
+- Is the upper boundary exclusive when locked?
+- Could timezone conversion alter the calendar date?
 - Are missing or invalid timestamps handled explicitly?
 
 #### Missing values
 
 - Are missing values excluded, retained, or classified according to the design?
-- Could a missing comparison return `FALSE` and be counted as on time?
-- Are missing entity identifiers possible?
+- Could a missing comparison become `FALSE` and be counted as a valid negative?
+- Are missing identifiers possible?
 - Does a missing lookup value remove an otherwise valid observation?
 
 #### Boundary conditions
 
-For a seller late-fulfillment analysis, reviewers should inspect cases such as:
+Reviewers should inspect design-specific cases such as:
 
-- purchase exactly at the start boundary;
-- purchase exactly at the end boundary;
-- actual and estimated delivery on the same date but at different times;
-- actual delivery one day after the estimate;
-- either delivery timestamp missing;
-- seller with 29 eligible seller-orders;
-- seller with exactly 30;
-- seller with 31;
-- one order containing multiple items from the same seller;
-- one order containing items from multiple sellers.
+- observation exactly at the start boundary;
+- observation exactly at the end boundary;
+- missing critical timestamps;
+- duplicate identifiers;
+- threshold values immediately below, exactly at, and immediately above a cutoff;
+- zero-denominator or zero-event entities when relevant;
+- capacity boundaries when relevant;
+- and conflicting twin / secondary evidence when relevant.
 
 #### Reproducibility
 
 - Are package versions or environment requirements recorded?
 - Are transformations deterministic?
 - Are intermediate outputs generated from code?
-- Can another analyst rerun the entire process?
+- Can another analyst rerun the process?
+- Can the exact source snapshot be recovered or identified?
 
 ### Counterexample testing
 
 Cross-review should not be limited to reading code.
 
-Reviewers can construct small synthetic test cases representing dangerous boundaries, such as:
-
-- a seller-order with two item rows;
-- a null actual-delivery timestamp;
-- a same-day late timestamp;
-- an observation exactly at the upper window boundary;
-- and sellers at denominators 29, 30, and 31.
-
-The expected result is derived directly from the locked specification. SQL and R are then tested against those cases. This exposes defects that the production data may not currently contain.
+Reviewers should construct or reuse frozen synthetic cases representing dangerous boundaries. Expected results must come from the locked specification, not from whichever R implementation currently passes.
 
 ### Cross-review finding format
 
@@ -754,24 +812,21 @@ Every finding should contain:
 - Resolution
 - Retest result
 
-Suggested severity categories are:
+Suggested severity categories:
 
-- **Blocking:** Could change the population, grain, KPI, or decision.
+- **Blocking:** Could change the population, grain, KPI, action, membership, or decision.
 - **Material:** Could change a meaningful subset or make future reruns unreliable.
-- **Minor:** Readability, maintainability, or performance issue without a credible effect on the result.
+- **Minor:** Readability, maintainability, or performance issue without a credible result effect.
 
 ### Resolving cross-review findings
-
-No issue should be closed merely because the original author disagrees.
-
-The process is:
 
 1. Reviewer records the finding.
 2. Author responds with evidence.
 3. Code is corrected if necessary.
 4. A different AI verifies the correction.
-5. Any data-construction change triggers a new reconciliation.
-6. The finding is marked resolved, accepted limitation, or unresolved.
+5. Any source-delivery change triggers Source Gate rerun plus rebuild of both judged paths.
+6. Any judged-construction change triggers fixture rerun and exact reconciliation.
+7. The finding is marked resolved, accepted limitation, or unresolved.
 
 If a reviewer discovers a problem in the locked measurement design itself, the AI must escalate it. The AIs cannot silently rewrite the design.
 
@@ -779,22 +834,23 @@ If a reviewer discovers a problem in the locked measurement design itself, the A
 
 The process moves forward only when:
 
-- exact reconciliation still passes;
+- SQL Source Gate still passes;
+- Fixture Gate still passes;
+- exact R-A / R-B reconciliation still passes;
 - no blocking structural issue remains;
 - no material issue remains unresolved;
 - accepted limitations are documented;
-- and all required corrections have been independently verified.
-
-Cross-review is the quality-control bridge between data construction and deeper analysis.
+- and required corrections have been independently verified.
 
 ## 10. Freeze the validated analytical data
 
-Once reconciliation and cross-review pass, the validated data should receive a stable version.
+Once the SQL Source Gate, Fixture Gate, reconciliation, and cross-review pass, the validated data should receive a stable version.
 
 Otherwise, deeper analysis could unknowingly use:
 
-- a newly refreshed extract;
-- a changed query;
+- a refreshed source extract;
+- a changed SQL source query;
+- a changed R implementation;
 - a manually edited CSV;
 - or a differently filtered dataset.
 
@@ -802,22 +858,23 @@ The frozen package should include:
 
 - validated analytical dataset;
 - row count;
-- key-uniqueness results;
-- **`snapshot_id`** (or locked equivalent freeze identity);
-- **`source_version`** (or locked equivalent);
-- **extraction** time and/or locked observation-boundary equivalent;
-- source extraction provenance notes;
-- SQL A version;
-- SQL B version;
-- R(B) version;
-- reconciliation report;
+- key-uniqueness or duplicate-profile results;
+- `snapshot_id` or locked equivalent;
+- `source_version` or locked equivalent;
+- extraction time and/or locked observation boundary;
+- source-delivery provenance notes;
+- SQL source script version;
+- SQL Source Gate report;
+- R-A version;
+- R-B version;
+- Fixture Gate freeze identity and results;
+- reconciliation script and report;
 - cross-review register;
-- Fixture Gate freeze identity (path + content hash / freeze timestamp) when fixtures were used;
-- simulation / non-live release labels when the pack is a simulation capacity run;
+- simulation / non-live release labels when applicable;
 - dual-path independence + never-copy attestations;
 - and a dataset hash where feasible.
 
-Blank / PENDING lineage fields fail freeze. Dual-path `snapshot_id` (and source/extraction equivalents) must align before the freeze is treated as Stage-4-green.
+Blank or `PENDING` lineage fields fail freeze.
 
 ### The boundary of validation
 
@@ -832,19 +889,23 @@ If deeper R analysis introduces:
 - a new time window;
 - or new feature engineering,
 
-those additions are not automatically validated by the earlier KPI reconciliation. They require a smaller validation cycle appropriate to the new material.
-
-For example, if customer-review data is added during deeper analysis, earlier validation of orders, items, and sellers does not prove that the review join is correct.
+those additions are not automatically validated by the earlier R-A / R-B reconciliation. They require a smaller validation cycle appropriate to the new material.
 
 ## 11. Deeper R analysis
 
-Stage 4 R execution (deeper analysis after the validation gate, and optionally the R(B) rebuild path when a full modular report script is appropriate) may use [docs/ENGINE.md](ENGINE.md) — the one-file R Workflow Engine prompt (thin CONFIG, nine stage functions, Prep / Analyze / Expand / Assure / Publish). It is an optional execution aid, not a substitute for the locked measurement design or the dual-path validation gate.
+[docs/ENGINE.md](ENGINE.md) may be used after the validation gate as an optional execution aid for deeper R analysis and reporting.
+
+It is **not** the default generator for both independent validation builders.
+
+Do not generate R-A and R-B from one common ENGINE.md-produced implementation, shared function library, or common judged-code template. That would weaken meaningful independence.
+
+ENGINE.md may guide general owner-familiar coding conventions if it does not transmit substantive judged logic from one builder to the other, but the safest default is to reserve it for post-validation analysis.
 
 ### R's role changes
 
-Before the validation gate, R serves as the second computational clerk. Its job is to independently rebuild the core KPI.
+Before the validation gate, R is the duplicated judged implementation layer: R-A and R-B independently build the core validated result.
 
-After the gate, R becomes the primary analytical engine. It can perform work SQL A was never intended to reproduce:
+After the gate, R becomes the primary analytical engine for work that does not need to be duplicated end-to-end, including:
 
 - Descriptive analysis
 - Distribution analysis
@@ -858,7 +919,7 @@ After the gate, R becomes the primary analytical engine. It can perform work SQL
 - Interpretation
 - Decision support
 
-### Do not begin with code
+### Do not begin deeper analysis with code
 
 Before AI 1 writes the deeper R project, it should create an analysis plan specifying:
 
@@ -895,7 +956,7 @@ AI 1 becomes the primary builder. Its responsibilities include:
 
 AI 1 owns the coherent primary pipeline.
 
-This is more useful than having all three AIs produce three complete R projects. Three full projects create unnecessary duplication, difficult comparison problems, inconsistent outputs, and substantial review overhead.
+This is more useful than having all three AIs produce three complete deeper-analysis projects. The dual-build requirement applies to the core Stage 4 judged result; deeper analysis uses targeted independent verification instead of triplicating the entire project.
 
 ### AI 2: Methodological and statistical critic
 
@@ -941,7 +1002,7 @@ AI 2 evaluates whether the analysis is conceptually and statistically defensible
 - Is rolling-origin validation used where appropriate?
 - Are seasonality and trend handled?
 - Are prediction intervals reported?
-- Is the forecast compared with a naïve baseline?
+- Is the forecast compared with a naive baseline?
 
 #### Interpretation
 
@@ -949,7 +1010,7 @@ AI 2 evaluates whether the analysis is conceptually and statistically defensible
 - Are limitations material to the recommendation disclosed?
 - Does the method actually answer the locked analytical question?
 
-AI 2 can reject a method even if the code executes perfectly. A correctly calculated 82.4% accuracy is still not useful if accuracy is the wrong metric.
+AI 2 can reject a method even if the code executes perfectly.
 
 ### AI 3: Code and data implementation critic
 
@@ -1052,7 +1113,7 @@ AI 3 separately checks:
 
 These are different checks:
 
-- AI 2 asks whether 82.4% is calculated correctly and is methodologically meaningful.
+- AI 2 asks whether the reported result is calculated correctly and methodologically meaningful.
 - AI 3 asks whether the pipeline genuinely produced a valid held-out prediction set.
 
 ### Targeted reproduction protocol
@@ -1067,7 +1128,7 @@ For each critical result:
 6. Investigate any difference.
 7. Preserve the check as an artifact.
 
-The reviewer should calculate from the underlying data or saved predictions, not copy the value from AI 1's summary table.
+The reviewer should calculate from underlying data or saved predictions, not copy the value from AI 1's summary table.
 
 ## 14. Review loop for deeper analysis
 
@@ -1089,18 +1150,6 @@ If a change is required, AI 1 modifies the analysis and reruns affected outputs.
 ### Verification round
 
 The original reviewer verifies the correction. For important changes, the other reviewer also checks for downstream consequences.
-
-For example, changing the train/test split may affect:
-
-- feature preprocessing;
-- tuning;
-- model selection;
-- evaluation metrics;
-- calibration;
-- feature importance;
-- and the final recommendation.
-
-The process must not correct the split while leaving obsolete model results elsewhere in the report.
 
 ### No voting rule
 
@@ -1167,7 +1216,7 @@ AI 3 verifies:
 - that every number in the narrative matches an approved output;
 - that segment labels are correct;
 - that chart values match tables;
-- that model metrics come from the held-out set;
+- that model metrics come from the held-out set when applicable;
 - and that the recommendation uses the correct validated population.
 
 ### Claim-to-evidence ledger
@@ -1176,9 +1225,9 @@ Every important final claim should be linked to its source dataset, calculation,
 
 | Final claim | Evidence | Independent check | Limitation |
 |---|---|---|---|
-| High-risk sellers materially exceed the marketplace baseline | Approved seller KPI table | Recomputed segment contrast | Descriptive, not causal |
-| Model accuracy is 82.4% | Held-out predictions | AI 2 independent calculation | Accuracy may conceal minority-class errors |
-| Enrollment is recommended for specified sellers | Decision-rule table | AI 3 rule trace | Depends on the approved volume floor |
+| Priority group materially exceeds the locked comparison | Validated judged table | Recomputed contrast | Descriptive unless causal design exists |
+| Model accuracy is 82.4% | Held-out predictions | Independent calculation | Accuracy may conceal minority-class errors |
+| Action is recommended for specified entities | Validated action table | Rule trace | Depends on locked thresholds and population |
 
 ### Final decision standard
 
@@ -1200,18 +1249,21 @@ The executive output can ultimately be compressed into three decision bullets, o
 | Locked measurement design | Controlling analytical specification |
 | Database context | Tables, keys, relationships, and SQL constraints |
 | Data profile | Counts, missingness, ranges, and distributions |
-| SQL A | Direct final-KPI implementation |
-| SQL A output | First final KPI table |
-| SQL B | Independent lower-grain extraction |
-| SQL B output | Data supplied to R(B) |
-| R(B) script | Independent KPI reconstruction |
-| R(B) output | Second final KPI table |
-| Reconciliation script | Mechanical comparison |
-| Reconciliation report | Evidence that the core KPI matches |
-| Cross-review reports | Structural critique of SQL and R |
+| Controlled SQL source script | Thin, nonjudgmental source delivery |
+| SQL source extract | Shared verified input supplied to R-A and R-B |
+| SQL Source Gate report | Evidence that delivery matches the authorized raw source |
+| Source-delivery manifest | Snapshot, lineage, row counts, fields, and transformations |
+| Frozen fixture pack | Pre-build known-case authority |
+| R-A script | First independent judged implementation |
+| R-A output | First judged analytical table |
+| R-B script | Second independent judged implementation |
+| R-B output | Second judged analytical table |
+| Reconciliation script | Mechanical R-A versus R-B comparison |
+| Reconciliation report | Evidence that the judged outputs match exactly |
+| Cross-review reports | Structural critique of source and both R paths |
 | Issue register | Findings, responses, corrections, and dispositions |
 | Validated-data manifest | Version, counts, provenance, and hashes |
-| Deeper R analysis | Main analytical pipeline |
+| Deeper R analysis | Main post-validation analytical pipeline |
 | Methodological review | Statistical and inferential critique |
 | Implementation review | R code and data-integrity critique |
 | Critical-result checks | Independent reproduction of key outputs |
@@ -1223,52 +1275,60 @@ The executive output can ultimately be compressed into three decision bullets, o
 | Gate | What passing establishes | What it does not establish |
 |---|---|---|
 | Measurement design locked | Everyone is implementing the same specification | The specification is necessarily the best business definition |
-| SQL A versus R(B) match | Independent paths produced the same core KPI table | Both paths are safe under unobserved conditions |
+| SQL Source Gate passes | Shared R input faithfully satisfies the authorized source-delivery contract | The Stage 3 judged logic is correct |
+| Fixture Gate passes | Both judged paths handle frozen known cases as specified | Production data contains no untested edge case |
+| R-A versus R-B match | Independent judged paths produced the same locked result on the frozen source | Both paths cannot share a conceptual misunderstanding |
 | Cross-review passes | No unresolved material structural defect was found | Every future data change will remain valid |
 | Deeper-analysis review passes | Method and implementation are defensible | Predictions will remain accurate indefinitely |
-| Critical results reproduce | Key reported values are computationally supported | The interpretation is automatically causal |
+| Critical results reproduce | Key reported values are computationally supported | Interpretation is automatically causal |
 | Interpretation review passes | Recommendation is traceable to evidence and decision rules | The business action is risk-free |
 
-### Validation Gate Pass ceiling (simulation)
+### Validation Gate Pass ceiling for simulation
 
-When the validated pack is labeled simulation-only / non-live:
+When the validated pack is simulation-only / non-live:
 
 | Passing establishes | Passing does not establish |
 |---|---|
-| Independent outputs satisfied the specified reconciliation and frozen-fixture checks on that simulation pack | Live enrollment / operational release authority; that both paths cannot share an untested translation mistake |
-| Stage 5 may interpret that labeled pack | That the roster is current for live occupancy; exhaustive detection of every translation miss |
+| Source delivery, fixtures, judged-path reconciliation, and structural review passed for the labeled simulation pack | Live operational release authority |
+| Stage 5 may interpret that labeled pack | That the roster is current for live occupancy or that all shared-design error is impossible |
 
-Live release remains a separate owner decision after current data, real occupancy, and operational prerequisites (§6A Simulation / release block). Pass does not prove causal proof or erase correlated shared-design error.
+Live release remains a separate owner decision after current data and operational prerequisites.
 
 ## 18. Complete operating sequence
 
-1. Lock what must be measured.
-2. Give the same specification to three independent AIs.
-2a. Confirm Spec→builder translation packet is **packet-complete** for all locked gates; Fixture Gate freeze identity recorded **before builders run**; dual-path independence attested. Each path attests its own contract (SQL B: source grain/fields; SQL A and R(B): judged decision logic).
-2b. Each builder records §6A **pre-build commitments** (persistence / dual-clock / universe / membership-first / no-pad / non-enroll as applicable to that path’s contract; lineage; independence) **before implementation or execution begins**.
-3. Have AI 1 construct the final KPI directly in SQL.
-4. Have AI 2 construct a lower-grain dataset through a separate SQL path.
-5. Have AI 3 independently rebuild the KPI in R.
-6. Reconcile SQL A against R(B).
-6a. Score frozen known-case fixtures; fixture Fail or post-fail rewrite blocks Pass. Diagnostic comparison may occur earlier; it is not an authorized reconciliation Pass.
-6b. Confirm lineage freeze fields present and aligned (mandatory for recon-green); confirm simulation / non-live labels when applicable (Pass ≠ live enrollment). Record executed attestations before claiming Pass.
-7. If they differ, diagnose the mismatch without treating either path as automatically correct.
-8. Correct the responsible implementation and rerun the full reconciliation.
-9. After a match, remove the information barriers.
-10. Cross-review the SQL and R implementations for hidden structural weaknesses.
-11. Resolve every material finding through evidence, not voting.
-12. Rerun reconciliation after any construction change.
-13. Freeze the validated analytical data.
-14. Use AI 1 to build the deeper R analysis.
-15. Use AI 2 to review the methodology.
-16. Use AI 3 to review the code and data implementation.
-17. Independently reproduce the critical results that support the decision.
-18. Correct and revalidate any analytical defects.
-19. Trace every final claim to an approved analytical output.
-20. Produce the interpretation, decision evaluation, and recommendation.
+1. Lock what must be measured in Stage 3.
+2. Freeze the known-case fixture pack before builders run.
+3. Record source snapshot, lineage, schema, and source-delivery contract.
+4. Have AI 2 construct the thin, nonjudgmental controlled SQL source delivery.
+5. Run the SQL Source Gate against the authorized raw source.
+6. If the Source Gate fails, repair source delivery and rerun it before downstream validation proceeds.
+7. Freeze the verified source package.
+8. Give the same locked Stage 3 specification, verified source package, fixture pack, and output contract to AI 1 and AI 3 separately.
+9. Have AI 1 build R-A independently.
+10. Have AI 3 build R-B independently.
+11. Preserve information barriers until both first-pass judged outputs are frozen.
+12. Score frozen known-case fixtures against both judged paths.
+13. If either fixture path fails, repair toward locked Stage 3; do not rewrite the failed fixture to force a pass.
+14. Reconcile R-A against R-B mechanically on all locked decision-critical fields.
+15. If they differ, diagnose without treating either path as automatically correct.
+16. Check whether the disagreement originates in R-A, R-B, reconciliation code, or the common source-delivery layer.
+17. Correct code, rebuild from source, rerun affected gates, and preserve failed reports.
+18. After exact reconciliation, remove the information barriers.
+19. Cross-review both R implementations and the SQL Source Gate for hidden structural weaknesses.
+20. Resolve every material finding through evidence, not voting.
+21. Rerun the Source Gate if source delivery changes.
+22. Rerun fixtures and reconciliation if judged construction changes.
+23. Freeze the validated analytical data and complete the validation manifest.
+24. Use AI 1 to build deeper R analysis when needed.
+25. Use AI 2 to review methodology.
+26. Use AI 3 to review code and data implementation.
+27. Independently reproduce critical post-validation results that support the decision.
+28. Correct and revalidate analytical defects.
+29. Trace every final claim to an approved analytical output.
+30. Produce the interpretation, decision evaluation, and recommendation.
 
 The core philosophy is:
 
-> **Independent construction before agreement, adversarial review after agreement, specialized review during deeper analysis, and evidence-based resolution throughout.**
+> **Faithful source delivery first, independent judged construction before agreement, exact reconciliation before trust, adversarial review after agreement, specialized review during deeper analysis, and evidence-based resolution throughout.**
 
-That is what turns three AIs from three potentially redundant code generators into a controlled analytical validation system.
+That is what turns three AIs from potentially redundant code generators into a controlled analytical validation system while keeping the substantive validation code in an R/tidyverse style the human analyst can personally inspect and audit.
