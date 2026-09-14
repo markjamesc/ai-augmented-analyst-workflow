@@ -57,3 +57,8 @@ SQL, R, Tidyverse, interpretable statistical modeling, Excel reporting and autom
 - [LinkedIn](https://www.linkedin.com/in/mark-ciganovic/)
 - [GitHub](https://github.com/markjamesc/)
 
+## Copyright and use
+
+Copyright © 2026 Mark Ciganovic. All rights reserved.
+
+This repository is not open source and does not grant permission to copy, distribute, modify, or incorporate its protected materials without prior written permission, except as permitted by applicable law and GitHub's Terms of Service. See [COPYRIGHT.md](COPYRIGHT.md) for the full notice.
