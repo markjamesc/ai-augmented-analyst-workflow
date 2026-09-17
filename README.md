@@ -48,6 +48,22 @@ One-pager: [docs/PACKET.md](docs/PACKET.md).
 
 Together, these documents specify the complete path from an initial stakeholder request to a validated, evidence-traceable decision, with deterministic checks that required procedural controls were not skipped or bypassed.
 
+## Framework refinement
+
+The five-stage workflow is the production analytical method. Proposed reusable changes to Stage 3 or Stage 4 are tested separately through a fully automated **three-model separation-of-duties ablation protocol** using ChatGPT, DeepSeek, and Grok in rotating Builder, Validator, and Adjudicator roles.
+
+The refinement layer uses a frozen constitution, blind first-pass Builder/Validator outputs, deterministic artifact hashing, and three terminal states: `KEEP`, `REVERT`, and `HALT`.
+
+See:
+
+- [Framework Refinement Overview](docs/framework-refinement/README.md)
+- [Three-Model Ablation Protocol](docs/framework-refinement/three-model-ablation-protocol.md)
+- [Ablation Constitution](docs/framework-refinement/ablation-constitution.md)
+- [Role Rotation](docs/framework-refinement/role-rotation.md)
+- [Framework Ablation Experiments](experiments/framework-ablation/README.md)
+
+A retained ablation may update the canonical Stage 3 and/or Stage 4 framework. Individual projects do not run the ablation layer as a sixth stage; they use the current canonical workflow version.
+
 ## Worked case studies
 
 | Project | Decision supported | Evidence |
