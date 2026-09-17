@@ -14,9 +14,24 @@ The objective is not merely faster reporting. It is better decisions grounded in
 flowchart LR
     A["Start and frame"] --> B["Design measurement"]
     B --> C["Execute and validate"]
-    C --> D["Interpret evidence"]
+    C --> G["R workflow gate"]
+    G -->|"PASS"| D["Interpret evidence"]
+    G -->|"FAIL"| C
     D --> E["Recommend action"]
 ```
+
+## Deterministic workflow enforcement
+
+The five-stage method now includes a separate **R Workflow Gate** that verifies that the required procedure was actually followed before Stage 5 begins.
+
+This is distinct from Stage 4 analytical validation:
+
+- **Stage 4 R-A / R-B reconciliation** asks whether the independent analytical implementations agree exactly on the locked judged logic.
+- **The R Workflow Gate** asks whether the project completed the required stage locks, used the correct Stage 3 design version, passed fixtures and validation, and has zero unresolved validation failures.
+
+The gate does not redesign the analysis or repair failed outputs. It reads machine-readable stage receipts and returns `PASS` or `FAIL`. Stage 5 is blocked unless the gate passes.
+
+See [R Workflow Gate — Cross-Stage Procedural Enforcement](docs/r-workflow-gate-enforcement.md) and the executable script at [workflow-gate/workflow_gate.R](workflow-gate/workflow_gate.R).
 
 ## Packet index (stages 1–5)
 
@@ -26,11 +41,12 @@ flowchart LR
 | 3 Measurement Design | [three-ai-measurement-design-framework.md](docs/three-ai-measurement-design-framework.md) |
 | 4 Execution, Validation, and Deeper Analysis | [three-ai-validation-and-analysis-framework.md](docs/three-ai-validation-and-analysis-framework.md) |
 | 4 R execution prompt (optional) | [ENGINE.md](docs/ENGINE.md) — one-file tidyverse R Workflow Engine under Stage 4 |
+| Cross-stage procedural enforcement | [r-workflow-gate-enforcement.md](docs/r-workflow-gate-enforcement.md) |
 | 5 Interpretation and Recommendation | [three-ai-interpretation-and-recommendation-framework.md](docs/three-ai-interpretation-and-recommendation-framework.md) |
 
 One-pager: [docs/PACKET.md](docs/PACKET.md).
 
-Together, these documents specify the complete path from an initial stakeholder request to a validated, evidence-traceable decision.
+Together, these documents specify the complete path from an initial stakeholder request to a validated, evidence-traceable decision, with deterministic checks that required procedural controls were not skipped or bypassed.
 
 ## Worked case studies
 
@@ -41,7 +57,7 @@ Together, these documents specify the complete path from an initial stakeholder 
 
 [FulfillIQ V1](https://github.com/markjamesc/fulfilliq) remains the historical baseline. V2 is the current worked example.
 
-The workflow repository explains the method; the case-study repositories show the method applied.
+The workflow repository explains the method; the case-study repositories show the method applied. The R Workflow Gate is intended for prospective use on new projects rather than retrofitting historical case studies merely for conformity.
 
 ## Portfolio files
 
@@ -50,7 +66,7 @@ The workflow repository explains the method; the case-study repositories show th
 
 ## Technical foundation
 
-SQL, R, Tidyverse, interpretable statistical modeling, Excel reporting and automation, dashboards, and AI-assisted analytical validation.
+SQL, R, Tidyverse, interpretable statistical modeling, Excel reporting and automation, dashboards, AI-assisted analytical validation, and deterministic R-based workflow enforcement.
 
 ## Related profiles
 
