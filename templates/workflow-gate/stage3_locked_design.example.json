@@ -1,0 +1,15 @@
+{
+  "stage": 3,
+  "status": "LOCKED",
+  "design_version": "example-v1",
+  "population": "Define the observable analytical population",
+  "grain": "Define the decision grain",
+  "window_start": "YYYY-MM-DD",
+  "window_end": "YYYY-MM-DD",
+  "decision_rules": {
+    "description": "Encode the locked action or classification rules in project-specific fields"
+  },
+  "required_outputs": [
+    "List the Stage 4 reconciliation-critical output fields"
+  ]
+}

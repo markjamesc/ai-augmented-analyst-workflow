@@ -1,0 +1,12 @@
+{
+  "stage": 4,
+  "status": "PASS",
+  "design_version_used": "example-v1",
+  "sql_source_gate": "PASS",
+  "fixtures": "PASS",
+  "r_a_status": "PASS",
+  "r_b_status": "PASS",
+  "reconciliation": "PASS",
+  "validation_gate": "PASS",
+  "unresolved_issues": 0
+}
