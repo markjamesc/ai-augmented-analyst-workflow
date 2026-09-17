@@ -1332,3 +1332,9 @@ The core philosophy is:
 > **Faithful source delivery first, independent judged construction before agreement, exact reconciliation before trust, adversarial review after agreement, specialized review during deeper analysis, and evidence-based resolution throughout.**
 
 That is what turns three AIs from potentially redundant code generators into a controlled analytical validation system while keeping the substantive validation code in an R/tidyverse style the human analyst can personally inspect and audit.
+
+## Framework refinement
+
+This document is a canonical Stage 4 framework artifact. Proposed reusable changes to the execution, source-gate, fixture, reconciliation, independence, or review architecture should be evaluated through the [Three-Model Framework Ablation Protocol](framework-refinement/three-model-ablation-protocol.md), under the frozen [Ablation Constitution](framework-refinement/ablation-constitution.md).
+
+Only ablations returning `KEEP` may authorize a reusable Stage 4 framework change. Mechanical disagreement between Builder and Validator is a `HALT`, not a silent `REVERT`, so that disagreement retains its diagnostic value.
