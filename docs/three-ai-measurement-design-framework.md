@@ -1509,4 +1509,10 @@ The final governing rules are:
 
 > If Stage 4 must decide what the population, grain, KPI, threshold, or action rule means, Stage 3 is not finished.
 
+## Framework refinement
+
+This document is a canonical Stage 3 framework artifact. Proposed reusable changes to Stage 3 should not be adopted directly from a single project run. They are evaluated through the [Three-Model Framework Ablation Protocol](framework-refinement/three-model-ablation-protocol.md), under the frozen [Ablation Constitution](framework-refinement/ablation-constitution.md).
+
+Only ablations returning `KEEP` may authorize a reusable Stage 3 framework change. `REVERT` preserves the current rule. `HALT` indicates that the experiment or validation harness is not trustworthy enough to adjudicate the change.
+
 End of framework.
