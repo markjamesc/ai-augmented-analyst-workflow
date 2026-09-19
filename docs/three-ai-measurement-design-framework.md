@@ -708,6 +708,47 @@ A decision threshold is a policy choice informed by evidence. It is not automati
 - a causal effect threshold;
 - or proof that entities immediately below it are meaningfully different.
 
+
+## 17A. Predictive analytics / ML mode declaration
+
+When a project may use machine learning or predictive analytics, Stage 3 must declare an explicit mode before Design Gate Pass and Stage 4 handoff.
+
+| Mode | Meaning |
+|---|---|
+| **None** | ML / predictive scoring is unused. Default. |
+| **A — Judged predictive contract** | The locked Stage 3 decision uses model scores / predictions (threshold→action or equivalent). |
+| **B — Expand / post-validation predictive analytics** | The judged Stage 4 decision does **not** require ML; predictive work may occur only after Validation Gate freeze (and/or via ENGINE Expand) as diagnostics / support. |
+
+Record the chosen mode in the Stage 3 artifact. If unused, record **None**.
+
+### Mode A lock fields
+
+If Mode A applies, Stage 3 must freeze all of the following before builders run:
+
+- prediction unit;
+- target;
+- allowed and forbidden features;
+- leakage rules;
+- split (temporal vs random) and training window;
+- model class or parsnip family (or a locked selection rule);
+- evaluation metrics;
+- threshold→action mapping;
+- reconciliation-critical fields (actions and/or `.pred`);
+- fixtures including known prediction / action cases.
+
+These fields become part of the Spec→builder packet and the R-A / R-B judged-output / reconciliation contracts. SQL remains nonjudgmental for Mode A: features and raw fields only—no training, no predicted actions in the source extract.
+
+### Mode B constraints
+
+If Mode B applies:
+
+- The judged decision-rule contract must remain non-ML (rules or other non-ML contract).
+- Post-gate predictive work follows the Stage 4 deeper-analysis pattern and may use ENGINE Expand as a helper.
+- Predictions must not silently rewrite Validation-Gate actions.
+- Promoting predictions into the judged decision requires reopening Stage 3 under Mode A.
+
+Mode selection is a Design Gate requirement. Stage 4 frameworks define how each mode executes; Stage 3 must make the mode and Mode A lock fields unambiguous.
+
 ## 18. Measurement-risk register
 
 Every material risk receives:
@@ -856,6 +897,8 @@ flowchart TD
 
 Stage 3 does not write the Stage 4 code, but its handoff must be precise enough that this architecture can execute without making new analytical decisions.
 
+Declare the predictive analytics / ML mode (**None** / **A** / **B**) as part of this handoff. Mode A judged scoring is dual-path under the R-A / R-B contracts below; Mode B predictive work is post-validation only. See §17A.
+
 ### 20.1 Controlled SQL source contract
 
 Define exactly what SQL must deliver to R-A and R-B:
@@ -887,6 +930,7 @@ Unless Stage 3 explicitly authorizes a transformation as mechanical plumbing, SQ
 - final action;
 - final selected status;
 - final priority rank;
+- model scores, `.pred` values, or threshold→action outcomes when Mode A applies;
 - or other Stage 3 judged fields.
 
 ### 20.2 SQL Source Gate handoff requirements
@@ -928,6 +972,7 @@ Define the complete result that **both** independent R builders must construct f
 - final decision / action fields;
 - selected / capacity fields when applicable;
 - sensitivity / twin / persistence fields when locked;
+- Mode A predictive fields when locked (`.pred`, scored outputs, threshold→action results);
 - audit fields;
 - expected uniqueness or duplicate behavior;
 - and required lineage references.
@@ -1264,6 +1309,9 @@ The design passes only when all of the following are satisfied.
 - Insufficient-evidence path defined.
 - Thresholds not misrepresented as natural facts or SLAs.
 - Judged decision logic assigned to R-A / R-B rather than precomputed in SQL unless an explicit mechanical exception is justified.
+- Predictive analytics / ML mode declared as **None**, **A**, or **B** (default **None** when unused).
+- If Mode A: prediction unit, target, allowed/forbidden features, leakage rules, split and training window, model class or locked selection rule, evaluation metrics, threshold→action mapping, reconciliation-critical fields (actions and/or `.pred`), and known prediction/action fixtures are locked.
+- If Mode B: judged decision remains non-ML; post-gate predictions are diagnostics/support only and must not silently rewrite Validation-Gate actions.
 
 ### Gate 10 — Stage 4 SQL→R contract
 
@@ -1279,6 +1327,7 @@ The design passes only when all of the following are satisfied.
 - Capacity/simulation label mapping present when those gates are used.
 - Permitted SQL mechanical transformations are explicit and separated from R judged analytical logic.
 - No production SQL or R has been written in Stage 3.
+- If Mode A: SQL source contract excludes training and predicted actions; R-A / R-B independently implement the locked scoring contract (no shared ENGINE Expand paste for both judged model paths).
 
 ### Gate 11 — Review and ownership
 
@@ -1374,6 +1423,7 @@ The final Stage 3 artifact must contain:
 15. Missingness, anomaly, and data-quality rules.
 16. Sample-size and uncertainty rules.
 17. Decision rules and capacity constraints.
+17A. Predictive analytics / ML mode (None / A / B) and Mode A lock fields when applicable.
 18. Measurement-risk register.
 19. Non-executable SQL→R implementation blueprint.
 20. Controlled SQL source contract.

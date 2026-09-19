@@ -189,9 +189,11 @@ Owner does not specify every `summarize`. You write the named list of metric fun
 
 ### Expand (optional)
 
+**Mode note.** Expand is a **Mode B** helper (post-validation / diagnostic `.pred` binding). Mode A judged predictive contracts are Stage 3/4 dual-path work for R-A and R-B; do **not** paste one shared Expand implementation as both judged model paths. See the Stage 3/4 ML mode sections in the measurement-design and validation frameworks.
+
 If `CONFIG$expand` is `FALSE`, return `measured` unchanged.
 
-If `TRUE`: **tidymodels / parsnip** (not caret). Bind `.pred` (interval columns if cheap) onto **existing rows** of time-indexed frames only: `rolling` and/or `monthly`. Extra columns only. Do not `bind_rows` future periods onto those tibbles. Do not write preds onto `counts`, `rates`, `spells`, `episodes`, or `before_after`. Do not change existing Measure columns. Do not replace Measure. Do not emit a separate model product.
+If `TRUE`: **tidymodels / parsnip** (not caret). Bind `.pred` (interval columns if cheap) onto **existing rows** of time-indexed frames only: `rolling` and/or `monthly`. Extra columns only. Do not `bind_rows` future periods onto those tibbles. Do not write preds onto `counts`, `rates`, `spells`, `episodes`, or `before_after`. Do not change existing Measure columns. Do not replace Measure. Do not emit a separate model product. Do not use Expand to silently rewrite Validation-Gate actions.
 
 If `CONFIG$method` is `NULL`, you pick a simple parsnip spec (e.g. `linear_reg()` or `rand_forest()` with a default engine). Horizon from `CONFIG$horizon` (default 30) means the final `horizon` existing time rows per series are the scoring rows: fit on earlier rows and bind `.pred` only to those held-out rows; other `.pred` values remain `NA`. Horizon never creates new calendar rows.
 

@@ -13,6 +13,8 @@ Portfolio method packet for [ai-augmented-analyst-workflow](https://github.com/m
 
 **ENGINE.md** is the one-file tidyverse R prompt (thin CONFIG + nine functions + Prep / Analyze / Expand / Assure / Publish). Use it when Stage 4 needs a modular R report script; it does not replace the Stage 4 validation gate or Stages 1–3 / 5 frameworks.
 
+**ML / predictive analytics modes (None / A / B)** live in the Stage 3 measurement-design and Stage 4 validation frameworks; ENGINE Expand is a Mode B helper only.
+
 **The R Workflow Gate is separate from Stage 4 analytical validation.** Stage 4 performs SQL source validation, independent R-A / R-B judged construction, exact reconciliation, structural review, and deeper analysis. The cross-stage gate verifies that the prescribed stage locks and validation controls were actually completed using the correct Stage 3 design version before Stage 5 may begin.
 
 Executable gate: [`../workflow-gate/workflow_gate.R`](../workflow-gate/workflow_gate.R). Example machine-readable stage artifacts are in [`../templates/workflow-gate/`](../templates/workflow-gate/).

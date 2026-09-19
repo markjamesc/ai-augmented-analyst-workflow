@@ -239,6 +239,7 @@ Therefore, unless Stage 3 explicitly classifies a transformation as mechanical s
 - `selected`
 - priority rank
 - final KPI classification
+- model scores, `.pred` values, or threshold→action outcomes (Mode A judged predictive fields)
 
 If SQL begins deciding the same substantive rules that R-A and R-B are supposed to validate independently, stop and redesign the source extract.
 
@@ -444,6 +445,7 @@ R-A and R-B must independently attest to every Stage 3 decision-changing rule th
 10. Capacity and no-padding rules
 11. Non-enrolling / inconclusive actions
 12. Final action and selected logic
+13. When Mode A applies: locked prediction unit, target, features, leakage rules, split / training window, model class or selection rule, metrics, threshold→action mapping, and reconciliation-critical `.pred` / action fields
 
 No single-rule attestation is sufficient when multiple gates are locked.
 
@@ -528,6 +530,63 @@ When capacity/simulation is unused, this block is design-cited N/A.
 | 7 | Snapshot / lineage fields present and aligned | Yes |
 | 8 | Plumbing adaptations disclosed | Yes |
 | 9 | Simulation / release ceiling honored when applicable | Yes |
+
+
+## 6B. Machine learning / predictive analytics modes
+
+Stage 4 may need predictive analytics. When it does, the project must declare one of three modes so builders know whether model scores belong in the judged dual-path contract or only after the Validation Gate.
+
+| Mode | When it applies | Validation implication |
+|---|---|---|
+| **None** | No ML / predictive scoring is used for the decision or for post-gate diagnostics | Default. Ordinary dual-path validation unchanged. |
+| **A — Judged predictive contract** | The Stage 3 locked decision uses model scores / predictions (threshold→action or equivalent) | R-A and R-B independently implement the locked scoring contract. Fixture Gate + exact recon apply to actions and/or `.pred` fields locked as reconciliation-critical. |
+| **B — Expand / post-validation predictive analytics** | The Stage 4 judged decision does **not** require ML; predictions are diagnostics / support after Validation Gate freeze | Single primary builder + methodological critique + implementation critique + independent checks of critical model metrics (see §11–§13). |
+
+Stage 3 must record which mode applies before Stage 4 construction begins. Default when ML is unused: **None**.
+
+### Mode A — Judged predictive contract
+
+Use Mode A when the locked decision depends on model scores or predictions.
+
+**SQL bright line (unchanged, strengthened for ML).** The controlled SQL source remains nonjudgmental: features and raw fields only. SQL must not train models, score entities into predicted actions, or precompute threshold→action outcomes. Feature plumbing is allowed when Stage 3 classifies it as mechanical source delivery; predicted actions and trained parameters are not.
+
+**Dual-path requirement.** R-A and R-B independently implement the Stage 3 locked scoring contract from the same verified source package. Do **not** generate both judged model paths from one shared [ENGINE.md](ENGINE.md) Expand template, shared model object, shared recipe, or shared scored table. Independence of judged construction applies to predictive contracts the same way it applies to rule contracts.
+
+**Stage 3 lock fields required for Mode A** (must be frozen before builders run):
+
+- prediction unit;
+- target;
+- allowed and forbidden features;
+- leakage rules;
+- split (temporal vs random) and training window;
+- model class or parsnip family (or a locked selection rule);
+- evaluation metrics;
+- threshold→action mapping;
+- reconciliation-critical fields (actions and/or `.pred`);
+- fixtures including known prediction / action cases.
+
+**Stage 4 execution under Mode A:**
+
+1. SQL Source Gate still proves faithful feature / raw delivery only.
+2. R-A and R-B each implement training / scoring / threshold→action per the locked contract (or apply a locked pretrained scoring procedure if Stage 3 explicitly freezes that procedure).
+3. Fixture Gate scores frozen known prediction / action cases against both paths.
+4. Exact reconciliation compares all locked reconciliation-critical fields, including actions and/or `.pred` when those are locked.
+5. Cross-review looks for shared leakage, split misuse, and copied model artifacts across paths.
+
+### Mode B — Expand / post-validation predictive analytics
+
+Use Mode B when the judged Validation Gate decision is rules-based or otherwise non-ML, and predictive work is optional support afterward.
+
+- After Validation Gate freeze (and/or via [ENGINE.md](ENGINE.md) optional Expand), tidymodels / parsnip may bind `.pred` onto analysis frames as diagnostics or decision support.
+- Use the existing deeper-analysis pattern: single primary builder (AI 1) + methodological critique (AI 2) + implementation critique (AI 3) + independent checks of critical model metrics (§11–§13).
+- Predictions must **not** silently rewrite Validation-Gate actions.
+- Changing the decision so that it depends on ML requires reopening Stage 3 under **Mode A** and re-locking the judged contract.
+
+ENGINE Expand is a Mode B helper only. It is not a substitute for Mode A dual-path judged scoring.
+
+### Pointer from deeper analysis
+
+§11 lists predictive modeling among post-gate R activities. That list is the Mode B / post-validation path. Keep the predictive-modeling, forecasting, and modeling-implementation checklists in §12–§13; Mode B uses them. Mode A does not replace those checklists for post-gate work—it places judged predictive decisions under dual-path validation instead.
 
 ## 7. Exact reconciliation
 
@@ -900,6 +959,14 @@ It is **not** the default generator for both independent validation builders.
 Do not generate R-A and R-B from one common ENGINE.md-produced implementation, shared function library, or common judged-code template. That would weaken meaningful independence.
 
 ENGINE.md may guide general owner-familiar coding conventions if it does not transmit substantive judged logic from one builder to the other, but the safest default is to reserve it for post-validation analysis.
+
+### Predictive analytics mode pointer
+
+Before treating predictive modeling as ordinary deeper analysis, confirm the Stage 3 ML mode:
+
+- **None** — no ML path.
+- **Mode A** — judged predictive contract; dual-path scoring belongs in §6 / §6B, not in a single post-gate builder.
+- **Mode B** — post-validation / ENGINE Expand diagnostics; use the predictive-modeling checklists below and in §12–§13. Do not let `.pred` columns silently rewrite Validation-Gate actions.
 
 ### R's role changes
 
