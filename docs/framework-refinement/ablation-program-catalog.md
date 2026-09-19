@@ -36,6 +36,31 @@ First-cut batch after Stage 5 Finish Gate. **Limited to 8** (not 10) for this ru
 
 Chicago frozen Stage 4 packs are **never rewritten** by ablations. KEEP updates the **general** frameworks only.
 
+
+## Batch A01–A08 results (Chicago 311 Dataset 2) — COMPLETE
+
+**Adjudicated:** 2026-09-19 (America/Chicago)  
+**Headline:** **0 KEEP · 7 REVERT · 1 HALT · A09/A10 deferred**  
+**Framework edits from this batch:** **None** (no Stage 3/4 canonical rule changes).
+
+| ID | Control | Terminal | Canonical effect |
+|----|---------|----------|------------------|
+| A01 | Dual-path independence | **REVERT** | Dual-path remains |
+| A02 | Fixture Gate before builders | **HALT** | Fixture Gate remains (P1 failed; harness note — same practical outcome as REVERT) |
+| A03 | SQL nonjudgment bright line | **REVERT** | SQL nonjudgment remains |
+| A04 | SQL Source Gate vs raw | **REVERT** | Source Gate remains |
+| A05 | Single owner knob only | **REVERT** | Single knob κ remains |
+| A06 | Integrity INCONCLUSIVE vs soft residual | **REVERT** | Hard INCONCLUSIVE remains |
+| A07 | TCD-IG vs raw age | **REVERT** | TCD-IG construct remains |
+| A08 | Exact recon critical-field set | **REVERT** | Full exact recon remains |
+| A09 | Capacity Framing-only | **DEFERRED** | Not run |
+| A10 | ML Mode declaration | **DEFERRED** | Not run |
+
+Full scorecard: [BATCH_A01_A08_SCORECARD.md](BATCH_A01_A08_SCORECARD.md) · Companion narrative: [ablation-batch-A01-A08-results.md](ablation-batch-A01-A08-results.md)  
+Project evidence trees: `chicago-311-dispatch-priority` → `docs/ablations/`.
+
+**A02 note:** Official terminal is HALT on evidence-completeness; substantive finding was still not KEEP. Forward harness: when Builder/Validator agree and raw MANIFEST is present, prefer REVERT (not HALT) when only historical Rscript stdout is missing and P1 fails.
+
 ## Eventual major-control catalog — 38 rules to test
 
 These are the ablation-sized controls for a fuller program (not every checklist sentence in the docs).
@@ -98,8 +123,8 @@ Design Gate bullets #1–11, Finish Gate #1–11, and every “must” sentence 
 
 ## Post-batch sequence (planned)
 
-1. Finish current **A01–A08** (stop; do not run A09/A10 this batch).  
-2. Apply only **KEEP** edits to Stage 3/4 canonical docs; link ablation IDs.  
+1. Finish current **A01–A08** (stop; do not run A09/A10 this batch). **Done — 0 KEEP.**  
+2. Apply only **KEEP** edits to Stage 3/4 canonical docs; link ablation IDs. **N/A this batch (zero KEEP).**  
 3. Draft forward upgrades (Framing `capacity_stance`, ML Mode Design Gate fail-closed, dual-path only where judgment lives, failability ladder, evidence-package schema, Master Prompt).  
 4. Three-AI verification panel on those upgrades.  
 5. Once approved → canonical for Price Point and later projects.  
