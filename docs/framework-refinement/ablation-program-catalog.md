@@ -17,9 +17,9 @@ Each ablation stresses **one** major control. Three models rotate Builder / Inde
 
 There is **no quorum** across the slate: one KEEP authorizes that rule’s change only.
 
-## Current Chicago 311 slate (Dataset 2) — 10 controls
+## Current Chicago 311 slate (Dataset 2) — **8 controls**
 
-First-cut batch after Stage 5 Finish Gate. Band 9–11; this run uses 10.
+First-cut batch after Stage 5 Finish Gate. **Limited to 8** (not 10) for this run (data/time limits).
 
 | ID | Control | Typical target |
 |----|---------|----------------|
@@ -31,14 +31,16 @@ First-cut batch after Stage 5 Finish Gate. Band 9–11; this run uses 10.
 | A06 | Integrity-gate INCONCLUSIVE (vs soft residual) | Stage 3 |
 | A07 | Primary construct (e.g. TCD-IG vs raw age) | Stage 3 |
 | A08 | Exact recon critical-field set | Stage 3/4 |
-| A09 | Capacity/ranking Framing-only | Stage 3 (+ Framing) |
-| A10 | ML Mode None/A/B declaration | Stage 3 |
+
+**Not in this batch** (deferred): A09 capacity/ranking Framing-only; A10 ML Mode None/A/B declaration — remain on the eventual catalog for a later project if needed.
 
 Chicago frozen Stage 4 packs are **never rewritten** by ablations. KEEP updates the **general** frameworks only.
 
 ## Eventual major-control catalog — 38 rules to test
 
 These are the ablation-sized controls for a fuller program (not every checklist sentence in the docs).
+
+Marked **(batch)** = on the current Chicago 8-control slate.
 
 ### Cross-cutting / three-AI process
 1. Stage 3 independent Design A / Design B / Data-Risk blindness before cross-review  
@@ -54,27 +56,27 @@ These are the ablation-sized controls for a fuller program (not every checklist 
 9. Ambiguity / premature-framing attack before lock
 
 ### Stage 3 measurement
-10. Single owner knob only *(current A05)*  
+10. Single owner knob only **(batch A05)**  
 11. Method constants vs knobs (constants not secretly tunable)  
-12. Integrity-gate INCONCLUSIVE vs soft residual *(current A06)*  
-13. Primary construct choice *(current A07)*  
+12. Integrity-gate INCONCLUSIVE vs soft residual **(batch A06)**  
+13. Primary construct choice **(batch A07)**  
 14. Open / eligibility / duplicate-legacy locked semantics  
-15. Ranking/capacity Framing-only *(current A09)*  
+15. Ranking/capacity Framing-only  
 16. Spec→builder packet completeness  
-17. Known-case Fixture Gate freeze before builders *(current A02)*  
+17. Known-case Fixture Gate freeze before builders **(batch A02)**  
 18. No rewrite fixtures after Fail (new version only)  
-19. ML Mode None/A/B declaration at Design Gate *(current A10)*  
+19. ML Mode None/A/B declaration at Design Gate  
 20. Mode A dual-path judged scoring lock fields (when Mode A)  
 21. Mode B post-validation only (no silent rewrite of Validation Gate actions)
 
 ### Stage 4 execution / validation
-22. SQL nonjudgment bright line *(current A03)*  
-23. SQL Source Gate vs raw *(current A04)*  
+22. SQL nonjudgment bright line **(batch A03)**  
+23. SQL Source Gate vs raw **(batch A04)**  
 24. Mechanical envelope vs final judged universe  
-25. Dual-path R-A/R-B independence *(current A01)*  
+25. Dual-path R-A/R-B independence **(batch A01)**  
 26. Same frozen source package to both builders  
 27. Fixture execution Pass on both paths before trusting production  
-28. Exact recon critical-field set *(current A08)*  
+28. Exact recon critical-field set **(batch A08)**  
 29. Exact recon fail → investigate/correct/rerun (no averaging / ID copying)  
 30. Structural cross-review after recon  
 31. Lineage / snapshot attestation  
@@ -88,7 +90,7 @@ These are the ablation-sized controls for a fuller program (not every checklist 
 37. Finish Gate / recommendation proportionality  
 38. Monitoring / next analytical question with recommendation
 
-**Counts:** 38 eventual major controls · 10 on the current slate · ~28 remaining.
+**Counts:** 38 eventual major controls · **8 on the current slate** · ~30 remaining for later projects.
 
 ## What not to ablate one-by-one
 
@@ -96,9 +98,9 @@ Design Gate bullets #1–11, Finish Gate #1–11, and every “must” sentence 
 
 ## Post-batch sequence (planned)
 
-1. Finish current A01–A10 (or stop early if KEEP/REVERT has stabilized).  
+1. Finish current **A01–A08** (stop; do not run A09/A10 this batch).  
 2. Apply only **KEEP** edits to Stage 3/4 canonical docs; link ablation IDs.  
-3. Draft forward upgrades (e.g. Framing `capacity_stance`, evidence-package schema, failability ladder, Master Prompt).  
+3. Draft forward upgrades (Framing `capacity_stance`, ML Mode Design Gate fail-closed, dual-path only where judgment lives, failability ladder, evidence-package schema, Master Prompt).  
 4. Three-AI verification panel on those upgrades.  
 5. Once approved → canonical for Price Point and later projects.  
 6. Ablations remain temporary; may stop after a limited number of projects.
