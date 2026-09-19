@@ -57,3 +57,7 @@ The primary refinement target is the **Stage 3 → Stage 4 interface**:
 - Ablation testing asks whether either layer is too weak, ambiguous, redundant, or unnecessarily complex.
 
 A retained ablation changes the reusable framework only after the three-model protocol returns **KEEP**.
+
+## Ablation program catalog
+
+See [ablation-program-catalog.md](ablation-program-catalog.md) for the current slate (A01–A10), the eventual 38-control catalog, and KEEP/REVERT/HALT meaning.
