@@ -1,6 +1,6 @@
 # Ablation Batch Scorecard — A01–A08
 
-**Scope:** Completed ablation batch (Dataset-2 / Method B project evidence)  
+**Scope:** Completed ablation batch (prior locked Method B project evidence)  
 **Batch:** Post–Finish Gate ablation slate (8 controls)  
 **Adjudicated:** 2026-09-19 (US Central / project timezone)  
 **Constitution:** v1.0  

@@ -1351,9 +1351,9 @@ The design passes only when all of the following are satisfied.
 
 Stage 3 validates the specification and defines the SQL→R execution contract. Stage 4 validates SQL source delivery, independent R implementation, reconciliation, structural robustness, and the evidence produced from the locked specification.
 
-## 30. Illustrative FulfillIQ design fragment
+## 30. Illustrative marketplace-ops design fragment
 
-The following illustrates the level of precision required. It is not a universal business template.
+The following illustrates the level of precision required for an example marketplace operations case. It is not a universal business template and is not tied to any named project.
 
 ### Approved decision context
 
@@ -1400,7 +1400,7 @@ Under the current Stage 4 standard, SQL would deliver the authorized source evid
 
 Program capacity is a business constraint, not a database column. Featured placement, intervention status, or plan capacity must not be invented as source fields.
 
-The historical FulfillIQ project does not need to be retrofitted to the new Stage 4 architecture. Its substantive Stage 3 design remains an example of measurement precision; the current framework governs future Stage 3→4 handoffs.
+A prior locked project pack does not need to be retrofitted to the current Stage 4 architecture. Its substantive Stage 3 design may remain a historical example of measurement precision; the current framework governs future Stage 3→4 handoffs.
 
 ## 31. Required structure of `Stage_03_Measurement_Design.md`
 

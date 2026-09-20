@@ -24,13 +24,13 @@ In frameworks FORWARD sections, Master Prompt, VERIFY packet, PACKET, r-workflow
 
 Local three-AI verify reply dumps under `docs/forward-verify/` (if present on a worktree) are **not** pushed to `main` — they may retain case names as a private audit trail and must not brand the portable method docs. Listed in `.gitignore`.
 
-## Residual older examples (not expanded)
+## Illustrative fragments (generalized)
 
-Pre-existing illustrative sections that mention other demo brands (e.g. FulfillIQ / Olist) in older framework prose were **left unchanged** for this lock. They are residual older examples, not part of the FORWARD upgrade set. Do not expand them in this commit.
+Older framework illustrative fragments that once named demo projects were rewritten as generic marketplace-ops / prior-locked-pack language (or removed). Method docs must not brand the portable workflow with real project proper nouns.
 
 ## Pre-push check
 
-Run a case-brand audit over `docs/` and `templates/` (excluding any local `docs/forward-verify/` dumps). Expected: **no matches** for city names, municipal-program brands, or past-project construct IDs in general method docs.
+Run a case-brand audit over `docs/` and `templates/` (local `docs/forward-verify/` dumps stay gitignored and should be absent from a clean worktree). Expected: **no matches** for city names, municipal-program brands, or past-project construct IDs.
 
 ## Lock confirmation
 

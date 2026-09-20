@@ -1,7 +1,7 @@
 # V3 Stage Mechanics Note
 
 **Date:** 2026-09-09  
-**Evidence base:** FulfillIQ 2.0 (Olist freeze) Stages 1–5  
+**Evidence base:** Prior locked marketplace-ops project pack, Stages 1–5  
 **Scope:** Targeted refinements to Stage 3 and Stage 4 frameworks — not a blank-page rewrite. Stages 1–2 unchanged. Master Prompt unchanged. Stage 5: packaging completeness only.
 
 ## What this run confirmed
@@ -30,7 +30,7 @@ Target for the next project: cut *decision-changing translation* mismatch toward
 
 ## How to verify on the next project
 
-1. Score proposed checklist/fixture items against a known-case / toy that would have caught the FulfillIQ R miss.
+1. Score proposed checklist/fixture items against a known-case / toy that would have caught an independent R under-implementation of locked Stage 3 rules (translation miss).
 2. Ablate one V3 change at a time.
 3. Keep dual-builder exact recon as the Pass criterion for Stage 4.
 4. Record residual mismatches as translation vs plumbing vs shared-design vs data-floor.

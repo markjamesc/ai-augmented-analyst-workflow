@@ -893,9 +893,9 @@ The compact version must sit on top of the full evidence trail rather than repla
 | Action strength is proportionate to current evidence | Conditions will remain stable indefinitely |
 | Monitoring and rollback are defined | Future evidence cannot change the recommendation |
 
-## 32. Illustrative FulfillIQ interpretation fragment
+## 32. Illustrative marketplace-ops interpretation fragment
 
-This example shows the required form without inventing execution results.
+This example marketplace operations case shows the required form without inventing execution results and without naming a real project.
 
 ### Direct answer
 

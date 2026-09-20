@@ -66,14 +66,13 @@ A retained ablation may update the canonical Stage 3 and/or Stage 4 framework. I
 
 ## Worked case studies
 
+Case-specific evidence lives in separate project repositories. This workflow repository explains the portable method only and does not brand the method with named project packs.
+
 | Project | Decision supported | Evidence |
 |---|---|---|
-| [FulfillIQ 2.0](https://github.com/markjamesc/fulfilliq-2.0) | Which sellers meet the locked rules for investigation in a 30-day plan simulation? | independent SQL A / SQL B / R(B), reconciliation across 3,095 sellers, seven investigation candidates, two inconclusive cases, completed interpretation gates |
 | [Bitcoin Proxy Analysis](https://github.com/markjamesc/ai-augmented-bitcoin-proxy-analysis) | Which public Bitcoin proxies, if any, are preferable to owning Bitcoin directly? | scenario model, executed notebook, internal QA checks, report and presentation |
 
-[FulfillIQ V1](https://github.com/markjamesc/fulfilliq) remains the historical baseline. V2 is the current worked example.
-
-The workflow repository explains the method; the case-study repositories show the method applied. The R Workflow Gate is intended for prospective use on new projects rather than retrofitting historical case studies merely for conformity.
+The R Workflow Gate is intended for prospective use on new projects rather than retrofitting prior locked packs merely for conformity.
 
 ## Portfolio files
 
