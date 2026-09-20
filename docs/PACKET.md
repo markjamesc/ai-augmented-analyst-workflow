@@ -4,6 +4,7 @@ Portfolio method packet for [ai-augmented-analyst-workflow](https://github.com/m
 
 | # | Stage / control | File |
 |---|---|---|
+| — | Master Prompt template | [MASTER_PROMPT.md](MASTER_PROMPT.md) — standing orchestration rules before Start |
 | 1–2 | Start and Framing | [three-ai-start-and-framing-dialogue-framework.md](three-ai-start-and-framing-dialogue-framework.md) |
 | 3 | Measurement Design | [three-ai-measurement-design-framework.md](three-ai-measurement-design-framework.md) |
 | 4 | Execution, Validation, and Deeper Analysis | [three-ai-validation-and-analysis-framework.md](three-ai-validation-and-analysis-framework.md) |

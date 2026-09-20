@@ -44,6 +44,7 @@ See [R Workflow Gate — Cross-Stage Procedural Enforcement](docs/r-workflow-gat
 
 | Stage | Document |
 |---|---|
+| Master Prompt template | [MASTER_PROMPT.md](docs/MASTER_PROMPT.md) — standing orchestration rules before Start |
 | 1–2 Start and Framing | [three-ai-start-and-framing-dialogue-framework.md](docs/three-ai-start-and-framing-dialogue-framework.md) |
 | 3 Measurement Design | [three-ai-measurement-design-framework.md](docs/three-ai-measurement-design-framework.md) |
 | 4 Execution, Validation, and Deeper Analysis | [three-ai-validation-and-analysis-framework.md](docs/three-ai-validation-and-analysis-framework.md) |
