@@ -8,5 +8,36 @@
   "r_b_status": "PASS",
   "reconciliation": "PASS",
   "validation_gate": "PASS",
-  "unresolved_issues": 0
+  "unresolved_issues": 0,
+  "fixture_version_used": "example-fixtures-v1",
+  "structural_cross_review": "PASS",
+  "decision_critical_model_required": false,
+  "decision_critical_model_validation": "NOT_REQUIRED",
+  "evidence_receipts": {
+    "source": {
+      "path": "evidence/source.json",
+      "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+    },
+    "fixtures": {
+      "path": "evidence/fixtures.json",
+      "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+    },
+    "reconciliation": {
+      "path": "evidence/reconciliation.json",
+      "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+    },
+    "structural": {
+      "path": "evidence/structural.json",
+      "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+    },
+    "validation": {
+      "path": "evidence/validation.json",
+      "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+    },
+    "lineage": {
+      "path": "evidence/lineage.json",
+      "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+    }
+  },
+  "_template_note": "Example only, not evidence of completed validation. Actual receipt files and hashes are mandatory."
 }

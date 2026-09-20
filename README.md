@@ -33,6 +33,13 @@ The gate does not redesign the analysis or repair failed outputs. It reads machi
 
 See [R Workflow Gate — Cross-Stage Procedural Enforcement](docs/r-workflow-gate-enforcement.md) and the executable script at [workflow-gate/workflow_gate.R](workflow-gate/workflow_gate.R).
 
+## Current implementation status
+
+- **Ablation batch A01–A08:** adjudicated; 0 KEEP, 7 REVERT, 1 HALT. No framework changes were authorized by that batch.
+- **Prospective upgrades:** approved separately, recorded in [Master Prompt](docs/MASTER_PROMPT.md) and [cross-review](docs/CROSS_REVIEW.md).
+- **Executable gate v2:** enforces explicit capacity/ML-mode declarations and content-addressed receipts, including fixture/reconciliation scorecards. See [contract and limitations](workflow-gate/CONTRACT_V2.md).
+- **Orchestration:** documented model roles and owner gates; this repository does not claim an unattended end-to-end ablation runner.
+
 ## Packet index (stages 1–5)
 
 | Stage | Document |
@@ -50,7 +57,7 @@ Together, these documents specify the complete path from an initial stakeholder 
 
 ## Framework refinement
 
-The five-stage workflow is the production analytical method. Proposed reusable changes to Stage 3 or Stage 4 are tested separately through a fully automated **three-model separation-of-duties ablation protocol** using ChatGPT, DeepSeek, and Grok in rotating Builder, Validator, and Adjudicator roles.
+The five-stage workflow is the production analytical method. Proposed reusable changes to Stage 3 or Stage 4 are tested separately through a **three-model separation-of-duties ablation protocol** using ChatGPT, DeepSeek, and Grok in rotating Builder, Validator, and Adjudicator roles.
 
 The refinement layer uses a frozen constitution, blind first-pass Builder/Validator outputs, deterministic artifact hashing, and three terminal states: `KEEP`, `REVERT`, and `HALT`.
 

@@ -13,5 +13,13 @@
     "List the Stage 4 reconciliation-critical output fields"
   ],
   "ml_mode": "None",
-  "_forward_note": "ml_mode fail-closed required None|A|B on new projects; historical Mode None/rules on a past project is descriptive only — do not mutate frozen packs to insert the field"
+  "_forward_note": "ml_mode fail-closed required None|A|B on new projects; historical Mode None/rules on a past project is descriptive only — do not mutate frozen packs to insert the field",
+  "fixture_version": "example-fixtures-v1",
+  "fixture_ids": [
+    "REPLACE_WITH_LOCKED_FIXTURE_ID"
+  ],
+  "reconciliation_critical_fields": [
+    "REPLACE_WITH_LOCKED_FIELD"
+  ],
+  "_template_note": "Example only; owner must explicitly lock mode and replace placeholders before use."
 }

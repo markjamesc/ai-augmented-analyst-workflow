@@ -1,5 +1,7 @@
 # R Workflow Gate
 
+**Prospective executable contract v2:** explicit capacity/ML modes, SHA-256 receipt verification, fixture and reconciliation scorecards, and lineage contents are now required. Install both `jsonlite` and `digest`. See [the schema and evidence boundary](CONTRACT_V2.md). Historical frozen project gates retain their original contract.
+
 This folder adds a deterministic procedural-enforcement layer to the five-stage AI-Augmented Analyst workflow.
 
 It does **not** replace the three-AI methodology, the Stage 4 SQL Source Gate, the independent R-A / R-B judged implementations, or their exact reconciliation. Those remain the analytical validation system.

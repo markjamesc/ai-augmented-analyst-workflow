@@ -83,6 +83,48 @@ run_gate <- function(project_root) {
 
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
+
+# Synthetic receipts exercise the gate contract, not any real project outcome.
+upgrade_fixture <- function(root, files) {
+  values <- lapply(files, function(p) fromJSON(file.path(root, p), simplifyVector = TRUE))
+  values[[2]]$capacity_stance <- "unordered_ok"
+  values[[3]]$ml_mode <- if (isTRUE(values[[4]]$decision_critical_model_required)) "A" else "None"
+  values[[3]]$fixture_version <- "fixtures-v1"
+  values[[3]]$fixture_ids <- c("F01", "F02")
+  values[[3]]$reconciliation_critical_fields <- c("id", "action")
+  values[[4]]$fixture_version_used <- "fixtures-v1"
+  values[[4]]$structural_cross_review <- "PASS"
+  values[[4]]$decision_critical_model_required <- identical(values[[3]]$ml_mode, "A")
+  values[[4]]$decision_critical_model_validation <- if (identical(values[[3]]$ml_mode, "A")) "PASS" else "NOT_REQUIRED"
+  roles <- c("source", "fixtures", "reconciliation", "structural", "validation", "lineage")
+  if (identical(values[[3]]$ml_mode, "A")) roles <- c(roles, "model")
+  dir.create(file.path(root, "evidence-v2"), showWarnings = FALSE)
+  receipts <- list()
+  for (role in roles) {
+    v <- list(status = "PASS", design_version = values[[3]]$design_version,
+      fixture_version = "fixtures-v1", checked_at_utc = "2026-09-20T00:00:00Z")
+    if (role == "fixtures") v$cases <- data.frame(id = c("F01", "F02"), expected = c("A", "B"), observed_a = c("A", "B"), observed_b = c("A", "B"))
+    if (role == "reconciliation") {
+      v$fields <- c("id", "action"); v$mismatch_count <- 0; v$row_count <- 2
+    }
+    if (role == "lineage") {
+      v$source_snapshot <- "synthetic-source-v1"; v$extract_identity <- "synthetic-extract-v1"
+      v$script_versions <- c("builder-a:test", "builder-b:test")
+    }
+    path <- paste0("evidence-v2/", role, ".json")
+    write_json(v, file.path(root, path), auto_unbox = TRUE, pretty = TRUE)
+    receipts[[role]] <- list(path = path, sha256 = digest::digest(file = file.path(root, path), algo = "sha256"))
+  }
+  values[[4]]$evidence_receipts <- receipts
+  for (i in seq_along(files)) write_json(values[[i]], file.path(root, files[[i]]), auto_unbox = TRUE, pretty = TRUE)
+}
+
+fixture_files <- c("artifacts/stage1_decision.json", "artifacts/stage2_framing.json", "artifacts/stage3_locked_design.json", "artifacts/stage4_validation_status.json")
+report_path <- "artifacts/workflow_gate_status.json"
+original_fixture <- write_project
+write_project <- function(root, ...) { original_fixture(root, ...); upgrade_fixture(root, fixture_files) }
+make_fixture <- function(root) write_project(root)
+
 pass_root <- tempfile("workflow-gate-pass-")
 dir.create(pass_root)
 write_project(pass_root, reconciliation = "PASS")
@@ -108,3 +150,61 @@ if (!identical(fail_report$result, "FAIL") || isTRUE(fail_report$stage5_allowed)
 }
 
 cat("Workflow gate tests passed: known PASS accepted; deliberate reconciliation failure blocked.\n")
+
+# Forward-contract regressions: each defect must block Stage 5.
+change_json <- function(root, index, fn) {
+  path <- file.path(root, fixture_files[[index]])
+  x <- fromJSON(path, simplifyVector = TRUE)
+  write_json(fn(x), path, pretty = TRUE, auto_unbox = TRUE)
+}
+change_receipt <- function(root, role, fn) {
+  path4 <- file.path(root, fixture_files[[4]])
+  s4 <- fromJSON(path4, simplifyVector = TRUE)
+  path <- file.path(root, s4$evidence_receipts[[role]]$path)
+  x <- fromJSON(path, simplifyVector = TRUE)
+  write_json(fn(x), path, pretty = TRUE, auto_unbox = TRUE)
+  s4$evidence_receipts[[role]]$sha256 <- digest::digest(file = path, algo = "sha256")
+  write_json(s4, path4, pretty = TRUE, auto_unbox = TRUE)
+}
+cases <- list(
+  missing_capacity = function(r) change_json(r, 2, function(x) { x$capacity_stance <- NULL; x }),
+  invalid_capacity = function(r) change_json(r, 2, function(x) { x$capacity_stance <- "TBD"; x }),
+  missing_mode = function(r) change_json(r, 3, function(x) { x$ml_mode <- NULL; x }),
+  invalid_mode = function(r) change_json(r, 3, function(x) { x$ml_mode <- ""; x }),
+  missing_ranking = function(r) change_json(r, 2, function(x) { x$capacity_stance <- "hard_attention_budget"; x }),
+  missing_receipt = function(r) unlink(file.path(r, "evidence-v2/source.json")),
+  tampered_receipt = function(r) cat("tampered", file = file.path(r, "evidence-v2/source.json"), append = TRUE),
+  empty_receipt = function(r) writeLines(character(), file.path(r, "evidence-v2/source.json")),
+  wrong_version = function(r) change_receipt(r, "source", function(x) { x$design_version <- "wrong"; x }),
+  failed_receipt = function(r) change_receipt(r, "validation", function(x) { x$status <- "FAIL"; x }),
+  mismatch = function(r) change_receipt(r, "reconciliation", function(x) { x$mismatch_count <- 1; x }),
+  missing_field = function(r) change_receipt(r, "reconciliation", function(x) { x$fields <- "id"; x }),
+  wrong_fixture = function(r) change_receipt(r, "fixtures", function(x) { x$cases$observed_b[[1]] <- "WRONG"; x }),
+  missing_fixture = function(r) change_receipt(r, "fixtures", function(x) { x$cases <- x$cases[1,,drop=FALSE]; x }),
+  missing_lineage = function(r) change_receipt(r, "lineage", function(x) { x$script_versions <- NULL; x }),
+  mode_a_without_validation = function(r) change_json(r, 3, function(x) { x$ml_mode <- "A"; x }),
+  missing_structural = function(r) change_json(r, 4, function(x) { x$structural_cross_review <- NULL; x })
+)
+for (name in names(cases)) {
+  root <- tempfile(paste0("gate-", name, "-")); dir.create(root); make_fixture(root)
+  cases[[name]](root)
+  status <- system2(file.path(R.home("bin"), "Rscript"), c(shQuote(gate_script), shQuote(root)), stdout = FALSE, stderr = FALSE)
+  if (identical(status, 0L)) stop("Defect incorrectly accepted: ", name)
+  report <- fromJSON(file.path(root, report_path))
+  stopifnot(identical(report$result, "FAIL"), identical(report$stage5_allowed, FALSE))
+  unlink(root, recursive = TRUE)
+}
+for (mode in c("None", "B")) {
+  root <- tempfile("gate-valid-budget-"); dir.create(root); make_fixture(root)
+  change_json(root, 2, function(x) { x$capacity_stance <- "hard_attention_budget"; x })
+  change_json(root, 3, function(x) {
+    x$ml_mode <- mode
+    x$ranking_contract <- list(key = "locked-rule-score", tie_break = "id", capacity_unit = "cases",
+      membership_first = TRUE, padding_allowed = FALSE, owner_n_deferred = TRUE)
+    x
+  })
+  status <- system2(file.path(R.home("bin"), "Rscript"), c(shQuote(gate_script), shQuote(root)), stdout = FALSE, stderr = FALSE)
+  stopifnot(identical(status, 0L))
+  unlink(root, recursive = TRUE)
+}
+cat("Forward regression tests passed: 17 defects rejected; explicit modes and deferred budget accepted.\n")

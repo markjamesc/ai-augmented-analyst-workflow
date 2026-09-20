@@ -89,7 +89,9 @@ Do NOT retrofit or mutate prior locked / frozen historical packs. Apply these ru
 
 ## Promotion checklist
 
-- [ ] Three-AI verify complete (see [VERIFY_PACKET.md](VERIFY_PACKET.md) + [CROSS_REVIEW.md](CROSS_REVIEW.md))
-- [ ] Owner approve revise→lock→push
+The first two items record the published framework lock. The remaining items are per-project adoption tasks.
+
+- [x] Three-AI verify complete (see [VERIFY_PACKET.md](VERIFY_PACKET.md) + [CROSS_REVIEW.md](CROSS_REVIEW.md))
+- [x] Owner approve revise→lock→push (recorded in CROSS_REVIEW.md)
 - [ ] Copy upgraded clauses into the **new** project’s master orchestration prompt
 - [ ] Extend that project’s `stage2_framing.json` / `stage3_locked_design.json` with required `capacity_stance` / `ml_mode`

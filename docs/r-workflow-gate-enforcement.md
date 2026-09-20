@@ -1,5 +1,7 @@
 # R Workflow Gate — Cross-Stage Procedural Enforcement
 
+**Prospective executable contract v2:** explicit capacity/ML modes, SHA-256 receipt verification, fixture and reconciliation scorecards, and lineage contents are now required. Install both `jsonlite` and `digest`. See [the schema and evidence boundary](../workflow-gate/CONTRACT_V2.md). Historical frozen project gates retain their original contract.
+
 ## Purpose
 
 The existing five-stage method already specifies what the AIs and analyst must do. This control adds a deterministic R layer that verifies that the required procedure was actually completed before the workflow advances into Stage 5.

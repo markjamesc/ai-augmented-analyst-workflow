@@ -14,7 +14,7 @@ The refinement layer is intentionally **not a sixth project stage**. Individual 
 
 ## Three-model ablation system
 
-Framework changes are evaluated through a fully automated three-model separation-of-duties process using:
+Framework changes are evaluated through an orchestrated three-model separation-of-duties process using:
 
 - **ChatGPT**
 - **DeepSeek**

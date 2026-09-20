@@ -9,6 +9,8 @@ on:
   push:
     branches:
       - workflow-gate-enforcement
+      - main
+      - portfolio-refresh-20260920
     paths:
       - "workflow-gate/**"
       - "templates/workflow-gate/**"
@@ -27,8 +29,8 @@ jobs:
         with:
           use-public-rspm: true
 
-      - name: Install jsonlite
-        run: Rscript -e 'install.packages("jsonlite", repos="https://cloud.r-project.org")'
+      - name: Install gate dependencies
+        run: Rscript -e 'install.packages(c("jsonlite", "digest"), repos="https://cloud.r-project.org")'
 
       - name: Run workflow gate tests
         run: Rscript workflow-gate/tests/test_workflow_gate.R .

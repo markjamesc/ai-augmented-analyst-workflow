@@ -32,4 +32,6 @@ Do not delete failed or reverted runs. They are part of the framework's developm
 
 ## Current status
 
-Protocol scaffold created. No execution evidence is implied by the presence of this directory.
+Batch A01–A08 is complete: **0 KEEP, 7 REVERT, 1 HALT**; A09/A10 were deferred. See the [scorecard](../../docs/framework-refinement/BATCH_A01_A08_SCORECARD.md). No canonical Stage 3/4 changes were authorized by this batch.
+
+This directory remains a layout template. The actual batch evidence is held in the project evidence repository, not duplicated here. Completed adjudication does not imply an unattended automated harness or establish the controls' general effectiveness.

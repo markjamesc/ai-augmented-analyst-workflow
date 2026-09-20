@@ -3,5 +3,6 @@
   "status": "LOCKED",
   "analytical_question": "Example locked analytical question",
   "capacity_stance": "unordered_ok",
-  "_forward_note": "capacity_stance required on new projects (unordered_ok | hard_attention_budget); do not retrofit prior locked packs"
+  "_forward_note": "capacity_stance required on new projects (unordered_ok | hard_attention_budget); do not retrofit prior locked packs",
+  "_template_note": "Example only; owner must explicitly select and lock capacity stance."
 }
