@@ -1,5 +1,7 @@
 {
   "stage": 2,
   "status": "LOCKED",
-  "analytical_question": "Example locked analytical question"
+  "analytical_question": "Example locked analytical question",
+  "capacity_stance": "unordered_ok",
+  "_forward_note": "capacity_stance required on new projects (unordered_ok | hard_attention_budget); do not retrofit prior locked packs"
 }

@@ -20,3 +20,13 @@ Portfolio method packet for [ai-augmented-analyst-workflow](https://github.com/m
 Executable gate: [`../workflow-gate/workflow_gate.R`](../workflow-gate/workflow_gate.R). Example machine-readable stage artifacts are in [`../templates/workflow-gate/`](../templates/workflow-gate/).
 
 Historical case studies do not need to be retrofitted merely for conformity. The deterministic gate is intended as a prospective control for new projects.
+
+## FORWARD method locks (verified)
+
+| Doc | File |
+|---|---|
+| Three-AI verify / lock packet | [VERIFY_PACKET.md](VERIFY_PACKET.md) |
+| Master Prompt (standing rules) | [MASTER_PROMPT.md](MASTER_PROMPT.md) |
+| Cross-review (revise→lock) | [CROSS_REVIEW.md](CROSS_REVIEW.md) |
+
+Additive FORWARD sections land in Stages 1–2 Framing, Stage 3 measurement design, and Stage 4 validation frameworks. They do **not** rewrite prior locked / frozen historical Stage 3/4 packs. Case-specific evidence lives in project repos only.

@@ -1565,4 +1565,49 @@ This document is a canonical Stage 3 framework artifact. Proposed reusable chang
 
 Only ablations returning `KEEP` may authorize a reusable Stage 3 framework change. `REVERT` preserves the current rule. `HALT` indicates that the experiment or validation harness is not trustworthy enough to adjudicate the change.
 
+---
+
+## FORWARD — ML Mode fail-closed at Design Gate
+
+> **Status:** Locked forward method language for new projects. Does **not** rewrite frozen historical Stage 3 packs. A past project's historical Mode None/rules posture is **descriptive only**.
+
+### Fail-closed rule
+
+Before Design Gate Pass / Stage 4 handoff, `ml_mode` must be exactly one of `None`, `A`, or `B`.
+
+| Mode | Meaning | Stage 4 implication |
+|---|---|---|
+| **None** | No ML / predictive scoring for the judged decision or for post-gate diagnostics. | Ordinary dual-path validation of the locked **rules / non-ML** contract. |
+| **A — Judged predictive contract** | Locked Stage 3 decision uses model scores / predictions (threshold→action or equivalent). | Dual R-A / R-B independently implement the locked scoring contract; Fixture Gate + exact recon cover locked actions and/or `.pred`. |
+| **B — Expand / post-validation predictive analytics** | Judged Validation Gate decision is non-ML; predictions are diagnostics / support after freeze (ENGINE Expand / tidymodels allowed). | Dual-path applies to the non-ML judged contract only; Mode B predictive work follows deeper-analysis review, not shared Expand pasted as both judged paths. |
+
+**Blank, omitted, TBD, or inferred mode = Design Gate Fail.** Do not allow Stage 4 to infer Mode from tooling choices (e.g. presence of tidymodels) or from a past project's posture. Historical Mode None/rules on a prior project does **not** authorize omitting `ml_mode` on new projects, and must not be used to mutate frozen packs to insert the field “for consistency.”
+
+### Use test (not a label test)
+
+- Any model-generated value that changes a judged action, membership, or capacity ranking **before** Validation freeze is **Mode A**.
+- Model-generated values **after** Validation freeze that do not rewrite Validation-Gate actions are **Mode B**.
+- Otherwise **None**.
+- Hybrid “rules on paper + informal score to order a hard-attention list” fails the use test: that is Mode A (or at least judged ranking) and requires Mode A locks — not Mode None clothing.
+
+### Mode A vs Mode B bright line (forward)
+
+- **Mode A:** prediction is part of *judgment*. Independence, fixtures, and exact recon apply to the predictive contract. **Banned as Mode A inputs:** ENGINE Expand paste, shared model object, shared recipe / workflow object, shared scored table, or any shared artifact that generates both judged paths.
+- **Mode B:** prediction is *post-Validation Gate diagnostics only*. Never in R-A/R-B judged construction. Must not silently rewrite Validation-Gate actions. Promoting predictions into the judged decision **or** into `hard_attention_budget` ranking requires reopening Stage 3 under Mode A.
+- **None:** do not smuggle Mode B diagnostics into judged outputs, and do not claim Mode A rigor without Mode A locks.
+
+### Design Gate checklist addition (forward)
+
+Gate 9 already lists Mode None/A/B. Forward projects treat that declaration as **mandatory and fail-closed**:
+
+1. `ml_mode` ∈ {`None`, `A`, `B`} is written into `Stage_03_Measurement_Design.md` and into `artifacts/stage3_locked_design.json` (required field `ml_mode`);
+2. if `A`, all Mode A lock fields in §17A are frozen before builders run;
+3. if `B`, the judged decision-rule contract is explicitly non-ML and post-gate predictive scope is bounded;
+4. if `None`, Stage 4 builders are forbidden from treating Expand / `.pred` as Validation-Gate inputs.
+
+### Historical packs unaffected
+
+Prior locked Stage 3 measurement designs and Stage 4 packs remain historical. Retrospective labeling of a past project as Mode **None** is interpretive documentation only; do not edit frozen project evidence to insert `ml_mode` fields.
+
+
 End of framework.

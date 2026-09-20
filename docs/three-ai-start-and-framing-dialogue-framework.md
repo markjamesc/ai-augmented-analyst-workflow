@@ -824,4 +824,59 @@ The final governing rule is:
 
 > Do not analyze the requested metric until the dialogue has established the decision. Do not design the measurement until the decision has been converted into one approved analytical question.
 
+---
+
+## FORWARD — `capacity_stance` at Framing Gate
+
+> **Status:** Locked forward method language for new projects. Does **not** retrofit frozen historical project packs. Case-specific evidence lives in project repos only.
+
+### Problem this upgrade closes
+
+When the purpose of the analysis is a **limited focus list** (hard attention budget, limited shift capacity, fixed investigation slots), an unordered census of qualifying units can be analytically correct and still fail the decision purpose. On a past project, ranking was deferred out of Stage 3/4 under that project's locked stance, and Stage 5 became the first place the capacity conflict was operational. Forward projects lock the stance earlier.
+
+### Required Framing field: `capacity_stance`
+
+Before Framing Gate Pass, record exactly one of the two tokens (missing / blank / inferred stance = **Framing Gate Fail**, regardless of purpose):
+
+| Value | Meaning | Downstream implication |
+|---|---|---|
+| **`unordered_ok`** | A complete qualifying set (or label census) is an acceptable decision output; ranking / hard truncation is not required for the purpose clause. | Stage 3/4 may produce unordered actions/labels; Stage 5 must not invent a hard budget that Framing never approved. Do **not** silently rank a census purpose. |
+| **`hard_attention_budget`** | The decision purpose is a **limited focus list**. Ranking, prioritization, or explicit truncation to a capacity ceiling is required for the recommendation to be actionable. | Framing must state the capacity unit (slots, hours, cases/shift, etc.) or an explicit “owner sets N later” placeholder. Stage 3 locks how capacity enters the measurement contract. Stage 4 does **not** invent ranking rules that Framing/Stage 3 never locked. Stage 5 applies N only under the locked key. |
+
+### Deferred-N rule (closes Stage 5 invention)
+
+If Framing records `hard_attention_budget` with “owner sets N before Stage 5,” Stage 3 must **still** freeze, before Design Gate Pass:
+
+1. ranking key;
+2. tie-break;
+3. membership-first / no-pad rule (what happens when qualifiers < N);
+4. explicit rule: **Stage 5 may apply N but may not invent the ranking key or truncation policy.**
+
+Deferral of N does **not** defer the ranking contract. “Stage 5 ranking-only” is not a complete Stage 3 lock by itself.
+
+### Capacity × Mode interaction
+
+A Mode B / diagnostic score must **not** rank a `hard_attention_budget` list. Promoting model-generated values into capacity ranking requires reopening Stage 3 under Mode A (judged predictive contract).
+
+### Framing Gate additions (forward)
+
+In addition to the existing Framing Gate criteria, pass only when:
+
+1. `capacity_stance` is explicitly recorded as `unordered_ok` or `hard_attention_budget` (required field; not optional);
+2. if `hard_attention_budget`, the analytical question or handoff names the capacity unit **or** records a controlled deferral (“capacity N set by owner before Stage 5 recommendation”), and Stage 3 will freeze ranking key / tie-break / no-pad as above;
+3. AI 3 has checked both directions: a limited-attention purpose was not silently framed as an unbounded census, **and** a census purpose was not silently forced into `hard_attention_budget` to manufacture a leaderboard;
+4. the Stage 3 handoff package includes `capacity_stance` (and capacity unit / deferral note when applicable).
+
+### What stays Framing-only vs what Stage 3 may lock
+
+- **Framing-only (preferred default):** whether ranking / hard truncation is part of the *purpose*.
+- **Stage 3:** formulas, floors, thresholds, and (when Framing chose hard budget) the locked ranking key, tie-break, no-pad, and capacity-application rule.
+- **Stage 4:** implements locked rules; does not invent capacity ranking to “make Stage 5 nicer.”
+- **Stage 5:** applies the locked stance and (when deferred) owner-set N only; may return to Framing if validated evidence shows purpose/capacity conflict that Framing never resolved.
+
+### Historical packs unaffected
+
+Prior locked project packs are historical evidence. This section does not require retrofitting those packs. Do not mutate frozen project evidence to insert `capacity_stance`. Ablation of capacity Framing-only (catalog item) remains available as a later stress test; this upgrade is prospective method strengthening, not a KEEP rewrite of frozen artifacts.
+
+
 End of framework.

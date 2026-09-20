@@ -228,3 +228,9 @@ A gate PASS is strong evidence of procedural compliance. It is not proof that:
 Those remain controlled by the three-AI reviews, source and methodological evidence, stakeholder constraints, and human judgment.
 
 The gate exists to eliminate a narrower failure mode: **the workflow silently claiming completion while a required control was skipped, stale, failed, or bypassed.**
+
+---
+
+## FORWARD — Evidence receipts
+
+For new / forward publishable project packs, treat `artifacts/workflow_gate_status.json` as a **required** procedural receipt alongside lineage and scorecard artifacts (minimum schema: status, `stage5_allowed`, `design_version`, fixture freeze hash, source snapshot id, recon result, validation result, timestamp). See the Stage 4 FORWARD evidence-package schema and [VERIFY_PACKET.md](VERIFY_PACKET.md). Prospective only — do not retrofit prior locked / frozen historical packs merely for conformity.

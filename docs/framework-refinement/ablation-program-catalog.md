@@ -17,9 +17,9 @@ Each ablation stresses **one** major control. Three models rotate Builder / Inde
 
 There is **no quorum** across the slate: one KEEP authorizes that rule’s change only.
 
-## Current Chicago 311 slate (Dataset 2) — **8 controls**
+## Completed ablation batch A01–A08 — **8 controls**
 
-First-cut batch after Stage 5 Finish Gate. **Limited to 8** (not 10) for this run (data/time limits).
+First-cut batch after a project Finish Gate. **Limited to 8** (not 10) for that run (data/time limits). Full adjudication trees live in the **project evidence repo** under `docs/ablations/` — not in this general workflow repo.
 
 | ID | Control | Typical target |
 |----|---------|----------------|
@@ -29,17 +29,16 @@ First-cut batch after Stage 5 Finish Gate. **Limited to 8** (not 10) for this ru
 | A04 | SQL Source Gate vs raw | Stage 4 |
 | A05 | Single owner knob only | Stage 3 |
 | A06 | Integrity-gate INCONCLUSIVE (vs soft residual) | Stage 3 |
-| A07 | Primary construct (e.g. TCD-IG vs raw age) | Stage 3 |
+| A07 | Primary construct choice (transformed index vs raw age analogue) | Stage 3 |
 | A08 | Exact recon critical-field set | Stage 3/4 |
 
 **Not in this batch** (deferred): A09 capacity/ranking Framing-only; A10 ML Mode None/A/B declaration — remain on the eventual catalog for a later project if needed.
 
-Chicago frozen Stage 4 packs are **never rewritten** by ablations. KEEP updates the **general** frameworks only.
+Prior locked Stage 4 packs in project repos are **never rewritten** by ablations. KEEP updates the **general** frameworks only.
 
+## Batch A01–A08 results — COMPLETE
 
-## Batch A01–A08 results (Chicago 311 Dataset 2) — COMPLETE
-
-**Adjudicated:** 2026-09-19 (America/Chicago)  
+**Adjudicated:** 2026-09-19 (US Central / project timezone)  
 **Headline:** **0 KEEP · 7 REVERT · 1 HALT · A09/A10 deferred**  
 **Framework edits from this batch:** **None** (no Stage 3/4 canonical rule changes).
 
@@ -51,21 +50,36 @@ Chicago frozen Stage 4 packs are **never rewritten** by ablations. KEEP updates 
 | A04 | SQL Source Gate vs raw | **REVERT** | Source Gate remains |
 | A05 | Single owner knob only | **REVERT** | Single knob κ remains |
 | A06 | Integrity INCONCLUSIVE vs soft residual | **REVERT** | Hard INCONCLUSIVE remains |
-| A07 | TCD-IG vs raw age | **REVERT** | TCD-IG construct remains |
+| A07 | Primary construct choice | **REVERT** | Locked primary construct remains |
 | A08 | Exact recon critical-field set | **REVERT** | Full exact recon remains |
 | A09 | Capacity Framing-only | **DEFERRED** | Not run |
 | A10 | ML Mode declaration | **DEFERRED** | Not run |
 
 Full scorecard: [BATCH_A01_A08_SCORECARD.md](BATCH_A01_A08_SCORECARD.md) · Companion narrative: [ablation-batch-A01-A08-results.md](ablation-batch-A01-A08-results.md)  
-Project evidence trees: `chicago-311-dispatch-priority` → `docs/ablations/`.
+**Batch evidence:** full trees live in the project evidence repo (`docs/ablations/A01` … `A08`).
 
 **A02 note:** Official terminal is HALT on evidence-completeness; substantive finding was still not KEEP. Forward harness: when Builder/Validator agree and raw MANIFEST is present, prefer REVERT (not HALT) when only historical Rscript stdout is missing and P1 fails.
+
+## Locked forward rules (not ablation candidates)
+
+The following five upgrades are **locked forward method rules** for prospective new projects (three-AI verify → owner revise→lock). They remain listed in the ~38 catalog for traceability but are **not** open ablation candidates unless a later KEEP explicitly reopens them:
+
+| Catalog # | Rule | Locked where |
+|-----------|------|--------------|
+| 8 | Capacity stance at Framing (`unordered_ok` / `hard_attention_budget`) | Stages 1–2 FORWARD + Master Prompt |
+| 19 (+20/21 Mode detail) | ML Mode None/A/B fail-closed at Design Gate | Stage 3 FORWARD + Master Prompt |
+| 25 (scoped) | Dual-path only where judgment lives | Stage 4 FORWARD + Master Prompt |
+| — | Failability ladder (fixtures → … → Workflow Gate) | Stage 4 FORWARD + Master Prompt |
+| — | Evidence-package schema (publishable packs) | Stage 4 FORWARD + `r-workflow-gate-enforcement.md` |
+
+Ablation A01–A08 returned **0 KEEP**; these locks are post-batch forward method strengthening, not KEEP-authorized rewrites of frozen project artifacts.
 
 ## Eventual major-control catalog — 38 rules to test
 
 These are the ablation-sized controls for a fuller program (not every checklist sentence in the docs).
 
-Marked **(batch)** = on the current Chicago 8-control slate.
+Marked **(batch)** = exercised in completed batch A01–A08.  
+Marked **(LOCKED FORWARD)** = locked forward method rule (not an open candidate).
 
 ### Cross-cutting / three-AI process
 1. Stage 3 independent Design A / Design B / Data-Risk blindness before cross-review  
@@ -77,7 +91,7 @@ Marked **(batch)** = on the current Chicago 8-control slate.
 ### Start & Framing
 6. Start Gate three-way action vocabulary lock before measurement  
 7. Framing Gate single analytical question lock (CQ-style)  
-8. Capacity stance at Framing (unordered OK vs hard attention budget)  
+8. Capacity stance at Framing (unordered OK vs hard attention budget) **(LOCKED FORWARD)**  
 9. Ambiguity / premature-framing attack before lock
 
 ### Stage 3 measurement
@@ -90,15 +104,15 @@ Marked **(batch)** = on the current Chicago 8-control slate.
 16. Spec→builder packet completeness  
 17. Known-case Fixture Gate freeze before builders **(batch A02)**  
 18. No rewrite fixtures after Fail (new version only)  
-19. ML Mode None/A/B declaration at Design Gate  
-20. Mode A dual-path judged scoring lock fields (when Mode A)  
-21. Mode B post-validation only (no silent rewrite of Validation Gate actions)
+19. ML Mode None/A/B declaration at Design Gate **(LOCKED FORWARD)**  
+20. Mode A dual-path judged scoring lock fields (when Mode A) **(LOCKED FORWARD detail)**  
+21. Mode B post-validation only (no silent rewrite of Validation Gate actions) **(LOCKED FORWARD detail)**
 
 ### Stage 4 execution / validation
 22. SQL nonjudgment bright line **(batch A03)**  
 23. SQL Source Gate vs raw **(batch A04)**  
 24. Mechanical envelope vs final judged universe  
-25. Dual-path R-A/R-B independence **(batch A01)**  
+25. Dual-path R-A/R-B independence **(batch A01)** / dual-path only where judgment **(LOCKED FORWARD)**  
 26. Same frozen source package to both builders  
 27. Fixture execution Pass on both paths before trusting production  
 28. Exact recon critical-field set **(batch A08)**  
@@ -115,19 +129,21 @@ Marked **(batch)** = on the current Chicago 8-control slate.
 37. Finish Gate / recommendation proportionality  
 38. Monitoring / next analytical question with recommendation
 
-**Counts:** 38 eventual major controls · **8 on the current slate** · ~30 remaining for later projects.
+**Also locked (tracked in FORWARD table, not separate ablation IDs):** failability ladder; evidence-package receipts for publishable packs.
+
+**Counts:** 38 eventual major controls · **8 completed in batch A01–A08** · five locked forward rules (not open candidates) · remaining items for later projects.
 
 ## What not to ablate one-by-one
 
 Design Gate bullets #1–11, Finish Gate #1–11, and every “must” sentence in prose should usually stay as **gate checklists**, not 100 separate ablations. Bundle them under the major controls above unless a specific bullet repeatedly fails in the wild.
 
-## Post-batch sequence (planned)
+## Post-batch sequence
 
-1. Finish current **A01–A08** (stop; do not run A09/A10 this batch). **Done — 0 KEEP.**  
-2. Apply only **KEEP** edits to Stage 3/4 canonical docs; link ablation IDs. **N/A this batch (zero KEEP).**  
-3. Draft forward upgrades (Framing `capacity_stance`, ML Mode Design Gate fail-closed, dual-path only where judgment lives, failability ladder, evidence-package schema, Master Prompt).  
-4. Three-AI verification panel on those upgrades.  
-5. Once approved → canonical for Price Point and later projects.  
+1. Finish **A01–A08** (stop; do not run A09/A10 that batch). **Done — 0 KEEP.**  
+2. Apply only **KEEP** edits to Stage 3/4 canonical docs; link ablation IDs. **N/A that batch (zero KEEP).**  
+3. Draft forward upgrades (Framing `capacity_stance`, ML Mode Design Gate fail-closed, dual-path only where judgment lives, failability ladder, evidence-package schema, Master Prompt). **Done.**  
+4. Three-AI verification panel on those upgrades. **Done — REVISE_THEN_LOCK.**  
+5. Owner approve → lock for prospective new projects. **In progress / this commit.**  
 6. Ablations remain temporary; may stop after a limited number of projects.
 
 ## Related links

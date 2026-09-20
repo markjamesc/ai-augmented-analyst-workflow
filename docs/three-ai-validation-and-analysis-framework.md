@@ -1400,6 +1400,95 @@ The core philosophy is:
 
 That is what turns three AIs from potentially redundant code generators into a controlled analytical validation system while keeping the substantive validation code in an R/tidyverse style the human analyst can personally inspect and audit.
 
+---
+
+## FORWARD — Dual-path only where judgment lives
+
+> **Status:** Locked forward method language for new projects. Does **not** rewrite frozen historical Stage 4 packs.
+
+### Clarifying rule
+
+Method B dual R-A / R-B exists to test **judged** decisions — the locked Stage 3 action / classification / (Mode A) scoring contract — not every downstream table.
+
+| Work | Dual-path required? | Shared helpers |
+|---|---|---|
+| Judged decision logic (rules or Mode A predictive contract) | **Yes** — independent R-A and R-B | **Forbidden** for judged code (see bright line below) |
+| SQL Source Gate mechanical delivery | No (single controlled delivery + gate) | Mechanical source helpers OK when nonjudgmental |
+| Fixture scoring harness | Shared frozen pack OK; each path scored independently | Shared fixture *inputs* OK; judged path code remains independent |
+| Exact reconciliation comparator | Single mechanical comparator | **Dumb comparator only** (join keys + exact equality on locked fields); no shared recode / tie-break / drop-for-compare that implements the decision rule |
+| Mode B / deeper analysis / ENGINE Expand | No dual judged paths | Shared Expand OK **only** post Validation Gate freeze; Mode B still receives builder / method-critic / implementation-critic review — “not dual judged-path” ≠ “no review” |
+| Stage 5 descriptive / interpretive tables | No | N/A |
+
+### Independence bright line (forward)
+
+- **Allowed to share before first-pass freeze:** Stage 3 design, verified SQL source package, frozen fixture pack, output schema, lineage identity.
+- **Forbidden to share for judged construction:** any project file, function, model object, recipe, workflow object, intermediate table, parameter object, or scored table that implements a Stage 3 decision-changing rule — including project-local `R/utils.R` / `R/judged_helpers.R`, shared eligibility / action / persistence functions, shared parsnip spec + recipe + workflow, shared “known IDs that should fire” beyond the frozen fixture pack, Expand paste, or copied clock/tz parse that decides labels. Tidyverse *the package* is fine; a shared judged helper library is not.
+- **SQL pre-judgment:** if a field is sufficient to determine the action, membership, or capacity rank, it is judged and belongs in R, not in the shared extract.
+- **Repair rule:** after a fail, repair cites Stage 3 clause + fixture evidence — **not** the twin path’s output row. Do not patch one path by reading the other’s judged table.
+- Fixture PASS does **not** waive production exact recon. Production disagreement between independent judged paths remains a hard fail until repaired toward the locked design.
+- **Mode B ≠ dual judged-path work.** Deeper analysis keeps its own review roles; it does not inherit R-A/R-B independence theater.
+
+### Historical packs unaffected
+
+Prior dual-path trees, recon freezes, and labels stay frozen as historical architectures. Ablation A01 retained dual-path independence (REVERT on collapse); this section restates the forward method rule without editing frozen project packs. Do not retrofit historical architectures to dual R-A/R-B if that was not the frozen pattern.
+
+---
+
+## FORWARD — Failability ladder
+
+> **Status:** Locked forward method language. Checks that can **fail the work** must be treated as hard stops, not advisory notes.
+
+### Ladder (lowest → highest aggregation)
+
+| Tier | Check | Fail means |
+|---|---|---|
+| 1 | **Fixtures** (frozen known cases vs R-A and R-B) | Judged path does not implement locked Stage 3 on known cases → repair toward design; do not rewrite fixtures to force green |
+| 2 | **SQL Source Gate** | Shared delivery is not faithful → repair source; do not proceed to judged trust |
+| 3 | **Exact reconciliation** (R-A vs R-B on locked fields) | Independent judged translations disagree → diagnose; never copy IDs/actions across paths to manufacture agreement |
+| 4 | **Structural cross-review** (recorded status feeding Validation Gate) | Shared weakness / silent coupling / undisclosed plumbing → unresolved material finding blocks Validation Gate |
+| 5 | **Validation Gate** | Aggregate analytical validation fail → no validated-data freeze for Stage 5 interpretation of judged results. Verbs: Fail / repair / rerun / Pass (not soft “issues remain”) |
+| 6 | **R Workflow Gate** (`workflow_gate.R`) | Procedural receipts incomplete / wrong design version / unresolved issues → Stage 5 blocked even if narrators claim “done” |
+
+### Operating rules
+
+1. Soft commentary, narrative confidence, chat consensus, majority AI vote, or “owner said it’s fine” in Slack **cannot** override a failed tier. **No verbal waiver.**
+2. The only authorized correction path is a **dated owner change-control note** that creates a **new freeze identity** and **reruns** the failed tier (and dependents) against that identity, recorded in lineage. No silent continue.
+3. A failed tier **blocks every later tier** until that tier is re-run green against the same freeze identities. Illegal orders include Workflow Pass before Validation Pass, and recon Pass without fixture freeze identity.
+4. Higher tiers do not substitute for lower ones (e.g. workflow gate PASS cannot invent missing fixture PASS).
+5. **Workflow Gate consumes lower-tier receipts** (fixture freeze hash, source snapshot id, recon result, validation result). It does not author them. Writing `PASS` / `stage5_allowed: true` without those hashes is itself Fail.
+6. Each failure routes to the owning stage; preserve failed reports; rerun affected gates after repair.
+7. Prior locked Stage 3/4 packs are not rewritten to re-litigate historical gate outcomes.
+
+---
+
+## FORWARD — Evidence-package schema (publishable packs)
+
+> **Status:** Locked forward required receipts for **new / forward publishable** project packs. Prospective only — **not** a retrofit of frozen historical packs.
+
+### Required receipts (minimum schema, not names alone)
+
+Before Stage 5 and for publishable packs, require machine-readable receipts with **contents**, not empty filenames:
+
+| Receipt | Typical path / artifact | Minimum contents |
+|---|---|---|
+| **workflow_gate** | `artifacts/workflow_gate_status.json` (+ gate run exit) | `status`, `stage5_allowed`, `design_version`, fixture freeze hash, source snapshot id, recon result, validation result, timestamp |
+| **lineage** | Source snapshot identity, extract hash/manifest, fixture-pack freeze identity, design_version, script versions | Same frozen source and design drove both judged paths |
+| **scorecards** | Recon summary; fixture PASS tallies | Fixture IDs expected vs observed; recon field list and mismatch count (not a README sentence alone) |
+| Stage boundary JSONs | `stage1_decision.json`, `stage2_framing.json`, `stage3_locked_design.json`, `stage4_validation_status.json` | Stage 2 **requires** `capacity_stance`; Stage 3 **requires** `ml_mode`. After this lock, new projects cannot omit these by claiming upgrades are “not yet in force.” |
+
+### Packaging rule
+
+- Narrative markdown alone is insufficient when a receipt is listed above.
+- Hashes / versions in lineage must match the scripts and extracts claimed in the pack.
+- Ablation scorecards (KEEP/REVERT/HALT) are refinement-layer evidence; they do not replace Validation Gate or workflow_gate receipts for the production project.
+- Local unpublished work that will become a publishable pack is under the same trigger (“Before Stage 5 and for publishable packs”), not a GitHub-only loophole.
+
+### Historical packs unaffected
+
+Do not rewrite frozen historical Stage 3/4 evidence packs to force this schema. Do not backfill prior locked project packs “for uniformity.” New forward packs adopt it.
+
+
+
 ## Framework refinement
 
 This document is a canonical Stage 4 framework artifact. Proposed reusable changes to the execution, source-gate, fixture, reconciliation, independence, or review architecture should be evaluated through the [Three-Model Framework Ablation Protocol](framework-refinement/three-model-ablation-protocol.md), under the frozen [Ablation Constitution](framework-refinement/ablation-constitution.md).

@@ -62,11 +62,11 @@ A retained ablation changes the reusable framework only after the three-model pr
 
 See [ablation-program-catalog.md](ablation-program-catalog.md) for the current slate (A01–A10), the eventual 38-control catalog, and KEEP/REVERT/HALT meaning.
 
-## Chicago 311 batch A01–A08 (complete)
+## Completed ablation batch A01–A08
 
-- [Ablation program catalog](ablation-program-catalog.md) — includes **Batch A01–A08 results**
+- [Ablation program catalog](ablation-program-catalog.md) — includes **Batch A01–A08 results** and **locked forward rules**
 - [BATCH_A01_A08_SCORECARD.md](BATCH_A01_A08_SCORECARD.md)
 - [ablation-batch-A01-A08-results.md](ablation-batch-A01-A08-results.md)
 
-**Result:** 0 KEEP · 7 REVERT · 1 HALT · A09/A10 deferred → no Stage 3/4 framework edits from this batch.
-
+**Result:** 0 KEEP · 7 REVERT · 1 HALT · A09/A10 deferred → no Stage 3/4 framework edits from this batch.  
+**Evidence trees:** live in the project evidence repo under `docs/ablations/` (not duplicated here).
