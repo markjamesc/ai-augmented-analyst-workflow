@@ -74,17 +74,191 @@ Prospective for new / forward publishable packs only — do not retrofit frozen 
 
 The five-stage method and the controlling framework documents remain authoritative. The R Procedure Gate verifies the observable procedural record; it does not replace or redesign any stage.
 
-For each stage (`start`, `framing`, `design`, `execution`, `finish`):
+### GrokBot execution instructions
 
-1. call `procedure_gate.R begin` before work begins;
-2. follow the controlling framework normally;
-3. write the required machine-readable stage receipt;
-4. call `procedure_gate.R complete`;
-5. proceed only when the result is `PASS`.
+You are GrokBot, the orchestrator. Read this entire template, including the standing rules and hard stops, before starting. Coordinate the three AI roles according to the linked stage frameworks and the project's supplied role assignments.
 
-Execution completion is the outer gate's call to the existing R Workflow Gate. Do not mark Execution complete first. On Workflow Gate Fail, Execution remains incomplete and Stage 5 remains blocked.
+This is a Markdown instruction document with R checkpoints. Execute the R blocks through your local execution tools, one checkpoint at a time. Do not paste the entire document into the R console or render all blocks as an unattended `.Rmd` pipeline. Perform the framework work and obtain required human approvals between checkpoints. Never simulate console output or infer that an unexecuted command passed.
 
-After Stage 5 and explicit human analyst approval, call `procedure_gate.R finalize`. A run is not protocol-compliant unless `artifacts/final_certificate.json` exists and reports `result = PASS` and `certified = true`. `BLOCKED` or `FAIL` may not be verbally waived.
+Make a project-specific copy of this template in the project repository. Fill the configuration from supplied project information before initializing the run. Preserve the canonical workflow checkout for the duration of the run; its controlling files are hashed at initialization. Do not invent a decision, constraint, model assignment, or approval to fill a gap.
+
+### Configure the project and R command helper
+
+Supply the initial project request and available evidence separately from these technical settings. Use absolute paths; on Windows, forward slashes work in R strings. R must have `jsonlite`, `digest`, `purrr`, and `magrittr` installed. If R, a dependency, a path, or required project information is unavailable, stop and report the specific problem.
+
+```r
+project_name <- "{{PROJECT_NAME}}"
+run_id <- "{{RUN_ID}}"
+workflow_repo <- "{{WORKFLOW_REPOSITORY_PATH}}"
+project_root <- "{{PROJECT_ROOT_PATH}}"
+
+settings <- c(project_name, run_id, workflow_repo, project_root)
+stopifnot(all(nzchar(trimws(settings))), !any(grepl("{{", settings, fixed = TRUE)))
+
+workflow_repo <- normalizePath(workflow_repo, mustWork = TRUE)
+project_root <- normalizePath(project_root, mustWork = TRUE)
+stopifnot(dir.exists(workflow_repo), dir.exists(project_root))
+
+gate_script <- normalizePath(
+  file.path(workflow_repo, "procedure-gate", "procedure_gate.R"),
+  mustWork = TRUE
+)
+
+# This helper executes the existing gate CLI; the gate files own all checks.
+run_procedure_gate <- function(action, step = NULL) {
+  arguments <- c(gate_script, action, project_root, step)
+  error_log <- tempfile("procedure-gate-stderr-")
+  on.exit(unlink(error_log), add = TRUE)
+
+  output <- system2(
+    file.path(R.home("bin"), "Rscript"),
+    args = vapply(arguments, shQuote, character(1)),
+    stdout = TRUE,
+    stderr = error_log
+  )
+  exit_status <- attr(output, "status")
+  if (is.null(exit_status)) exit_status <- 0L
+
+  cat(output, sep = "\n")
+  if (file.exists(error_log)) cat(readLines(error_log, warn = FALSE), sep = "\n")
+  if (exit_status != 0L) stop("Procedure Gate failed; stop progression and inspect the output.")
+
+  response <- jsonlite::fromJSON(paste(output, collapse = "\n"), simplifyVector = FALSE)
+  expected <- switch(action,
+    start = "STARTED", begin = "AUTHORIZED", complete = "PASS",
+    finalize = "PASS", status = NULL,
+    stop("Unknown gate action")
+  )
+  actual <- if (action == "finalize") response$result else response$status
+  if (!is.null(expected) && !identical(actual, expected)) {
+    stop("Unexpected gate result; stop progression.")
+  }
+  if (action == "finalize" && !isTRUE(response$certified)) {
+    stop("Final certification was not granted.")
+  }
+  invisible(response)
+}
+```
+
+Keep the configuration and helper available for subsequent R blocks. If your execution tool opens a fresh R session, rerun this setup with the same settings before the requested checkpoint. State persists in the project files; do not initialize a new run merely because the R session restarted.
+
+### Initialize once, or inspect an existing run
+
+For a new run, execute once and require `STARTED`:
+
+```r
+run_procedure_gate("start", run_id)
+```
+
+When resuming, execute the following instead of `start`. Confirm the recorded run ID matches the intended run, then continue from the recorded current stage or next incomplete stage. A status response is informational; it does not authorize work by itself.
+
+```r
+run_status <- run_procedure_gate("status")
+stopifnot(identical(run_status$run_id, run_id))
+```
+
+### Stage 1 — Start
+
+Execute and require `AUTHORIZED` before beginning Start:
+
+```r
+run_procedure_gate("begin", "start")
+```
+
+Read `docs/three-ai-start-and-framing-dialogue-framework.md` in `workflow_repo` and follow its Start procedure. Save the actual stage evidence and `artifacts/stage1_decision.json` in `project_root`, using the current template in `templates/workflow-gate/` as the schema guide. Template PASS values are examples, not evidence.
+
+Execute after the work and required confirmation are complete; require `PASS`:
+
+```r
+run_procedure_gate("complete", "start")
+```
+
+### Stage 2 — Framing
+
+Execute and require `AUTHORIZED`:
+
+```r
+run_procedure_gate("begin", "framing")
+```
+
+Follow the Framing procedure in `docs/three-ai-start-and-framing-dialogue-framework.md`, including its reviews, approvals, and capacity stance lock. Save the evidence and `artifacts/stage2_framing.json` using the current schema template.
+
+Execute and require `PASS`:
+
+```r
+run_procedure_gate("complete", "framing")
+```
+
+### Stage 3 — Measurement Design
+
+Execute and require `AUTHORIZED`:
+
+```r
+run_procedure_gate("begin", "design")
+```
+
+Follow `docs/three-ai-measurement-design-framework.md` in full, including the independent first passes, controlled cross-review, Design Gates, and human-approved lock. Save the evidence and `artifacts/stage3_locked_design.json` using the current schema template.
+
+Execute and require `PASS`:
+
+```r
+run_procedure_gate("complete", "design")
+```
+
+### Stage 4 — Execution, Validation, and Deeper Analysis
+
+Execute and require `AUTHORIZED`:
+
+```r
+run_procedure_gate("begin", "execution")
+```
+
+Follow `docs/three-ai-validation-and-analysis-framework.md` in full. Use `docs/ENGINE.md` only where permitted by the existing framework. Preserve the lower-tier evidence files, their hashes, and `artifacts/stage4_validation_status.json` using the current schema template.
+
+Execute and require `PASS`:
+
+```r
+run_procedure_gate("complete", "execution")
+```
+
+This completion command invokes the existing R Workflow Gate. Do not mark Execution complete first or substitute a separate verbal release. On Workflow Gate failure, Execution remains incomplete and Stage 5 remains blocked.
+
+### Stage 5 — Finish: Interpretation and Recommendation
+
+Execute and require `AUTHORIZED`:
+
+```r
+run_procedure_gate("begin", "finish")
+```
+
+Follow `docs/three-ai-interpretation-and-recommendation-framework.md` in full, including independent first passes, cross-review, Finish Gates, and explicit human analyst approval. Save the deliverables and `artifacts/stage5_interpretation_status.json`, using `templates/procedure-gate/stage5_interpretation_status.example.json` as the schema guide. Record the actual Workflow Gate report hash.
+
+Execute and require `PASS`:
+
+```r
+run_procedure_gate("complete", "finish")
+```
+
+### Final certification and failure handling
+
+After Finish passes, execute:
+
+```r
+run_procedure_gate("finalize")
+
+certificate <- jsonlite::read_json(
+  file.path(project_root, "artifacts", "final_certificate.json")
+)
+stopifnot(
+  identical(certificate$run_id, run_id),
+  identical(certificate$result, "PASS"),
+  isTRUE(certificate$certified)
+)
+```
+
+Report certification only after successful execution and confirmation of the generated certificate. The certificate covers the gate's observable checks and recorded attestations; it does not prove private AI context or authenticate a self-reported human approval.
+
+On `BLOCKED`, `FAIL`, malformed output, or execution error, stop progression and report the actual failed checks. Repair an incomplete stage under its existing framework and retry its completion check. Do not rerun `begin` for a stage already recorded as active or reopen a completed stage by editing state. Material changes to completed locks require the framework's owner-approved change control; if the existing gate cannot represent the required reopening, pause and report that limitation. Never overwrite prior evidence, change the gate, or manufacture a receipt to force a pass.
 
 ## Orchestrator hard stops (paste block)
 
