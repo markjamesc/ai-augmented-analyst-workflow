@@ -2,5 +2,12 @@
   "stage": 1,
   "status": "LOCKED",
   "decision_statement": "Example decision statement",
-  "decision_owner": "Example decision owner"
+  "decision_owner": "Example decision owner",
+  "ai2_independent_reconstruction": "PASS",
+  "ai3_independent_red_team": "PASS",
+  "start_gate": "PASS",
+  "stakeholder_confirmation": "CONFIRMED",
+  "human_analyst_approval": "APPROVED",
+  "unresolved_issues": 0,
+  "_procedure_note": "Prospective Procedure Gate fields record the existing Start protocol; replace example content with run evidence."
 }

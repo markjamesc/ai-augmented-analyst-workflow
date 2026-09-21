@@ -18,11 +18,15 @@ flowchart LR
     G -->|"PASS"| D["Interpret evidence"]
     G -->|"FAIL"| C
     D --> E["Recommend action"]
+    E --> P["R procedure certificate"]
 ```
 
-## Deterministic workflow enforcement
+## Deterministic procedural enforcement
 
-The five-stage method now includes a separate **R Workflow Gate** that verifies that the required procedure was actually followed before Stage 5 begins.
+The five-stage method has two composed deterministic controls:
+
+- the **R Workflow Gate**, which controls the Stage 4→5 release; and
+- the **R Procedure Gate**, which referees the complete Start→Finish sequence and certifies the run.
 
 This is distinct from Stage 4 analytical validation:
 
@@ -33,12 +37,15 @@ The gate does not redesign the analysis or repair failed outputs. It reads machi
 
 See [R Workflow Gate — Cross-Stage Procedural Enforcement](docs/r-workflow-gate-enforcement.md) and the executable script at [workflow-gate/workflow_gate.R](workflow-gate/workflow_gate.R).
 
+The outer Procedure Gate does not change the five stages. It records which stage is active, verifies each stage receipt, calls the existing Workflow Gate to complete Execution, and writes `artifacts/final_certificate.json` only after the full procedure passes. See [R Procedure Gate — Whole-Run Procedural Referee](docs/r-procedure-gate-enforcement.md) and [procedure-gate/procedure_gate.R](procedure-gate/procedure_gate.R).
+
 ## Current implementation status
 
 - **Ablation batch A01–A08:** adjudicated; 0 KEEP, 7 REVERT, 1 HALT. No framework changes were authorized by that batch.
 - **Prospective upgrades:** approved separately, recorded in [Master Prompt](docs/MASTER_PROMPT.md) and [cross-review](docs/CROSS_REVIEW.md).
 - **Executable gate v2:** enforces explicit capacity/ML-mode declarations and content-addressed receipts, including fixture/reconciliation scorecards. See [contract and limitations](workflow-gate/CONTRACT_V2.md).
-- **Orchestration:** documented model roles and owner gates; this repository does not claim an unattended end-to-end ablation runner.
+- **Whole-run referee:** tracks and certifies the existing five-stage sequence without changing its analytical method.
+- **Orchestration:** documented model roles and owner gates; this repository does not claim an unattended end-to-end ablation runner or technical restriction of all agent capabilities.
 
 ## Packet index (stages 1–5)
 
@@ -49,7 +56,8 @@ See [R Workflow Gate — Cross-Stage Procedural Enforcement](docs/r-workflow-gat
 | 3 Measurement Design | [three-ai-measurement-design-framework.md](docs/three-ai-measurement-design-framework.md) |
 | 4 Execution, Validation, and Deeper Analysis | [three-ai-validation-and-analysis-framework.md](docs/three-ai-validation-and-analysis-framework.md) |
 | 4 R execution prompt (optional) | [ENGINE.md](docs/ENGINE.md) — one-file tidyverse R Workflow Engine under Stage 4 |
-| Cross-stage procedural enforcement | [r-workflow-gate-enforcement.md](docs/r-workflow-gate-enforcement.md) |
+| Whole-run R procedure referee | [r-procedure-gate-enforcement.md](docs/r-procedure-gate-enforcement.md) |
+| Stage 4→5 release enforcement | [r-workflow-gate-enforcement.md](docs/r-workflow-gate-enforcement.md) |
 | 5 Interpretation and Recommendation | [three-ai-interpretation-and-recommendation-framework.md](docs/three-ai-interpretation-and-recommendation-framework.md) |
 
 One-pager: [docs/PACKET.md](docs/PACKET.md).

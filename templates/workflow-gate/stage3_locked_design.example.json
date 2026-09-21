@@ -13,6 +13,14 @@
     "List the Stage 4 reconciliation-critical output fields"
   ],
   "ml_mode": "None",
+  "ai1_independent_design": "PASS",
+  "ai2_independent_design": "PASS",
+  "ai3_independent_risk_dossier": "PASS",
+  "information_barrier": "PASS",
+  "cross_review": "PASS",
+  "design_gates": "PASS",
+  "human_analyst_approval": "APPROVED",
+  "unresolved_issues": 0,
   "_forward_note": "ml_mode fail-closed required None|A|B on new projects; historical Mode None/rules on a past project is descriptive only — do not mutate frozen packs to insert the field",
   "fixture_version": "example-fixtures-v1",
   "fixture_ids": [

@@ -1,10 +1,13 @@
-name: Workflow Gate Test
+name: R Gate Tests
 
 on:
   pull_request:
     paths:
       - "workflow-gate/**"
+      - "procedure-gate/**"
       - "templates/workflow-gate/**"
+      - "templates/procedure-gate/**"
+      - "docs/MASTER_PROMPT.md"
       - ".github/workflows/workflow-gate-test.yml"
   push:
     branches:
@@ -13,7 +16,10 @@ on:
       - portfolio-refresh-20260920
     paths:
       - "workflow-gate/**"
+      - "procedure-gate/**"
       - "templates/workflow-gate/**"
+      - "templates/procedure-gate/**"
+      - "docs/MASTER_PROMPT.md"
       - ".github/workflows/workflow-gate-test.yml"
 
 jobs:
@@ -34,3 +40,6 @@ jobs:
 
       - name: Run workflow gate tests
         run: Rscript workflow-gate/tests/test_workflow_gate.R .
+
+      - name: Run procedure gate tests
+        run: Rscript procedure-gate/tests/test_procedure_gate.R .
