@@ -8,13 +8,21 @@
 # release decision to workflow-gate/workflow_gate.R, and certifies the run only
 # after all five existing stages pass.
 
-suppressPackageStartupMessages(library(jsonlite))
+######### Libraries ###############################################################################
+
+suppressPackageStartupMessages({
+  library(jsonlite)
+  library(purrr)
+  library(magrittr)
+})
 if (!requireNamespace("digest", quietly = TRUE)) {
   stop("Install digest to verify procedure and artifact hashes")
 }
 
 `%||%` <- function(x, y) if (is.null(x)) y else x
-`%not_in%` <- function(x, y) !(x %in% y)
+`%not_in%` <- negate(`%in%`)
+
+######### Read and save the run ###################################################################
 
 procedure_script_path <- function() {
   file_arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
@@ -41,16 +49,15 @@ procedure_paths <- function(project_root) {
 }
 
 read_procedure <- function() {
-  fromJSON(
-    file.path(procedure_repo_root(), "procedure-gate", "procedure.json"),
-    simplifyVector = FALSE
-  )
+  file.path(procedure_repo_root(), "procedure-gate", "procedure.json") %>%
+    fromJSON(simplifyVector = FALSE)
 }
 
 read_state <- function(project_root) {
   paths <- procedure_paths(project_root)
   if (!file.exists(paths$state)) stop("Procedure run has not been started: ", paths$state)
-  fromJSON(paths$state, simplifyVector = FALSE)
+  paths$state %>%
+    fromJSON(simplifyVector = FALSE)
 }
 
 write_json_atomic <- function(value, path) {
@@ -86,8 +93,11 @@ has_fields <- function(x, fields) {
   is.list(x) && all(fields %in% names(x))
 }
 
+######### Identify stages and verify frozen files #################################################
+
 step_by_id <- function(procedure, step_id) {
-  matches <- Filter(function(step) identical(step$id, step_id), procedure$steps)
+  matches <- procedure$steps %>%
+    keep(function(step) identical(step$id, step_id))
   if (length(matches) == 0L) stop("Unknown procedure step: ", step_id)
   if (length(matches) > 1L) stop("Duplicate procedure step: ", step_id)
   matches[[1]]
@@ -100,13 +110,15 @@ completed_ids <- function(state) {
 verify_completed_artifacts <- function(state, project_root) {
   completed <- state$completed_steps %||% list()
   if (length(completed) == 0L) return(TRUE)
-  all(vapply(completed, function(value) {
+  artifact_checks <- completed %>% map_lgl(function(value) {
     relative_path <- value$artifact$path %||% ""
     expected_hash <- value$artifact$sha256 %||% ""
     path <- file.path(normalizePath(project_root, mustWork = TRUE), relative_path)
     text_scalar(relative_path) && text_scalar(expected_hash) && file.exists(path) &&
       !dir.exists(path) && identical(tolower(expected_hash), sha256_file(path))
-  }, logical(1)))
+  })
+
+  all(artifact_checks)
 }
 
 verify_workflow_report <- function(state, project_root) {
@@ -120,16 +132,15 @@ verify_workflow_report <- function(state, project_root) {
 framework_hashes <- function(procedure) {
   files <- unique(c(
     "docs/MASTER_PROMPT.md",
-    vapply(procedure$steps, function(step) step$framework, character(1)),
+    map_chr(procedure$steps, function(step) step$framework),
     "docs/r-workflow-gate-enforcement.md",
     "workflow-gate/workflow_gate.R"
   ))
-  values <- lapply(files, function(relative_path) {
+  values <- files %>% map(function(relative_path) {
     path <- file.path(procedure_repo_root(), relative_path)
     if (!file.exists(path)) stop("Controlling file is missing: ", relative_path)
     list(path = relative_path, sha256 = sha256_file(path))
-  })
-  names(values) <- files
+  }) %>% setNames(files)
   values
 }
 
@@ -139,11 +150,17 @@ verify_framework_hashes <- function(state) {
     identical(tolower(state$procedure_sha256 %||% ""), sha256_file(procedure_path))
   locked <- state$framework_hashes %||% list()
   if (length(locked) == 0L) return(FALSE)
-  procedure_ok && all(vapply(locked, function(entry) {
+  if (!procedure_ok) return(FALSE)
+
+  framework_checks <- locked %>% map_lgl(function(entry) {
     path <- file.path(procedure_repo_root(), entry$path)
     file.exists(path) && identical(tolower(entry$sha256), sha256_file(path))
-  }, logical(1)))
+  })
+
+  all(framework_checks)
 }
+
+######### Record PASS / FAIL checks ###############################################################
 
 check_result <- function(name, pass, detail) {
   list(
@@ -154,7 +171,12 @@ check_result <- function(name, pass, detail) {
 }
 
 checks_pass <- function(checks) {
-  length(checks) > 0L && all(vapply(checks, function(x) identical(x$result, "PASS"), logical(1)))
+  # An empty checklist is not a pass. Missing / NA results are not passes either.
+  if (length(checks) == 0L) return(FALSE)
+
+  checks %>%
+    map_lgl(function(check) identical(check$result, "PASS")) %>%
+    all()
 }
 
 save_checks <- function(project_root, step_id, phase, checks) {
@@ -176,6 +198,8 @@ read_artifact_safe <- function(path) {
   if (!file.exists(path) || dir.exists(path) || file.info(path)$size <= 0) return(NULL)
   tryCatch(fromJSON(path, simplifyVector = FALSE), error = function(e) NULL)
 }
+
+######### Verify the required receipt for each stage ##############################################
 
 validate_stage_receipt <- function(step_id, receipt, project_root) {
   checks <- list()
@@ -271,7 +295,7 @@ validate_stage_receipt <- function(step_id, receipt, project_root) {
       !is.na(receipt$unresolved_issues) && receipt$unresolved_issues == 0
     add("Stage 5 unresolved issues", issues_ok, "unresolved_issues must equal 0")
     deliverables_ok <- is.list(receipt) && length(receipt$deliverables) > 0L &&
-      all(vapply(receipt$deliverables, text_scalar, logical(1)))
+      all(map_lgl(receipt$deliverables, text_scalar))
     add("Stage 5 deliverables recorded", deliverables_ok, "deliverables must contain at least one recorded artifact")
     workflow_path <- procedure_paths(project_root)$workflow_report
     workflow_hash_ok <- file.exists(workflow_path) && is.list(receipt) &&
@@ -282,6 +306,8 @@ validate_stage_receipt <- function(step_id, receipt, project_root) {
 
   checks
 }
+
+######### Ask the existing Workflow Gate to release Execution #####################################
 
 run_workflow_gate <- function(project_root) {
   paths <- procedure_paths(project_root)
@@ -311,6 +337,8 @@ run_workflow_gate <- function(project_root) {
   )
 }
 
+######### Start the run ###########################################################################
+
 procedure_start <- function(project_root, run_id) {
   if (!text_scalar(run_id)) stop("run_id must be one nonempty string")
   paths <- procedure_paths(project_root)
@@ -333,6 +361,8 @@ procedure_start <- function(project_root, run_id) {
   save_state(state, project_root)
   list(status = "STARTED", run_id = run_id, next_step = procedure$steps[[1]]$id)
 }
+
+######### Begin a stage only when its prerequisites pass ##########################################
 
 procedure_begin <- function(project_root, step_id) {
   state <- read_state(project_root)
@@ -358,6 +388,8 @@ procedure_begin <- function(project_root, step_id) {
   save_state(state, project_root)
   list(status = "AUTHORIZED", step = step_id, framework = step$framework, check_report = record)
 }
+
+######### Complete a stage only after its evidence passes #########################################
 
 procedure_complete <- function(project_root, step_id) {
   state <- read_state(project_root)
@@ -408,16 +440,18 @@ procedure_complete <- function(project_root, step_id) {
   state$updated_at_utc <- timestamp_utc()
   save_state(state, project_root)
 
-  step_ids <- vapply(procedure$steps, function(x) x$id, character(1))
+  step_ids <- procedure$steps %>% map_chr(function(step) step$id)
   position <- match(step_id, step_ids)
   next_step <- if (position < length(step_ids)) step_ids[[position + 1L]] else "FINALIZE"
   list(status = "PASS", completed_step = step_id, next_step = next_step, check_report = record)
 }
 
+######### Show progress ##########################################################################
+
 procedure_status <- function(project_root) {
   state <- read_state(project_root)
   procedure <- read_procedure()
-  step_ids <- vapply(procedure$steps, function(x) x$id, character(1))
+  step_ids <- procedure$steps %>% map_chr(function(step) step$id)
   done <- completed_ids(state)
   next_step <- if (!is.null(state$current_step)) state$current_step else {
     remaining <- step_ids[step_ids %not_in% done]
@@ -434,11 +468,13 @@ procedure_status <- function(project_root) {
   )
 }
 
+######### Certify the completed run ###############################################################
+
 procedure_finalize <- function(project_root) {
   state <- read_state(project_root)
   procedure <- read_procedure()
   paths <- procedure_paths(project_root)
-  required <- vapply(procedure$steps, function(x) x$id, character(1))
+  required <- procedure$steps %>% map_chr(function(step) step$id)
   checks <- list(
     check_result("No step is active", is.null(state$current_step), "current_step must be null"),
     check_result("All five stages complete", all(required %in% completed_ids(state)), paste(required, collapse = ", ")),
@@ -450,7 +486,7 @@ procedure_finalize <- function(project_root) {
   record <- save_checks(project_root, "final", "certification", checks)
   if (!checks_pass(checks)) return(list(status = "FAIL", checks = checks))
 
-  completed <- lapply(required, function(id) {
+  completed <- required %>% map(function(id) {
     value <- state$completed_steps[[id]]
     list(id = id, artifact_path = value$artifact$path, artifact_sha256 = value$artifact$sha256)
   })
@@ -479,6 +515,8 @@ procedure_finalize <- function(project_root) {
   save_state(state, project_root)
   certificate
 }
+
+######### Command-line entry point ###############################################################
 
 print_json <- function(value) {
   cat(toJSON(value, pretty = TRUE, auto_unbox = TRUE, null = "null"), "\n")

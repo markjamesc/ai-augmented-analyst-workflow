@@ -15,9 +15,15 @@
 #   Rscript workflow-gate/workflow_gate.R /path/to/project
 #
 # Dependency:
-#   install.packages("jsonlite")
+#   install.packages(c("jsonlite", "digest", "purrr", "magrittr"))
 
-suppressPackageStartupMessages(library(jsonlite))
+######### Libraries and project paths #############################################################
+
+suppressPackageStartupMessages({
+  library(jsonlite)
+  library(purrr)
+  library(magrittr)
+})
 if (!requireNamespace("digest", quietly = TRUE)) stop("Install digest to verify SHA-256 receipts")
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -31,6 +37,8 @@ paths <- list(
   stage4 = file.path(artifacts_dir, "stage4_validation_status.json"),
   gate   = file.path(artifacts_dir, "workflow_gate_status.json")
 )
+
+######### Read receipts and record checks #########################################################
 
 checks <- list()
 add_check <- function(name, pass, detail) {
@@ -256,7 +264,13 @@ for (role in receipt_roles) {
   verified_receipts[[role]] <- entry
 }
 
-all_pass <- length(checks) > 0 && all(vapply(checks, function(x) identical(x$result, "PASS"), logical(1)))
+######### Release only when every required check passes ###########################################
+
+check_results <- checks %>%
+  map_lgl(function(check) identical(check$result, "PASS"))
+
+# Do not use na.rm = TRUE here: unknown evidence must never disappear from a gate.
+all_pass <- length(checks) > 0 && all(check_results)
 
 dir.create(artifacts_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -277,9 +291,9 @@ write_json(gate_output, paths$gate, pretty = TRUE, auto_unbox = TRUE, null = "nu
 
 cat("\nFive-Stage Workflow Gate\n")
 cat("========================\n")
-for (x in checks) {
-  cat(sprintf("%-46s %s\n", x$check, x$result))
-}
+walk(checks, function(check) {
+  cat(sprintf("%-46s %s\n", check$check, check$result))
+})
 cat("------------------------\n")
 cat("OVERALL:", gate_output$result, "\n")
 cat("STAGE 5 ALLOWED:", if (gate_output$stage5_allowed) "YES" else "NO", "\n")

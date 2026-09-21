@@ -8,6 +8,19 @@ repo_root <- if (length(args) >= 1L) normalizePath(args[[1]], mustWork = TRUE) e
 gate_script <- file.path(repo_root, "procedure-gate", "procedure_gate.R")
 if (!file.exists(gate_script)) stop("Procedure Gate not found: ", gate_script)
 
+# Test the small checking functions separately from the command-line runner.
+gate <- new.env()
+sys.source(gate_script, envir = gate)
+gate$procedure_script_path <- function() gate_script
+
+stopifnot(!gate$checks_pass(list()))
+stopifnot(!gate$checks_pass(list(list(result = NULL))))
+stopifnot(!gate$checks_pass(list(list(result = NA_character_))))
+stopifnot(!gate$checks_pass(list(list(result = c("PASS", "FAIL")))))
+stopifnot(!gate$checks_pass(list(list(result = "PASS"), list(result = "FAIL"))))
+stopifnot(gate$checks_pass(list(list(result = "PASS"))))
+stopifnot(identical(gate$`%not_in%`(c("start", "finish"), "start"), c(FALSE, TRUE)))
+
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
 run_gate <- function(...) {
@@ -151,6 +164,15 @@ dir.create(project_root)
 result <- run_gate("start", project_root, "TEST-001")
 stopifnot(identical(result$status, 0L))
 
+# Existing evidence cannot substitute for authorization.
+write_stage1(project_root)
+result <- run_gate("complete", project_root, "start")
+stopifnot(!identical(result$status, 0L))
+unlink(file.path(project_root, "artifacts", "stage1_decision.json"))
+
+result <- run_gate("finalize", project_root)
+stopifnot(!identical(result$status, 0L))
+
 # A future stage cannot begin before its prerequisites.
 result <- run_gate("begin", project_root, "design")
 stopifnot(!identical(result$status, 0L))
@@ -191,6 +213,15 @@ stopifnot(identical(result$status, 0L))
 result <- run_gate("complete", project_root, "execution")
 stopifnot(!identical(result$status, 0L))
 write_stage4(project_root)
+
+# A superficially PASS Stage 4 receipt still fails if lower-tier evidence fails.
+source_receipt <- file.path(project_root, "evidence-v2", "source.json")
+write_json(list(status = "FAIL"), source_receipt)
+result <- run_gate("complete", project_root, "execution")
+stopifnot(!identical(result$status, 0L))
+result <- run_gate("begin", project_root, "finish")
+stopifnot(!identical(result$status, 0L))
+write_stage4(project_root)
 result <- run_gate("complete", project_root, "execution")
 stopifnot(identical(result$status, 0L))
 stopifnot(file.exists(file.path(project_root, "artifacts", "workflow_gate_status.json")))
@@ -198,6 +229,22 @@ stopifnot(file.exists(file.path(project_root, "artifacts", "workflow_gate_status
 result <- run_gate("begin", project_root, "finish")
 stopifnot(identical(result$status, 0L))
 write_stage5(project_root)
+
+# Every required role/review/approval field must fail when individually absent.
+for (step in c("start", "framing", "design", "finish")) {
+  definition <- gate$step_by_id(gate$read_procedure(), step)
+  receipt <- fromJSON(file.path(project_root, definition$artifact), simplifyVector = FALSE)
+  stopifnot(gate$checks_pass(gate$validate_stage_receipt(step, receipt, project_root)))
+  required_fields <- names(receipt)[vapply(receipt, function(value) {
+    is.character(value) && length(value) == 1L && value %in% c("PASS", "APPROVED", "CONFIRMED")
+  }, logical(1))]
+  for (field in required_fields) {
+    missing_field <- receipt
+    missing_field[[field]] <- NULL
+    stopifnot(!gate$checks_pass(gate$validate_stage_receipt(step, missing_field, project_root)))
+  }
+}
+
 result <- run_gate("complete", project_root, "finish")
 stopifnot(identical(result$status, 0L))
 
