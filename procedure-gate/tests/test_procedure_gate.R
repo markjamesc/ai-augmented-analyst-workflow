@@ -140,6 +140,9 @@ write_stage4 <- function(root) {
 }
 
 write_stage5 <- function(root) {
+  for (path in c("stage5-evidence.md", "stage5-decision.md", "monitoring-plan.md")) {
+    writeLines(paste("Synthetic deliverable:", path), file.path(root, path))
+  }
   workflow_path <- file.path(root, "artifacts", "workflow_gate_status.json")
   if (!file.exists(workflow_path)) stop("Workflow Gate report missing before Stage 5 fixture")
   write_receipt(root, "stage5_interpretation_status.json", list(
@@ -263,6 +266,40 @@ stopifnot(identical(certificate$result, "PASS"), isTRUE(certificate$certified))
 
 state <- fromJSON(file.path(project_root, "artifacts", "procedure", "run_state.json"), simplifyVector = TRUE)
 stopifnot(identical(state$status, "CERTIFIED"))
+
+# Finalization must inspect the actual released evidence, not just its report.
+original_source <- readBin(source_receipt, "raw", n = file.info(source_receipt)$size)
+write_json(list(status = "FAIL"), source_receipt)
+stopifnot(run_gate("finalize", project_root)$status != 0L)
+failed_certificate <- fromJSON(certificate_path)
+stopifnot(identical(failed_certificate$result, "FAIL"), identical(failed_certificate$certified, FALSE))
+state <- fromJSON(file.path(project_root, "artifacts", "procedure", "run_state.json"))
+stopifnot(!identical(state$status, "CERTIFIED"))
+stopifnot(length(list.files(file.path(project_root, "artifacts", "procedure", "certificates"))) > 0L)
+writeBin(original_source, source_receipt)
+stopifnot(run_gate("finalize", project_root)$status == 0L)
+unlink(source_receipt)
+stopifnot(run_gate("finalize", project_root)$status != 0L)
+writeBin(original_source, source_receipt)
+stopifnot(run_gate("finalize", project_root)$status == 0L)
+
+# Stage 5 names must resolve to real, nonempty project files.
+finish_receipt <- fromJSON(file.path(project_root, "artifacts", "stage5_interpretation_status.json"), simplifyVector = FALSE)
+for (bad_path in c("missing.md", "../outside.md", project_root, "empty.md")) {
+  file.create(file.path(project_root, "empty.md"))
+  invalid <- finish_receipt
+  invalid$deliverables <- list(bad_path)
+  stopifnot(!gate$checks_pass(gate$validate_stage_receipt("finish", invalid, project_root)))
+}
+deliverable <- file.path(project_root, "stage5-evidence.md")
+original_deliverable <- readBin(deliverable, "raw", n = file.info(deliverable)$size)
+writeLines("Changed after completion", deliverable)
+stopifnot(run_gate("finalize", project_root)$status != 0L)
+unlink(deliverable)
+stopifnot(run_gate("finalize", project_root)$status != 0L)
+writeBin(original_deliverable, deliverable)
+stopifnot(run_gate("finalize", project_root)$status == 0L)
+cat("Regression checks passed: changed evidence, missing/changed deliverables, stale PASS invalidation.\n")
 
 unlink(project_root, recursive = TRUE)
 cat("Procedure Gate tests passed: illegal transitions blocked; five-stage run certified.\n")
