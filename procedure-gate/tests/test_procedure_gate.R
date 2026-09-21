@@ -278,6 +278,10 @@ stopifnot(!identical(state$status, "CERTIFIED"))
 stopifnot(length(list.files(file.path(project_root, "artifacts", "procedure", "certificates"))) > 0L)
 writeBin(original_source, source_receipt)
 stopifnot(run_gate("finalize", project_root)$status == 0L)
+unlink(source_receipt)
+stopifnot(run_gate("finalize", project_root)$status != 0L)
+writeBin(original_source, source_receipt)
+stopifnot(run_gate("finalize", project_root)$status == 0L)
 
 # Stage 5 names must resolve to real, nonempty project files.
 finish_receipt <- fromJSON(file.path(project_root, "artifacts", "stage5_interpretation_status.json"), simplifyVector = FALSE)
