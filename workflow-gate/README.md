@@ -74,7 +74,7 @@ Rscript workflow-gate/workflow_gate.R /path/to/project
 Dependency:
 
 ```r
-install.packages("jsonlite")
+install.packages(c("jsonlite", "digest", "purrr", "magrittr"))
 ```
 
 The script writes:

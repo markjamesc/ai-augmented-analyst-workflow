@@ -20,8 +20,28 @@ When the orchestrator requests completion of `execution`, the Procedure Gate run
 ## Dependencies
 
 ```r
-install.packages(c("jsonlite", "digest"))
+install.packages(c("jsonlite", "digest", "purrr", "magrittr"))
 ```
+
+## Code style and reading order
+
+The gate uses ordinary functions, named intermediate objects, `%>%` pipelines,
+and `purrr::map()` / `map_chr()` / `map_lgl()` with explicit `function(...)`
+bodies. It loads only the tidyverse components it needs (`purrr` and
+`magrittr`), not plotting or spreadsheet packages.
+
+Read `procedure_start()`, `procedure_begin()`, `procedure_complete()`, and
+`procedure_finalize()` for the procedure. File I/O, JSON, and hash helpers are
+kept separate. `map_chr()` means one string per stage; `map_lgl()` means one
+TRUE/FALSE per check. The JSON output shapes and command interface are unchanged.
+
+Some base R is deliberate: `if` / `&&` guard unsafe operations, `identical()`
+requires an exact result, and `system2()` invokes the existing release gate.
+These checks must not be replaced with NA-dropping summaries or implicit passes.
+
+This style refactor does not expand the certification claim: the referee checks
+recorded order and evidence, including attestations, not the truth of private
+model activity or the authenticity of a self-reported human approval.
 
 ## Project receipts
 

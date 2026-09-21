@@ -36,7 +36,7 @@ jobs:
           use-public-rspm: true
 
       - name: Install gate dependencies
-        run: Rscript -e 'install.packages(c("jsonlite", "digest"), repos="https://cloud.r-project.org")'
+        run: Rscript -e 'install.packages(c("jsonlite", "digest", "purrr", "magrittr"), repos="https://cloud.r-project.org")'
 
       - name: Run workflow gate tests
         run: Rscript workflow-gate/tests/test_workflow_gate.R .
