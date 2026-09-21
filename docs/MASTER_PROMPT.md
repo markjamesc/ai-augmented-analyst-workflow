@@ -15,7 +15,8 @@ Use the current `main` (or verified commit) of:
 - Stages 1–2: `docs/three-ai-start-and-framing-dialogue-framework.md` — including **FORWARD `capacity_stance`**
 - Stage 3: `docs/three-ai-measurement-design-framework.md` — including **FORWARD ML Mode fail-closed**
 - Stage 4: `docs/three-ai-validation-and-analysis-framework.md` — including **FORWARD dual-path / failability / evidence schema**
-- Cross-stage: `docs/r-workflow-gate-enforcement.md` + `workflow-gate/workflow_gate.R`
+- Whole-run procedure referee: `docs/r-procedure-gate-enforcement.md` + `procedure-gate/procedure_gate.R`
+- Stage 4→5 release: `docs/r-workflow-gate-enforcement.md` + `workflow-gate/workflow_gate.R`
 - Optional ENGINE: `docs/ENGINE.md` (Mode B helper only)
 - Stage 5: `docs/three-ai-interpretation-and-recommendation-framework.md`
 
@@ -69,6 +70,22 @@ Prospective for new / forward publishable packs only — do not retrofit frozen 
 6. **Wall-clock / timezone parse consistency:** Naive export clocks and timezone conversions must follow the locked Stage 3/4 contract for the project timezone; both judged paths must parse the same way. Treat silent clock/tz divergence as a judged-path defect, not a cosmetic formatting issue.
 7. **Ablation KEEP-only:** Only ablations returning `KEEP` may authorize reusable Stage 3/4 framework edits. `REVERT` / `HALT` / deferred items / forward upgrades that are not KEEP-authorized do not rewrite frozen project evidence. Ablation batch A01–A08 returned **0 KEEP**; batch trees live in the project evidence repo.
 
+## R Procedure Referee (always on for prospective runs)
+
+The five-stage method and the controlling framework documents remain authoritative. The R Procedure Gate verifies the observable procedural record; it does not replace or redesign any stage.
+
+For each stage (`start`, `framing`, `design`, `execution`, `finish`):
+
+1. call `procedure_gate.R begin` before work begins;
+2. follow the controlling framework normally;
+3. write the required machine-readable stage receipt;
+4. call `procedure_gate.R complete`;
+5. proceed only when the result is `PASS`.
+
+Execution completion is the outer gate's call to the existing R Workflow Gate. Do not mark Execution complete first. On Workflow Gate Fail, Execution remains incomplete and Stage 5 remains blocked.
+
+After Stage 5 and explicit human analyst approval, call `procedure_gate.R finalize`. A run is not protocol-compliant unless `artifacts/final_certificate.json` exists and reports `result = PASS` and `certified = true`. `BLOCKED` or `FAIL` may not be verbally waived.
+
 ## Orchestrator hard stops (paste block)
 
 ```text
@@ -78,6 +95,7 @@ FORWARD HARD STOPS (portable method):
 3) Dual R-A/R-B only for judged contracts; shared judged helpers forbidden; dumb comparator only.
 4) Fixture / Source / Recon / Cross-review / Validation / Workflow gates can fail the work — no verbal waiver; owner change-control = new freeze + rerun.
 5) Stage 5 blocked unless workflow_gate_status.json PASS with stage5_allowed and lineage + scorecard receipts present (Workflow Gate consumes lower receipts).
+6) The complete run is not protocol-compliant unless the R Procedure Gate certifies all five stages and writes final_certificate.json with result = PASS and certified = true.
 Do NOT retrofit or mutate prior locked / frozen historical packs. Apply these rules to this project prospectively. Case evidence stays in the project repo.
 ```
 

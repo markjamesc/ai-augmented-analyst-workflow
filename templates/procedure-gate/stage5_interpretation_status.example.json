@@ -1,0 +1,23 @@
+{
+  "stage": 5,
+  "status": "PASS",
+  "workflow_gate_report_sha256": "replace-with-the-actual-sha256-of-artifacts/workflow_gate_status.json",
+  "ai1_first_pass": "PASS",
+  "ai2_first_pass": "PASS",
+  "ai3_first_pass": "PASS",
+  "information_barrier": "PASS",
+  "cross_review": "PASS",
+  "finish_gates": "PASS",
+  "human_analyst_approval": "APPROVED",
+  "unresolved_issues": 0,
+  "deliverables": [
+    "01_STAGE_05_EVIDENCE_PACKAGE.md",
+    "02_RESULT_INVENTORY.md",
+    "03_AI1_PRIMARY_INTERPRETATION.md",
+    "04_AI2_DECISION_AND_INFERENCE_CRITIQUE.md",
+    "05_AI3_CLAIM_TO_EVIDENCE_AUDIT.md",
+    "08_CROSS_REVIEW_AND_RECONCILIATION.md",
+    "11_STAGE_05_DECISION_EVALUATION.md",
+    "12_MONITORING_AND_NEXT_QUESTION_PLAN.md"
+  ]
+}

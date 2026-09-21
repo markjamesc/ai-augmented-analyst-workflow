@@ -3,6 +3,14 @@
   "status": "LOCKED",
   "analytical_question": "Example locked analytical question",
   "capacity_stance": "unordered_ok",
+  "ai1_builder": "PASS",
+  "ai2_decision_fit_review": "PASS",
+  "ai3_framing_red_team": "PASS",
+  "cross_review": "PASS",
+  "framing_gate": "PASS",
+  "stakeholder_approval": "APPROVED",
+  "human_analyst_approval": "APPROVED",
+  "unresolved_issues": 0,
   "_forward_note": "capacity_stance required on new projects (unordered_ok | hard_attention_budget); do not retrofit prior locked packs",
   "_template_note": "Example only; owner must explicitly select and lock capacity stance."
 }
