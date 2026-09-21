@@ -30,6 +30,17 @@ and `purrr::map()` / `map_chr()` / `map_lgl()` with explicit `function(...)`
 bodies. It loads only the tidyverse components it needs (`purrr` and
 `magrittr`), not plotting or spreadsheet packages.
 
+Finalization rechecks the supporting evidence files against the frozen Workflow
+Gate report. Finish requires existing, nonempty deliverables inside the project;
+their hashes are recorded at completion and checked again at finalization.
+Existing completed runs without these deliverable hashes require a new run.
+A failed final check replaces the public certificate with `FAIL` and
+`certified: false`, and removes the state's `CERTIFIED` status. Previous
+certificates are retained by file hash under `artifacts/procedure/certificates/`
+as historical records, not current authorization. These checks establish recorded
+artifact integrity; they do not prove that claimed AI reviews or human approvals
+actually occurred, or prevent bypass by an agent with unrestricted file access.
+
 Read `procedure_start()`, `procedure_begin()`, `procedure_complete()`, and
 `procedure_finalize()` for the procedure. File I/O, JSON, and hash helpers are
 kept separate. `map_chr()` means one string per stage; `map_lgl()` means one

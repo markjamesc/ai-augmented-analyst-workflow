@@ -129,6 +129,29 @@ verify_workflow_report <- function(state, project_root) {
     identical(tolower(expected_hash), sha256_file(path))
 }
 
+project_file_ok <- function(path, project_root) {
+  if (!text_scalar(path) || grepl("^(/|[A-Za-z]:|\\\\)", path) ||
+      ".." %in% strsplit(gsub("\\\\", "/", path), "/", fixed = TRUE)[[1]]) return(FALSE)
+  root <- normalizePath(project_root, winslash = "/", mustWork = TRUE)
+  file <- file.path(root, path)
+  if (!file.exists(file) || dir.exists(file) || is.na(file.info(file)$size) ||
+      file.info(file)$size == 0) return(FALSE)
+  startsWith(normalizePath(file, winslash = "/", mustWork = TRUE), paste0(root, "/"))
+}
+
+verify_file_manifest <- function(manifest, project_root) {
+  is.list(manifest) && length(manifest) > 0L && all(map_lgl(manifest, function(entry) {
+    is.list(entry) && project_file_ok(entry$path, project_root) &&
+      text_scalar(entry$sha256) &&
+      identical(tolower(entry$sha256), sha256_file(file.path(project_root, entry$path)))
+  }))
+}
+
+verify_supporting_evidence <- function(project_root) {
+  report <- read_artifact_safe(procedure_paths(project_root)$workflow_report)
+  is.list(report) && verify_file_manifest(report$evidence_receipts, project_root)
+}
+
 framework_hashes <- function(procedure) {
   files <- unique(c(
     "docs/MASTER_PROMPT.md",
@@ -295,8 +318,8 @@ validate_stage_receipt <- function(step_id, receipt, project_root) {
       !is.na(receipt$unresolved_issues) && receipt$unresolved_issues == 0
     add("Stage 5 unresolved issues", issues_ok, "unresolved_issues must equal 0")
     deliverables_ok <- is.list(receipt) && length(receipt$deliverables) > 0L &&
-      all(map_lgl(receipt$deliverables, text_scalar))
-    add("Stage 5 deliverables recorded", deliverables_ok, "deliverables must contain at least one recorded artifact")
+      all(map_lgl(receipt$deliverables, project_file_ok, project_root = project_root))
+    add("Stage 5 deliverables recorded", deliverables_ok, "deliverables must name existing nonempty files inside the project")
     workflow_path <- procedure_paths(project_root)$workflow_report
     workflow_hash_ok <- file.exists(workflow_path) && is.list(receipt) &&
       text_scalar(receipt$workflow_gate_report_sha256) &&
@@ -436,6 +459,11 @@ procedure_complete <- function(project_root, step_id) {
       verified_at_utc = timestamp_utc()
     )
   }
+  if (identical(step_id, "finish")) {
+    state$completed_steps$finish$deliverables <- receipt$deliverables %>% map(function(path) {
+      list(path = path, sha256 = sha256_file(file.path(project_root, path)))
+    })
+  }
   state$current_step <- NULL
   state$updated_at_utc <- timestamp_utc()
   save_state(state, project_root)
@@ -481,10 +509,27 @@ procedure_finalize <- function(project_root) {
     check_result("Workflow Gate certified Execution", is.list(state$workflow_gate) && identical(state$workflow_gate$status, "PASS"), "workflow_gate status must equal PASS"),
     check_result("Completed receipts unchanged", verify_completed_artifacts(state, project_root), "completed artifact hashes must still match"),
     check_result("Workflow Gate report unchanged", verify_workflow_report(state, project_root), "recorded workflow report hash must still match"),
+    check_result("Supporting evidence unchanged", verify_supporting_evidence(project_root), "evidence files must match the released Workflow Gate report"),
+    check_result("Stage 5 deliverables unchanged", verify_file_manifest(state$completed_steps$finish$deliverables, project_root), "deliverables must match their Finish completion hashes"),
     check_result("Controlling documents unchanged", verify_framework_hashes(state), "framework hashes must match run start")
   )
   record <- save_checks(project_root, "final", "certification", checks)
-  if (!checks_pass(checks)) return(list(status = "FAIL", checks = checks))
+  if (!checks_pass(checks)) {
+    if (file.exists(paths$certificate)) {
+      archive <- file.path(project_root, "artifacts", "procedure", "certificates")
+      dir.create(archive, recursive = TRUE, showWarnings = FALSE)
+      if (!file.copy(paths$certificate, file.path(archive, paste0(sha256_file(paths$certificate), ".json")), overwrite = TRUE)) {
+        stop("Could not archive previous certificate")
+      }
+    }
+    write_json_atomic(list(result = "FAIL", certified = FALSE, run_id = state$run_id,
+                           checks = checks, checked_at_utc = timestamp_utc()), paths$certificate)
+    state$status <- "IN_PROGRESS"
+    state$final_certificate <- list(path = "artifacts/final_certificate.json", sha256 = sha256_file(paths$certificate))
+    state$updated_at_utc <- timestamp_utc()
+    save_state(state, project_root)
+    return(list(status = "FAIL", checks = checks))
+  }
 
   completed <- required %>% map(function(id) {
     value <- state$completed_steps[[id]]
@@ -499,6 +544,7 @@ procedure_finalize <- function(project_root) {
     procedure_version = state$procedure_version,
     procedure_sha256 = state$procedure_sha256,
     completed_steps = completed,
+    deliverables = state$completed_steps$finish$deliverables,
     workflow_gate_report_sha256 = state$workflow_gate$report_sha256,
     certification_check_sha256 = record$sha256,
     certified_at_utc = timestamp_utc()
