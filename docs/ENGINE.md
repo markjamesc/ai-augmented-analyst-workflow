@@ -31,16 +31,30 @@ Default to this visible style:
 - Keep the body of each required stage function linear: transform an input, assign a small number of visible intermediate objects, and return the result.
 - Use clear section-divider comments and short comments that explain business or technical necessity. Do not narrate obvious verbs line by line.
 - Prefer bare column names for fixed columns. Use `.data[[group]]`, `!!sym(group)`, or another tidy-evaluation form only when the column name is genuinely dynamic.
-- Use familiar `purrr` patterns: `map()` plus `set_names()` for grouped analysis, `imap()` for named workbook sheets, and `pmap()` only when several parallel inputs are truly needed.
+- Use `list()` for small explicit collections such as CONFIG, metric packs, options, and returned bundles.
+- Use `map()` for repeated computation, `imap()` when the element name is part of the computation, and `pmap()` only when several parallel inputs are truly needed. If a named list is genuinely the right output, derive names once with `set_names()`; do not duplicate the naming vector.
+- When a list represents groups of one tabular dataset and the group identity should travel with the data, prefer a nested tibble / list-column such as `nest(.by = group)` over manually constructing detached lists by repeatedly filtering `unique()` values. Use `map()` on the list-column for the computation. Keep a free-standing named list only when the downstream interface genuinely benefits from one.
 - Build Excel outputs directly and visibly: `createWorkbook()` → `addWorksheet()` → `freezePane()` → `writeData()` / `addStyle()` → `insertPlot()` → `saveWorkbook()`.
 - Prefer explicit formulas and visible denominator protection over compact metaprogramming.
-- Keep the nine required stage functions. That modularity is required even though the owner source was linear. Do not create a large layer of tiny mechanical helpers. Extra helpers are justified when logic is repeated, technically delicate, or materially clearer in isolation — including one named list of metric functions (the pack).
+- Keep the nine required stage functions. That modularity is required even though the owner source was linear. Repeated analytical logic, technically delicate logic, or a substantial `map()` callback should be extracted into a plainly named helper rather than copied inline. Do not create a large layer of tiny mechanical helpers; abstraction must correspond to a meaningful analytical operation. One named list of metric functions (the pack) is explicitly expected.
 - Do not hide ordinary workflow state in attributes when a plainly named object or named list is easier to follow. The required nested Measure result is the only deliberate deep structure.
 - When an unfamiliar function or technique is necessary, isolate it in the smallest practical helper or block and add one concise comment: what it does, why it is needed, and what it returns.
 
 Familiarity does not authorize fragile practices. Continue to use named columns, named input types, denominator checks, join checks, explicit quality gates, and reproducible output paths. Do not reproduce positional column selection, per-entity panel completion, deprecated tidy evaluation, or unchecked division merely because an older script used it.
 
 **Better-function rule.** If a tidyverse / tidymodels function is clearly more correct or less error-prone than an owner habit, use the better one. New functions are allowed. Accuracy first. The owner specifically called out list construction as weak: do not copy it.
+
+### Modularity and collection rule
+
+Preserve the owner's tidyverse dialect, but improve its structure.
+
+- Stage functions are mandatory boundaries. Inside them, extract a helper when an operation is repeated, represents a coherent analytical concept, is technically delicate, or would otherwise create a long anonymous callback.
+- Prefer functions that accept a tibble plus explicit arguments and return a tibble or clearly named list. Avoid hidden globals and side effects except where Publish necessarily writes files.
+- Do not modularize merely to shorten code. A five-line transformation used once can stay inline; a repeated rolling calculation, rate calculation, spell builder, grouped summary, chart builder, or workbook-sheet writer should normally become a named function.
+- Prefer `\.data[[group]]` for genuinely dynamic column names. Prefer bare column names for fixed columns. Do not return to positional constructions such as `data[, 1]`, `df[[1]]`, or `unlist(unique(data[1]))`.
+- Collection choice is semantic: **`list()` = explicit collection; `map()` = repeated computation; `nest(.by = ...)` / list-column = grouped tabular structure.** Do not use `map()` merely to manufacture a list that `nest()` expresses more directly.
+- Nested tibbles are preferred while group metadata should remain attached to grouped data. The engine's required external Measure contract remains `measured[[group]][[metric]]`; use nested tibbles internally when they make the grouped computation clearer, then return the required contract.
+- Generated code should remain easy for the owner to read top-to-bottom, modify, and debug. Modularity is an aid to comprehension, not an invitation to OOP, metaprogramming layers, or framework-heavy design.
 
 ---
 
@@ -254,7 +268,9 @@ Must:
 - recognize that `str_split` already creates list-columns — **no** `as.list(str_split(...))`
 - name lists from the object once: `CONFIG$groups %>% set_names() %>% map(...)`; never a second hardcoded `setNames(c(...))`
 - use `unnest` / `separate_longer_delim` only on identified multivalued grouping columns
+- use `list()` for explicit small collections, `map()` / `imap()` for repeated computation, and `nest(.by = ...)` plus list-columns for grouped tabular structures when the key should remain attached to the data
 - use one named list of metric functions (the pack) and return `measured[[group]][[metric]]`; flatten only at Publish
+- extract repeated or substantial analytical callbacks into plainly named functions instead of copy-pasting long transformations inside `map()`
 - use `imap()` for repeated named workbook work and direct workbook verbs
 - protect every calculated rate against a zero or missing denominator
 - isolate and explain unfamiliar syntax when it is necessary
@@ -345,7 +361,7 @@ Done means all of the following, from one CONFIG, with no questions asked:
 8. Publish wrote the requested mix from the same nested tibbles into `results/<YYYY-MM-DD>/` with `insertPlot` + percent; Shiny saved the tibbles once as one RDS and wrote `fluidPage`+`sidebarLayout` to disk; `runApp` only if `interactive()`.
 9. Rolling kept `NA` until the window is full; rates from rolled events / rolled exposure; OPEN = completed-window end.
 10. A generic entity-day panel actually runs (in-memory synthetic daily + lookup inside `load()` if files are missing). Named `cols()` on CSV; Excel recycled `"text"` then named cast. Never positional `col_types`.
-11. A familiarity audit passes: ordinary calls are unqualified after library attachment; fixed columns use bare names; stage bodies are linear; helpers are limited and justified; necessary unfamiliar syntax is isolated and briefly explained; Excel construction remains visible.
+11. A familiarity audit passes: ordinary calls are unqualified after library attachment; fixed columns use bare names; stage bodies are linear; helpers are limited and justified; repeated/substantial analytical logic is modularized; collection choice follows `list()` = explicit collection, `map()` = computation, `nest(.by = ...)` = grouped tabular structure; necessary unfamiliar syntax is isolated and briefly explained; Excel construction remains visible.
 
 ---
 
