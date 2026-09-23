@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - benchmark/r-engine-20260923
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
