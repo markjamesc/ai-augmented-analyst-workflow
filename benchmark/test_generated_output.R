@@ -1,3 +1,5 @@
+library(tidyverse)
+
 result <- readRDS("benchmark/results/benchmark_result.rds")
 
 daily <- result$daily
