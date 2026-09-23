@@ -8,7 +8,7 @@ library(readxl)
 library(openxlsx)
 library(zoo)
 
-\`%not_in%\` <- negate(\`%in%\`)
+`%not_in%` <- negate(`%in%`)
 
 # ---- CONFIG ---------------------------------------------------------------
 
