@@ -522,17 +522,32 @@ publish <- function(measured, CONFIG) {
     plot_device <- tempfile(fileext = ".png")
     png(plot_device, width = 1200, height = 800, res = 150)
     print(p)
-    insertPlot(
-      wb,
-      sheet = "entity__rates",
-      width = 6,
-      height = 4,
-      startRow = 2,
-      startCol = max(8, ncol(rates) + 3),
-      fileType = "png"
+
+    plot_error <- tryCatch(
+      {
+        insertPlot(
+          wb,
+          sheet = "entity__rates",
+          width = 6,
+          height = 4,
+          startRow = 2,
+          startCol = max(8, ncol(rates) + 3),
+          fileType = "png"
+        )
+        NULL
+      },
+      error = function(e) conditionMessage(e)
     )
+
     dev.off()
     unlink(plot_device)
+
+    if (!is.null(plot_error)) {
+      writeLines(
+        plot_error,
+        file.path(output_dir, "insertPlot_error.txt")
+      )
+    }
 
     workbook_path <- file.path(
       output_dir,
