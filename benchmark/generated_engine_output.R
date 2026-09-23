@@ -519,6 +519,8 @@ publish <- function(measured, CONFIG) {
         y = "Rate"
       )
 
+    plot_device <- tempfile(fileext = ".png")
+    png(plot_device, width = 1200, height = 800, res = 150)
     print(p)
     insertPlot(
       wb,
@@ -529,6 +531,8 @@ publish <- function(measured, CONFIG) {
       startCol = max(8, ncol(rates) + 3),
       fileType = "png"
     )
+    dev.off()
+    unlink(plot_device)
 
     workbook_path <- file.path(
       output_dir,
