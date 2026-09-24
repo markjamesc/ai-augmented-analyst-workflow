@@ -24,16 +24,24 @@ if (!requireNamespace("digest", quietly = TRUE)) {
 
 ######### Read and save the run ###################################################################
 
+# Locate this script from the Rscript invocation rather than assuming the caller's
+# working directory. This lets GrokBot invoke the gate from another project
+# while the gate still resolves the canonical workflow repository correctly.
 procedure_script_path <- function() {
   file_arg <- grep("^--file=", commandArgs(trailingOnly = FALSE), value = TRUE)
   if (length(file_arg) == 0L) return(normalizePath("procedure-gate/procedure_gate.R", mustWork = TRUE))
   normalizePath(sub("^--file=", "", file_arg[[1]]), mustWork = TRUE)
 }
 
+# Resolve the root of the reusable workflow repository. All canonical procedure
+# files and framework documents are resolved relative to this location.
 procedure_repo_root <- function() {
   normalizePath(file.path(dirname(procedure_script_path()), ".."), mustWork = TRUE)
 }
 
+# Centralize every project-side path owned or consumed by the Procedure Gate.
+# The reusable workflow code lives in the workflow repository; run state,
+# receipts, reports, checks, and the certificate live in the governed project.
 procedure_paths <- function(project_root) {
   project_root <- normalizePath(project_root, mustWork = TRUE)
   list(
@@ -48,11 +56,15 @@ procedure_paths <- function(project_root) {
   )
 }
 
+# Read the canonical five-stage procedure definition. procedure.json supplies
+# stage order, prerequisites, framework documents, and required receipt paths.
 read_procedure <- function() {
   file.path(procedure_repo_root(), "procedure-gate", "procedure.json") %>%
     fromJSON(simplifyVector = FALSE)
 }
 
+# Read persistent run state. Fail closed if the run has never been initialized:
+# status/begin/complete/finalize must never invent state from conversation memory.
 read_state <- function(project_root) {
   paths <- procedure_paths(project_root)
   if (!file.exists(paths$state)) stop("Procedure run has not been started: ", paths$state)
@@ -60,6 +72,9 @@ read_state <- function(project_root) {
     fromJSON(simplifyVector = FALSE)
 }
 
+# Write state and check records atomically: create a complete temporary JSON file
+# first, then rename it into place. This reduces the risk of a crash leaving a
+# partially written run_state.json or certificate.
 write_json_atomic <- function(value, path) {
   dir.create(dirname(path), recursive = TRUE, showWarnings = FALSE)
   temporary <- paste0(path, ".tmp")
@@ -73,6 +88,9 @@ save_state <- function(state, project_root) {
   write_json_atomic(state, procedure_paths(project_root)$state)
 }
 
+# SHA-256 hashes turn "this stage passed" into "this exact file passed."
+# Later checks can therefore detect silent edits to receipts, reports, evidence,
+# controlling framework files, and final deliverables.
 sha256_file <- function(path) {
   digest::digest(file = path, algo = "sha256")
 }
@@ -95,6 +113,8 @@ has_fields <- function(x, fields) {
 
 ######### Identify stages and verify frozen files #################################################
 
+# Resolve exactly one canonical stage definition. Unknown or duplicate stage IDs
+# are procedure-definition errors and stop execution rather than being guessed.
 step_by_id <- function(procedure, step_id) {
   matches <- procedure$steps %>%
     keep(function(step) identical(step$id, step_id))
@@ -107,6 +127,9 @@ completed_ids <- function(state) {
   names(state$completed_steps %||% list()) %||% character()
 }
 
+# Completed-stage receipts are immutable. Each receipt's current SHA-256 must
+# still match the hash recorded when the stage passed; otherwise progression is
+# blocked until the discrepancy is handled through the governed change process.
 verify_completed_artifacts <- function(state, project_root) {
   completed <- state$completed_steps %||% list()
   if (length(completed) == 0L) return(TRUE)
@@ -121,6 +144,9 @@ verify_completed_artifacts <- function(state, project_root) {
   all(artifact_checks)
 }
 
+# Once Execution has passed, freeze the canonical Workflow Gate report too.
+# Stage 5 and certification must rely on the exact report that released Stage 4,
+# not on a later edited replacement.
 verify_workflow_report <- function(state, project_root) {
   if (is.null(state$workflow_gate)) return(TRUE)
   path <- procedure_paths(project_root)$workflow_report
@@ -129,6 +155,9 @@ verify_workflow_report <- function(state, project_root) {
     identical(tolower(expected_hash), sha256_file(path))
 }
 
+# Stage 5 deliverables must be real, nonempty files inside the project tree.
+# Reject absolute paths and '..' traversal so a receipt cannot satisfy the gate
+# by pointing to arbitrary files elsewhere on the machine.
 project_file_ok <- function(path, project_root) {
   if (!text_scalar(path) || grepl("^(/|[A-Za-z]:|\\\\)", path) ||
       ".." %in% strsplit(gsub("\\\\", "/", path), "/", fixed = TRUE)[[1]]) return(FALSE)
@@ -139,6 +168,8 @@ project_file_ok <- function(path, project_root) {
   startsWith(normalizePath(file, winslash = "/", mustWork = TRUE), paste0(root, "/"))
 }
 
+# Verify a manifest entry by entry: every file must be safe, present, nonempty,
+# and byte-identical to the SHA-256 recorded when the manifest was created.
 verify_file_manifest <- function(manifest, project_root) {
   is.list(manifest) && length(manifest) > 0L && all(map_lgl(manifest, function(entry) {
     is.list(entry) && project_file_ok(entry$path, project_root) &&
@@ -147,11 +178,17 @@ verify_file_manifest <- function(manifest, project_root) {
   }))
 }
 
+# Final certification revalidates the lower-tier evidence referenced by the
+# released Workflow Gate report. A previously green gate is not enough if its
+# supporting evidence has changed afterward.
 verify_supporting_evidence <- function(project_root) {
   report <- read_artifact_safe(procedure_paths(project_root)$workflow_report)
   is.list(report) && verify_file_manifest(report$evidence_receipts, project_root)
 }
 
+# Freeze the canonical workflow definition at run start. These hashes bind the
+# run to the Master Prompt, stage frameworks, Workflow Gate enforcement doc,
+# and Workflow Gate implementation that governed the run when it began.
 framework_hashes <- function(procedure) {
   files <- unique(c(
     "docs/MASTER_PROMPT.md",
@@ -167,6 +204,9 @@ framework_hashes <- function(procedure) {
   values
 }
 
+# Recheck the frozen canonical controls before stage transitions and finalization.
+# If the governing method changes mid-run, the gate fails closed instead of
+# silently continuing under a different procedure.
 verify_framework_hashes <- function(state) {
   procedure_path <- file.path(procedure_repo_root(), "procedure-gate", "procedure.json")
   procedure_ok <- file.exists(procedure_path) &&
@@ -185,6 +225,8 @@ verify_framework_hashes <- function(state) {
 
 ######### Record PASS / FAIL checks ###############################################################
 
+# Normalize every procedural assertion into an auditable PASS/FAIL record.
+# Narrative confidence does not count; only a literal TRUE becomes PASS.
 check_result <- function(name, pass, detail) {
   list(
     check = name,
@@ -193,6 +235,8 @@ check_result <- function(name, pass, detail) {
   )
 }
 
+# Fail closed: every required check must explicitly PASS, and an empty checklist
+# is never accepted as success.
 checks_pass <- function(checks) {
   # An empty checklist is not a pass. Missing / NA results are not passes either.
   if (length(checks) == 0L) return(FALSE)
@@ -202,6 +246,8 @@ checks_pass <- function(checks) {
     all()
 }
 
+# Persist the exact begin/complete/certification checks that produced a decision.
+# This creates an audit trail separate from the stage receipt itself.
 save_checks <- function(project_root, step_id, phase, checks) {
   paths <- procedure_paths(project_root)
   dir.create(paths$checks_dir, recursive = TRUE, showWarnings = FALSE)
@@ -217,6 +263,8 @@ save_checks <- function(project_root, step_id, phase, checks) {
   list(path = path, sha256 = sha256_file(path), result = record$result)
 }
 
+# Treat missing, empty, directory, or malformed JSON as unavailable evidence.
+# Parsing problems therefore become gate failures rather than inferred success.
 read_artifact_safe <- function(path) {
   if (!file.exists(path) || dir.exists(path) || file.info(path)$size <= 0) return(NULL)
   tryCatch(fromJSON(path, simplifyVector = FALSE), error = function(e) NULL)
@@ -224,6 +272,9 @@ read_artifact_safe <- function(path) {
 
 ######### Verify the required receipt for each stage ##############################################
 
+# Validate what "complete" means for each stage. The receipt is not trusted merely
+# because it says PASS/LOCKED: required AI-role checks, human approvals, locks,
+# unresolved-issue counts, and Stage 5 deliverables are checked explicitly.
 validate_stage_receipt <- function(step_id, receipt, project_root) {
   checks <- list()
   add <- function(name, pass, detail) {
@@ -332,6 +383,9 @@ validate_stage_receipt <- function(step_id, receipt, project_root) {
 
 ######### Ask the existing Workflow Gate to release Execution #####################################
 
+# Execution cannot release Stage 5 by self-report. Launch the canonical Workflow
+# Gate in a separate Rscript process and require BOTH a zero exit status and a
+# machine-readable PASS with stage5_allowed = TRUE.
 run_workflow_gate <- function(project_root) {
   paths <- procedure_paths(project_root)
   gate_script <- normalizePath(
@@ -362,6 +416,9 @@ run_workflow_gate <- function(project_root) {
 
 ######### Start the run ###########################################################################
 
+# Initialize exactly one governed run. Starting freezes the procedure definition
+# and canonical framework hashes; an existing run_state.json prevents duplicate
+# initialization and forces later sessions to resume instead.
 procedure_start <- function(project_root, run_id) {
   if (!text_scalar(run_id)) stop("run_id must be one nonempty string")
   paths <- procedure_paths(project_root)
@@ -387,6 +444,9 @@ procedure_start <- function(project_root, run_id) {
 
 ######### Begin a stage only when its prerequisites pass ##########################################
 
+# Stage-entry authorization. A stage may begin only when the run is active,
+# nothing else is active, prerequisites are complete, prior evidence is unchanged,
+# and the frozen canonical framework still matches run start.
 procedure_begin <- function(project_root, step_id) {
   state <- read_state(project_root)
   procedure <- read_procedure()
@@ -414,6 +474,9 @@ procedure_begin <- function(project_root, step_id) {
 
 ######### Complete a stage only after its evidence passes #########################################
 
+# Stage-completion authorization. Completion requires prior begin authorization,
+# a valid stage receipt, unchanged earlier artifacts, and all stage-specific
+# checks. Execution additionally must pass the canonical Workflow Gate.
 procedure_complete <- function(project_root, step_id) {
   state <- read_state(project_root)
   procedure <- read_procedure()
@@ -476,6 +539,8 @@ procedure_complete <- function(project_root, step_id) {
 
 ######### Show progress ##########################################################################
 
+# Report persisted progress without authorizing anything. This lets an interrupted
+# GrokBot session discover the active or next incomplete stage and resume safely.
 procedure_status <- function(project_root) {
   state <- read_state(project_root)
   procedure <- read_procedure()
@@ -498,6 +563,9 @@ procedure_status <- function(project_root) {
 
 ######### Certify the completed run ###############################################################
 
+# Final certification is a fresh integrity check, not a rubber stamp on earlier
+# PASS results. Recheck all stages, the Workflow Gate, supporting evidence,
+# deliverables, and frozen controls before issuing a certified PASS.
 procedure_finalize <- function(project_root) {
   state <- read_state(project_root)
   procedure <- read_procedure()
@@ -564,10 +632,14 @@ procedure_finalize <- function(project_root) {
 
 ######### Command-line entry point ###############################################################
 
+# Emit machine-readable CLI output so the orchestrator can parse gate results
+# deterministically rather than inferring state from prose.
 print_json <- function(value) {
   cat(toJSON(value, pretty = TRUE, auto_unbox = TRUE, null = "null"), "\n")
 }
 
+# Command-line dispatcher. Nonzero process exits on FAIL/BLOCKED allow an external
+# orchestrator to treat gate refusal as an execution failure, not just text output.
 procedure_main <- function() {
   args <- commandArgs(trailingOnly = TRUE)
   if (length(args) < 2L) {
