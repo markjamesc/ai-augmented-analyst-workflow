@@ -43,3 +43,6 @@ jobs:
 
       - name: Run procedure gate tests
         run: Rscript procedure-gate/tests/test_procedure_gate.R .
+
+      - name: Synthetic master-prompt and gate simulation
+        run: Rscript procedure-gate/tests/simulation.R .
