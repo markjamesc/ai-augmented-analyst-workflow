@@ -122,6 +122,16 @@ The gate returns `PASS` only when the current step was authorized, the controlli
 Rscript procedure-gate/procedure_gate.R status /path/to/project
 ```
 
+### Amend a completed receipt (owner-approved change control)
+
+A completed step is never reopened. After the owner approves a change control, stage the new receipt and a change record inside the project, then run:
+
+```bash
+Rscript procedure-gate/procedure_gate.R amend /path/to/project design change-control/stage3_v2.json change-control/CC-01.json
+```
+
+The change record fields are `change_id`, `step`, `reason`, `approval_text`, `approval_timestamp`, `superseded_sha256`, `new_sha256` and `archive_path`. The gate returns `AMENDED` only when no later step is complete, the hashes match the actual files, the approval is explicit, and the new receipt carries `supersedes_sha256` and passes the step's receipt checks. It archives the old bytes at `archive_path`, installs the new receipt, appends to `amendment_history`, and rechecks all of these at every later transition and in the certificate. See [`../docs/r-procedure-gate-enforcement.md`](../docs/r-procedure-gate-enforcement.md).
+
 ### Finalize
 
 ```bash
@@ -168,4 +178,4 @@ The gate verifies observable evidence and recorded attestations. A `PASS` role f
 Rscript procedure-gate/tests/test_procedure_gate.R
 ```
 
-The tests exercise the legal five-stage path, premature stage access, completion without authorization, missing receipts, the nested Workflow Gate, and final certification.
+The tests exercise the legal five-stage path, premature stage access, completion without authorization, missing receipts, the nested Workflow Gate, final certification, and owner-approved receipt amendment (pass path, missing or mismatched change records, a later completed step, and tampering after amendment).

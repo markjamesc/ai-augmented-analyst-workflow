@@ -53,6 +53,20 @@ artifacts/final_certificate.json
 
 The authoritative analytical artifacts and stage receipts remain in the project repository. The outer state records their identities and hashes, and later transitions recheck those hashes so a completed receipt cannot be changed silently; it does not replace them.
 
+## Owner-approved receipt amendment
+
+A completed stage is never reopened. When the owner approves a change control for a completed receipt, the gate records it with `amend`:
+
+```bash
+Rscript procedure-gate/procedure_gate.R amend <project-root> <completed-step> <new-receipt> <change-record>
+```
+
+Both paths are project-relative files. The change record is a JSON object with `change_id`, `step`, `reason`, `approval_text`, `approval_timestamp` (ISO 8601 with `Z` or a UTC offset), `superseded_sha256`, `new_sha256` and `archive_path`.
+
+`amend` passes only when the run is active; the step is complete, has no nested completion gate, and no later step is complete (a begun later step is allowed and is rechecked on `complete`); every recorded hash still matches; the change record names the step, carries an explicit approval (not `PENDING`/`TBD`/`TODO`) and matches the actual files; the new receipt carries `supersedes_sha256` equal to the old hash and passes the same receipt checks as `complete`; and `archive_path` is a new project-relative file.
+
+On `AMENDED`, the old receipt is copied byte-for-byte to `archive_path`, the new receipt is installed at the step's artifact path, the step's recorded hash is updated, and an entry is appended to `amendment_history` in `run_state.json`. Later transitions verify the current receipt, every archived receipt and every change record, and the final certificate includes `amendment_history`. A failed `amend` changes nothing and writes its check report under `artifacts/procedure/checks/`.
+
 ## Operating rule
 
 Before a stage begins, the orchestrator calls `begin`. After the required stage receipt is written, it calls `complete`. A failed completion leaves the stage open for repair and rerun.
