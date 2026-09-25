@@ -118,7 +118,55 @@ verify_completed_artifacts <- function(state, project_root) {
       !dir.exists(path) && identical(tolower(expected_hash), sha256_file(path))
   })
 
-  all(artifact_checks)
+  all(artifact_checks) && verify_amendment_history(state, project_root)
+}
+
+######### Verify owner-approved receipt amendments ################################################
+
+amendment_history <- function(state) {
+  state$amendment_history %||% list()
+}
+
+project_path_ok <- function(path) {
+  # A project-relative file path that may not exist yet: no absolute, "..", "." or empty segments.
+  text_scalar(path) && !grepl("^(/|[A-Za-z]:|\\\\)", path) &&
+    !any(strsplit(gsub("\\\\", "/", path), "/", fixed = TRUE)[[1]] %in% c("", ".", ".."))
+}
+
+resolve_project_path <- function(path, project_root) {
+  root <- normalizePath(project_root, winslash = "/", mustWork = TRUE)
+  tolower(normalizePath(file.path(root, gsub("\\\\", "/", path)), winslash = "/", mustWork = FALSE))
+}
+
+verify_amendment_history <- function(state, project_root) {
+  history <- amendment_history(state)
+  if (length(history) == 0L) return(TRUE)
+  file_matches <- function(record) {
+    is.list(record) && project_file_ok(record$path, project_root) && text_scalar(record$sha256) &&
+      identical(tolower(record$sha256), sha256_file(file.path(project_root, record$path)))
+  }
+  entries_ok <- history %>% map_lgl(function(entry) {
+    if (!is.list(entry) || !file_matches(entry$superseded) || !file_matches(entry$change_record)) return(FALSE)
+    change <- read_artifact_safe(file.path(project_root, entry$change_record$path))
+    is.list(entry$new) && is_value(change, "change_id", entry$change_id) &&
+      is_value(change, "step", entry$step) &&
+      is_value(change, "superseded_sha256", entry$superseded$sha256) &&
+      is_value(change, "new_sha256", entry$new$sha256) &&
+      is_value(change, "archive_path", entry$superseded$path)
+  })
+  if (!all(entries_ok)) return(FALSE)
+
+  # Amendments of one step form a single chain that ends at the step's current artifact hash.
+  chains_ok <- unique(map_chr(history, function(entry) entry$step)) %>% map_lgl(function(step_id) {
+    chain <- history %>% keep(function(entry) identical(entry$step, step_id))
+    links_ok <- length(chain) == 1L || all(map_lgl(seq(2L, length(chain)), function(i) {
+      identical(chain[[i]]$superseded$sha256, chain[[i - 1L]]$new$sha256)
+    }))
+    step_id %in% completed_ids(state) && links_ok &&
+      identical(chain[[length(chain)]]$new$sha256, state$completed_steps[[step_id]]$artifact$sha256)
+  })
+  change_ids <- map_chr(history, function(entry) entry$change_id)
+  all(chains_ok) && !anyDuplicated(change_ids)
 }
 
 verify_workflow_report <- function(state, project_root) {
@@ -474,6 +522,109 @@ procedure_complete <- function(project_root, step_id) {
   list(status = "PASS", completed_step = step_id, next_step = next_step, check_report = record)
 }
 
+######### Amend a completed receipt under owner-approved change control ##########################
+
+procedure_amend <- function(project_root, step_id, new_receipt_path, change_record_path) {
+  state <- read_state(project_root)
+  procedure <- read_procedure()
+  step <- step_by_id(procedure, step_id)
+  root <- normalizePath(project_root, mustWork = TRUE)
+  step_ids <- procedure$steps %>% map_chr(function(step) step$id)
+  later_ids <- step_ids[seq_along(step_ids) > match(step_id, step_ids)]
+  history <- amendment_history(state)
+  recorded <- state$completed_steps[[step_id]]$artifact$sha256 %||% ""
+
+  receipt_ok <- project_file_ok(new_receipt_path, root)
+  receipt <- if (receipt_ok) read_artifact_safe(file.path(root, new_receipt_path)) else NULL
+  new_sha <- if (receipt_ok) sha256_file(file.path(root, new_receipt_path)) else ""
+  change <- if (project_file_ok(change_record_path, root)) read_artifact_safe(file.path(root, change_record_path)) else NULL
+
+  required_change <- c(
+    "change_id", "step", "reason", "approval_text", "approval_timestamp",
+    "superseded_sha256", "new_sha256", "archive_path"
+  )
+  fields_ok <- has_fields(change, required_change) &&
+    all(map_lgl(required_change, function(field) text_scalar(change[[field]])))
+  change_id <- if (fields_ok) change$change_id else ""
+  id_ok <- grepl("^[A-Za-z0-9._-]+$", change_id) &&
+    change_id %not_in% map_chr(history, function(entry) entry$change_id %||% "")
+  approval_ok <- fields_ok &&
+    !grepl("^\\s*(PENDING|TBD|TODO)\\b", change$approval_text, ignore.case = TRUE, perl = TRUE) &&
+    grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2})?(Z|[+-][0-9]{2}:[0-9]{2})$", change$approval_timestamp)
+
+  archive_path <- if (fields_ok) change$archive_path else ""
+  archive_file <- file.path(root, archive_path)
+  protected <- c(
+    step$artifact, new_receipt_path, change_record_path,
+    map_chr(state$completed_steps %||% list(), function(value) value$artifact$path %||% ""),
+    map_chr(history, function(entry) entry$superseded$path %||% "")
+  )
+  archive_ok <- project_path_ok(archive_path) && !dir.exists(archive_file) &&
+    resolve_project_path(archive_path, root) %not_in% resolve_project_path(protected, root) &&
+    (!file.exists(archive_file) || identical(sha256_file(archive_file), tolower(recorded)))
+
+  checks <- list(
+    check_result("Run is active", identical(state$status, "IN_PROGRESS"), "status must equal IN_PROGRESS"),
+    check_result("Step is complete", step_id %in% completed_ids(state), "only a completed step can be amended; completed steps are never reopened"),
+    check_result("No later step is complete", !any(later_ids %in% completed_ids(state)), paste("Later steps:", paste(later_ids, collapse = ", "))),
+    check_result("Step has no nested completion gate", is.null(step$completion_gate), "a step completed by a nested gate cannot be amended; its gate result would go stale"),
+    check_result("Controlling documents unchanged", verify_framework_hashes(state), "framework hashes must match run start"),
+    check_result("Completed receipts unchanged", verify_completed_artifacts(state, project_root), "completed artifact hashes must still match"),
+    check_result("Workflow Gate report unchanged", verify_workflow_report(state, project_root), "recorded workflow report hash must still match"),
+    check_result("Change record exists and parses", is.list(change), change_record_path),
+    check_result("Change record required fields", fields_ok, paste(required_change, collapse = ", ")),
+    check_result("Change identifier valid and unused", id_ok, "change_id uses letters, digits, '.', '_' or '-' and is not already in amendment_history"),
+    check_result("Change record names this step", is_value(change, "step", step_id), "step must equal the amended step"),
+    check_result("Owner approval recorded", approval_ok, "approval_text must be explicit (not PENDING/TBD/TODO); approval_timestamp must be ISO 8601 with Z or a UTC offset"),
+    check_result("Superseded hash matches recorded receipt", text_scalar(recorded) && is_value(change, "superseded_sha256", tolower(recorded)), "superseded_sha256 must equal the completed step's recorded artifact sha256"),
+    check_result("New receipt exists and parses", is.list(receipt), new_receipt_path),
+    check_result("New hash matches new receipt", receipt_ok && is_value(change, "new_sha256", new_sha) && !identical(new_sha, tolower(recorded)), "new_sha256 must equal the new receipt's sha256 and differ from the superseded receipt"),
+    check_result("New receipt names what it supersedes", text_scalar(recorded) && is_value(receipt, "supersedes_sha256", tolower(recorded)), "supersedes_sha256 must equal the superseded sha256"),
+    check_result("Archive path is safe", archive_ok, "archive_path must be a new project-relative file (or already hold the superseded bytes), distinct from live receipts")
+  )
+  checks <- c(checks, validate_stage_receipt(step_id, receipt, project_root))
+
+  record <- save_checks(project_root, step_id, if (id_ok) paste0("amend-", change_id) else "amend", checks)
+  if (!checks_pass(checks)) return(list(status = "FAIL", step = step_id, checks = checks))
+
+  # Preserve the superseded bytes first, then install the new receipt at the step's artifact path.
+  artifact_path <- file.path(root, step$artifact)
+  dir.create(dirname(archive_file), recursive = TRUE, showWarnings = FALSE)
+  if (!file.exists(archive_file) && !file.copy(artifact_path, archive_file, overwrite = FALSE)) {
+    stop("Could not archive the superseded receipt: ", archive_path)
+  }
+  if (!identical(sha256_file(archive_file), tolower(recorded))) stop("Archived receipt does not match superseded_sha256")
+  temporary <- paste0(artifact_path, ".amend.tmp")
+  if (!file.copy(file.path(root, new_receipt_path), temporary, overwrite = TRUE) ||
+      !identical(sha256_file(temporary), new_sha)) {
+    stop("Could not stage the new receipt")
+  }
+  if (.Platform$OS.type == "windows" && file.exists(artifact_path)) unlink(artifact_path)
+  if (!file.rename(temporary, artifact_path) || !identical(sha256_file(artifact_path), new_sha)) {
+    stop("Could not install the new receipt: ", step$artifact)
+  }
+
+  entry <- list(
+    change_id = change_id,
+    step = step_id,
+    amended_at_utc = timestamp_utc(),
+    approval_timestamp = change$approval_timestamp,
+    superseded = list(path = gsub("\\\\", "/", archive_path), sha256 = tolower(recorded)),
+    new = list(path = step$artifact, sha256 = new_sha, source_path = gsub("\\\\", "/", new_receipt_path)),
+    change_record = list(path = gsub("\\\\", "/", change_record_path), sha256 = sha256_file(file.path(root, change_record_path))),
+    check_report = list(path = record$path, sha256 = record$sha256)
+  )
+  state$amendment_history <- c(history, list(entry))
+  state$completed_steps[[step_id]]$artifact$sha256 <- new_sha
+  state$updated_at_utc <- timestamp_utc()
+  save_state(state, project_root)
+  list(
+    status = "AMENDED", step = step_id, change_id = change_id,
+    superseded_sha256 = tolower(recorded), new_sha256 = new_sha,
+    archive_path = entry$superseded$path, check_report = record
+  )
+}
+
 ######### Show progress ##########################################################################
 
 procedure_status <- function(project_root) {
@@ -485,7 +636,7 @@ procedure_status <- function(project_root) {
     remaining <- step_ids[step_ids %not_in% done]
     if (length(remaining) > 0L) remaining[[1]] else "FINALIZE"
   }
-  list(
+  result <- list(
     run_id = state$run_id,
     status = state$status,
     current_step = state$current_step,
@@ -494,6 +645,8 @@ procedure_status <- function(project_root) {
     workflow_gate = state$workflow_gate,
     final_certificate = state$final_certificate
   )
+  if (length(amendment_history(state)) > 0L) result$amendment_history <- amendment_history(state)
+  result
 }
 
 ######### Certify the completed run ###############################################################
@@ -549,6 +702,7 @@ procedure_finalize <- function(project_root) {
     certification_check_sha256 = record$sha256,
     certified_at_utc = timestamp_utc()
   )
+  if (length(amendment_history(state)) > 0L) certificate$amendment_history <- amendment_history(state)
   certificate$certificate_sha256 <- digest::digest(certificate, algo = "sha256")
   write_json_atomic(certificate, paths$certificate)
 
@@ -579,6 +733,7 @@ procedure_main <- function() {
         "Rscript procedure-gate/procedure_gate.R complete <project-root> <step>",
         "Rscript procedure-gate/procedure_gate.R status <project-root>",
         "Rscript procedure-gate/procedure_gate.R finalize <project-root>",
+        "Rscript procedure-gate/procedure_gate.R amend <project-root> <completed-step> <new-receipt> <change-record>",
         sep = "\n  "
       )
     )
@@ -601,6 +756,10 @@ procedure_main <- function() {
     },
     status = procedure_status(project_root),
     finalize = procedure_finalize(project_root),
+    amend = {
+      if (length(args) < 5L) stop("amend requires <completed-step> <new-receipt> <change-record>")
+      procedure_amend(project_root, args[[3]], args[[4]], args[[5]])
+    },
     stop("Unknown action: ", action)
   )
   print_json(result)

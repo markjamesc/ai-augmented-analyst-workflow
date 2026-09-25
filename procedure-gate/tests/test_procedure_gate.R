@@ -301,5 +301,169 @@ writeBin(original_deliverable, deliverable)
 stopifnot(run_gate("finalize", project_root)$status == 0L)
 cat("Regression checks passed: changed evidence, missing/changed deliverables, stale PASS invalidation.\n")
 
+# Owner-approved receipt amendment: a completed receipt is superseded only through a
+# matching change record; the old bytes are archived and the step is never reopened.
+amend_root <- tempfile("procedure-gate-amend-")
+dir.create(amend_root)
+stopifnot(run_gate("start", amend_root, "TEST-AMEND")$status == 0L)
+stopifnot(run_gate("begin", amend_root, "start")$status == 0L)
+write_stage1(amend_root)
+stopifnot(run_gate("complete", amend_root, "start")$status == 0L)
+stopifnot(run_gate("begin", amend_root, "framing")$status == 0L)
+write_stage2(amend_root)
+stopifnot(run_gate("complete", amend_root, "framing")$status == 0L)
+stopifnot(run_gate("begin", amend_root, "design")$status == 0L)
+write_stage3(amend_root)
+stopifnot(run_gate("complete", amend_root, "design")$status == 0L)
+stopifnot(run_gate("begin", amend_root, "execution")$status == 0L)
+
+sha <- function(path) digest::digest(file = path, algo = "sha256")
+read_bytes <- function(path) readBin(path, "raw", n = file.info(path)$size)
+state_path <- file.path(amend_root, "artifacts", "procedure", "run_state.json")
+read_run_state <- function() fromJSON(state_path, simplifyVector = FALSE)
+design_path <- file.path(amend_root, "artifacts", "stage3_locked_design.json")
+old_sha <- sha(design_path)
+old_bytes <- read_bytes(design_path)
+v1 <- fromJSON(design_path, simplifyVector = FALSE)
+dir.create(file.path(amend_root, "change-control"))
+v2_rel <- "change-control/stage3_v2.json"
+record_rel <- "change-control/CC-TEST-01.json"
+archive_rel <- "artifacts/archive/stage3_locked_design.v1.json"
+v2_path <- file.path(amend_root, v2_rel)
+record_path <- file.path(amend_root, record_rel)
+archive_path <- file.path(amend_root, archive_rel)
+
+write_v2 <- function(path = v2_path, base = v1, supersedes = old_sha, drop = character()) {
+  receipt <- base
+  receipt$decision_horizon <- "28 days after the decision origin"
+  receipt$supersedes_sha256 <- supersedes
+  receipt$change_control_id <- "CC-TEST-01"
+  receipt[drop] <- NULL
+  write_json(receipt, path, pretty = TRUE, auto_unbox = TRUE)
+}
+write_record <- function(path = record_path, ..., drop = character()) {
+  record <- list(
+    change_id = "CC-TEST-01", step = "design", reason = "Locked receipt omitted required fields",
+    approval_text = "I approve change control CC-TEST-01.", approval_timestamp = "2026-09-25T11:47:00-05:00",
+    superseded_sha256 = old_sha, new_sha256 = sha(v2_path), archive_path = archive_rel
+  )
+  overrides <- list(...)
+  for (field in names(overrides)) record[[field]] <- overrides[[field]]
+  record[drop] <- NULL
+  write_json(record, path, pretty = TRUE, auto_unbox = TRUE)
+}
+amend <- function(step = "design", receipt = v2_rel, record = record_rel) {
+  run_gate("amend", amend_root, step, receipt, record)$status
+}
+unchanged <- function() {
+  state <- read_run_state()
+  identical(sha(design_path), old_sha) && identical(state$completed_steps$design$artifact$sha256, old_sha) &&
+    is.null(state$amendment_history) && !file.exists(archive_path)
+}
+amend_cases <- 0L
+refused <- function(status) {
+  amend_cases <<- amend_cases + 1L
+  stopifnot(status != 0L, unchanged())
+}
+
+# A missing change record is refused and changes nothing.
+write_v2()
+refused(amend())
+# The new receipt must name the receipt it supersedes.
+write_v2(drop = "supersedes_sha256")
+write_record()
+refused(amend())
+write_v2(supersedes = strrep("0", 64))
+write_record()
+refused(amend())
+# Mismatched hashes are refused: the new receipt hash and the superseded hash must both match the files.
+write_v2()
+write_record(new_sha256 = strrep("0", 64))
+refused(amend())
+write_record(superseded_sha256 = strrep("0", 64))
+refused(amend())
+# Every change-record field is required, approval must be explicit, and the new receipt must pass complete's checks.
+for (field in c("change_id", "step", "reason", "approval_text", "approval_timestamp", "superseded_sha256", "new_sha256", "archive_path")) {
+  write_record(drop = field)
+  refused(amend())
+}
+write_record(approval_text = "PENDING owner approval")
+refused(amend())
+write_record(approval_timestamp = "PENDING")
+refused(amend())
+write_record(step = "framing")
+refused(amend())
+write_v2(drop = "human_analyst_approval")
+write_record()
+refused(amend())
+# The archive must be a new, safe path, never a live receipt.
+write_v2()
+for (bad_archive in c("artifacts/stage3_locked_design.json", "../outside.json", "artifacts/./x.json", record_rel)) {
+  write_record(archive_path = bad_archive)
+  refused(amend())
+}
+# A step with a later completed step cannot be amended; nor can an incomplete step.
+stage1_path <- file.path(amend_root, "artifacts", "stage1_decision.json")
+stage1_v2 <- fromJSON(stage1_path, simplifyVector = FALSE)
+stage1_v2$supersedes_sha256 <- sha(stage1_path)
+write_json(stage1_v2, file.path(amend_root, "change-control", "stage1_v2.json"), pretty = TRUE, auto_unbox = TRUE)
+write_record(file.path(amend_root, "change-control", "CC-TEST-S1.json"), change_id = "CC-TEST-S1", step = "start",
+  superseded_sha256 = sha(stage1_path), new_sha256 = sha(file.path(amend_root, "change-control", "stage1_v2.json")),
+  archive_path = "artifacts/archive/stage1_decision.v1.json")
+refused(amend("start", "change-control/stage1_v2.json", "change-control/CC-TEST-S1.json"))
+write_record()
+refused(amend("execution"))
+
+# Pass path: old bytes archived verbatim, new receipt installed, history appended, step not reopened.
+write_v2()
+write_record()
+stopifnot(amend() == 0L)
+stopifnot(identical(read_bytes(archive_path), old_bytes))
+stopifnot(identical(sha(design_path), sha(v2_path)))
+state <- read_run_state()
+stopifnot(identical(state$completed_steps$design$artifact$sha256, sha(v2_path)))
+stopifnot(length(state$amendment_history) == 1L, identical(state$amendment_history[[1]]$change_id, "CC-TEST-01"))
+stopifnot(identical(state$amendment_history[[1]]$superseded$sha256, old_sha))
+stopifnot(identical(state$current_step, "execution"))
+stopifnot(run_gate("begin", amend_root, "design")$status != 0L)
+stopifnot(amend() != 0L)  # the same change record cannot be applied twice
+status <- fromJSON(paste(run_gate("status", amend_root)$output, collapse = "\n"), simplifyVector = FALSE)
+stopifnot(length(status$amendment_history) == 1L)
+
+# The begun later step is re-verified on completion against the amended receipt.
+write_stage4(amend_root)
+stopifnot(run_gate("complete", amend_root, "execution")$status == 0L)
+# Once a later step is complete, the earlier receipt cannot be amended again.
+v3_path <- file.path(amend_root, "change-control", "stage3_v3.json")
+write_v2(v3_path, base = fromJSON(design_path, simplifyVector = FALSE), supersedes = sha(design_path))
+write_record(file.path(amend_root, "change-control", "CC-TEST-02.json"), change_id = "CC-TEST-02",
+  superseded_sha256 = sha(design_path), new_sha256 = sha(v3_path), archive_path = "artifacts/archive/stage3_locked_design.v2.json")
+stopifnot(amend("design", "change-control/stage3_v3.json", "change-control/CC-TEST-02.json") != 0L)
+stopifnot(identical(read_run_state()$completed_steps$design$artifact$sha256, sha(v2_path)))
+
+# Tampering after amendment is detected: archived receipt, change record, amended receipt.
+for (path in c(archive_path, record_path, design_path)) {
+  original <- read_bytes(path)
+  writeLines("{\"tampered\": true}", path)
+  stopifnot(run_gate("begin", amend_root, "finish")$status != 0L)
+  unlink(path)
+  stopifnot(run_gate("begin", amend_root, "finish")$status != 0L)
+  writeBin(original, path)
+}
+stopifnot(run_gate("begin", amend_root, "finish")$status == 0L)
+write_stage5(amend_root)
+stopifnot(run_gate("complete", amend_root, "finish")$status == 0L)
+stopifnot(run_gate("finalize", amend_root)$status == 0L)
+certificate <- fromJSON(file.path(amend_root, "artifacts", "final_certificate.json"), simplifyVector = FALSE)
+stopifnot(isTRUE(certificate$certified), length(certificate$amendment_history) == 1L)
+stopifnot(identical(certificate$amendment_history[[1]]$new$sha256, sha(v2_path)))
+original <- read_bytes(archive_path)
+writeLines("changed", archive_path)
+stopifnot(run_gate("finalize", amend_root)$status != 0L)
+writeBin(original, archive_path)
+stopifnot(run_gate("finalize", amend_root)$status == 0L)
+unlink(amend_root, recursive = TRUE)
+cat("Amendment checks passed:", amend_cases, "refused amendments left state unchanged; archived, re-verified and certified.\n")
+
 unlink(project_root, recursive = TRUE)
 cat("Procedure Gate tests passed: illegal transitions blocked; five-stage run certified.\n")
