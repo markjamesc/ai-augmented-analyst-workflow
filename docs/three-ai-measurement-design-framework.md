@@ -734,7 +734,9 @@ If Mode A applies, Stage 3 must freeze all of the following before builders run:
 - evaluation metrics;
 - threshold→action mapping;
 - reconciliation-critical fields (actions and/or `.pred`);
-- fixtures including known prediction / action cases.
+- fixtures including known prediction / action cases;
+- **numerical solver settings** whenever the model is fitted iteratively: convergence threshold (for glmnet, `thresh`), maximum iterations, standardization, and any other setting that changes predictions. Library defaults are not a lock. Two independent paths that build the same design matrix with columns in a different order can stop at different points under a loose default and disagree beyond the reconciliation tolerance; lock a threshold tight enough that column order cannot move predictions by more than a small fraction of that tolerance;
+- **tie rules stated exactly**: whether "minimum" or "maximum" means exact equality or equality within a stated tolerance, and which side wins a tie.
 
 These fields become part of the Spec→builder packet and the R-A / R-B judged-output / reconciliation contracts. SQL remains nonjudgmental for Mode A: features and raw fields only—no training, no predicted actions in the source extract.
 
@@ -825,6 +827,8 @@ Stage 3 defines three linked implementation contracts:
 The technology roles are deliberate:
 
 > **SQL gets the data. The SQL Source Gate verifies that SQL got the data right. R-A and R-B independently wrangle and analyze the data. Exact reconciliation tests whether the two R implementations agree.**
+
+Only the orchestrator touches the database, through its command-line client; R reads the frozen extract and never connects to the database (§20.4B).
 
 Minimum gate classes when the design uses them follow below. Optional persistence, twin, capacity, and simulation mechanics may be marked **N/A** only with an explicit design cite that the mechanic is unused. Packet completeness, lineage mapping, SQL/R separation, and R-path independence remain mandatory.
 
@@ -953,6 +957,13 @@ At minimum, specify which of the following are required:
 
 Stage 3 defines the required evidence and failure conditions. Stage 4 writes the SQL Source Gate, runs it, preserves its evidence, and determines Pass / Fail.
 
+Write each requirement so it cannot be met by a weaker check:
+
+- "values equal raw for every row" means a keyed row-by-row comparison with zero only-in-extract keys, zero only-in-raw keys, zero duplicates and zero value mismatches; a count plus a column sum does not satisfy it;
+- "trimmed categoricals" covers every character categorical field in every delivered file;
+- the missing-value token set used to read the extract (normally the client's `NULL` only) is locked once and shared by the gate and both builders;
+- a calendar or other grain-defining dimension is checked for unique, complete keys over the locked range.
+
 A business identifier must not automatically be assumed to be a unique physical-row key. If duplicates are possible, Stage 3 must require a duplicate-safe validation strategy in Stage 4, such as a stable raw-row identifier or full-row / critical-field multiset comparison with occurrence counts.
 
 ### 20.3 R-A / R-B judged-output contract
@@ -998,7 +1009,25 @@ Define exact comparison requirements between the two R judged outputs:
 - lineage alignment;
 - and any predetermined machine-level numerical tolerance for continuous values.
 
+For every reconciliation-critical field, state whether it is compared **exactly** or **within a tolerance**, and give the tolerance. Fields derived by rounding or discretizing tolerance-band quantities (for example a revenue difference rounded to cents from predictions that agree within a tolerance) must be classified explicitly, typically as "exact sign, within the parent tolerance". The decision fields that consume them stay exact. Leaving such a field "exact" by default creates reconciliation failures with no decision consequence, and fixing that after results requires owner change control.
+
 “Close” is not a substitute for the locked reconciliation standard.
+
+### 20.4A Specification completeness checks (from structural cross-review)
+
+Before the Design Gate, check the locked text for these recurring gaps. Each one let two faithful builders implement different behavior in a past run:
+
+- **Exact source field names.** Name the exact column a rule reads (e.g. `event_name_1` versus either event field), not a concept.
+- **Every field for every action class.** Specify the value of each output field (guardrail flags, ratios, ranks) for every action class, including `unchanged` and hold outcomes.
+- **Tie-breaks for every argmax / argmin and ranking**, including exact ties of unrounded values.
+- **Degenerate inputs.** Define behavior when a statistic is undefined (no positive training day for a quantile cap, an empty group, a zero denominator), rather than leaving builders to halt or emit `NA` differently.
+- **Small denominators in acceptance metrics.** For mean relative-error style acceptance tests, state how items with very small realized denominators are treated (exclusion floor, alternative statistic, or reporting a per-item influence breakdown), so one item cannot decide the gate unnoticed.
+- **Calendar arithmetic.** Express windows in calendar ordinals or dates, not integer arithmetic on period codes that only happens to be contiguous.
+- **Grain assertions.** Require a uniqueness / completeness assertion wherever a dimension join defines the grain.
+
+### 20.4B Database access and the role of R
+
+The orchestrator accesses the database only through its command-line client (for MySQL, the `mysql` CLI) and delivers frozen, Source-Gate-verified extracts. R never connects to the database (no DBI / RMariaDB). R is used for the analysis of the frozen extract and for procedure enforcement (`procedure_gate.R`, `workflow_gate.R`) only; it does no data sourcing. The Stage 4 handoff and every builder packet must state this.
 
 ### 20.5 Fixture and lineage contract
 

@@ -218,6 +218,17 @@ flowchart LR
     J["Judged logic:<br/>window / open / eligible / event / action / selected"] -. "must not be baked into SQL" .-> SQL
 ```
 
+### Database access is through the database command-line client only
+
+The orchestrator (Grok Bot or equivalent) is the only party that touches the database, and only through the database's own command-line client (for MySQL, the `mysql` CLI with a stored `--login-path`; credentials stay in the local credential store and are never written into prompts, packets or repositories). It runs the locked, read-only extract and Source Gate queries and delivers **frozen, hashed, Source-Gate-verified extract files** to the builders.
+
+R and RStudio never connect to the database: no DBI, RMariaDB, RMySQL, odbc or equivalent connection in any builder, fixture, gate or helper code. R has exactly two roles:
+
+1. **analysis** of the frozen extract (tidyverse wrangling, the locked model such as parsnip/glmnet, judged outputs); and
+2. **procedure enforcement** (`procedure_gate.R`, `workflow_gate.R` and the project's gate helper).
+
+R does no data sourcing. A builder packet or AI reply that assumes R-side database access is a packet defect: correct the packet, do not add a connection.
+
 ### The bright-line rule
 
 SQL should answer:
@@ -311,6 +322,8 @@ If the same raw row occurs three times, the delivered extract must preserve thre
 
 For every source field that materially supports Stage 3 logic, the gate should establish that the delivered value matches the raw source value unless a documented mechanical transformation was authorized.
 
+**Value equality is a keyed, row-by-row comparison.** Join delivered and raw rows on the full physical-row key (or the multiset fingerprint above) and require, for every critical field: zero keys only in the extract, zero keys only in the raw source, zero duplicate keys on either side, zero missing values introduced, and zero value mismatches (compare exact representations, e.g. integer cents for money). Aggregate checks such as a row count plus a column `SUM`, or a checksum that is computed but not compared, are **not** value-equality checks: a swap between rows or offsetting edits passes them. Aggregates may be reported as supporting evidence only.
+
 Examples may include:
 
 - entity/request/order ID
@@ -325,6 +338,12 @@ Examples may include:
 - source-presence indicators
 
 Any authorized transformation must have its own reproducible check.
+
+### Text hygiene, missing-value tokens and calendar grain
+
+- **Whitespace.** When the design requires trimmed categorical values, the gate tests every delivered character / `varchar` categorical field in **every** delivered file (for example `x == trimws(x)` plus blank-string counts), not a sample of fields or files.
+- **Missing-value tokens.** The gate and both builders must read missing values with the same, explicitly locked token set, matching how the database client writes SQL `NULL` (the `mysql --batch` client writes the literal `NULL`). Do not let a reader default (such as R's `"NA"`) silently turn real strings into missing values on one path only.
+- **Calendar / grain completeness.** When a calendar or other dimension table defines the analytical grain, the gate checks that its key is unique and complete over the locked range (for example one row per day, no gaps), so that downstream joins cannot duplicate or drop grain rows.
 
 ### Source Gate output
 
@@ -367,7 +386,7 @@ Both may use tidyverse and owner-familiar R idioms.
 
 AI 1 should independently:
 
-1. Load and verify the authorized source package.
+1. Load and verify the authorized source package (the frozen, hashed extract files; never a database connection).
 2. Confirm expected keys and duplicate behavior.
 3. Parse dates and timestamps.
 4. Apply the locked decision window.
@@ -653,6 +672,10 @@ There should be:
 - and zero count-component differences.
 
 Rates or continuous values should be compared using unrounded underlying values and a predetermined machine-level tolerance only when representation differences make that necessary.
+
+**Derived rounded fields.** A field produced by rounding (or otherwise discretizing) values that themselves reconcile only within a tolerance must not be reconciled exactly: two correct paths can straddle a rounding boundary. Stage 3 must classify such fields in the reconciliation contract, typically "exact sign, within the parent tolerance", while the decision fields that consume them (legality, guardrail pass, action, selection, rank) stay exact. If this is discovered only after results, it is a change-control decision for the owner, disclosed as post-result.
+
+**Iterative fits.** When a locked model is fitted by an iterative solver, both paths must use the convergence settings locked in Stage 3 (see the measurement-design framework §17A). Prediction differences that shrink when the solver is run to tighter convergence indicate an under-specified lock, not a builder defect.
 
 Two displayed values that round to the same number are not reconciled if their underlying components differ.
 
