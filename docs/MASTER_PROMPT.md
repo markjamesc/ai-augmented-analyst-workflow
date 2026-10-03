@@ -68,7 +68,8 @@ Prospective for new / forward publishable packs only — do not retrofit frozen 
 4. **Method B:** Dual R-A/R-B for judged contracts under the independence bright line above.
 5. **ML Mode:** Fail-closed `None` / `A` / `B` as locked in Stage 3.
 6. **Wall-clock / timezone parse consistency:** Naive export clocks and timezone conversions must follow the locked Stage 3/4 contract for the project timezone; both judged paths must parse the same way. Treat silent clock/tz divergence as a judged-path defect, not a cosmetic formatting issue.
-7. **Ablation KEEP-only:** Only ablations returning `KEEP` may authorize reusable Stage 3/4 framework edits. `REVERT` / `HALT` / deferred items / forward upgrades that are not KEEP-authorized do not rewrite frozen project evidence. Ablation batch A01–A08 returned **0 KEEP**; batch trees live in the project evidence repo.
+7. **Database access and the role of R:** Only the orchestrator accesses the database, and only through the database command-line client (for MySQL, the `mysql` CLI with a stored login path; credentials never appear in prompts, packets or repositories). It delivers frozen, hashed, Source-Gate-verified extracts. R / RStudio never connect to the database (no DBI / RMariaDB / odbc). R does (1) the analysis on the frozen extract (tidyverse wrangling, the locked model such as parsnip/glmnet, outputs) and (2) procedure enforcement (`procedure_gate.R`, `workflow_gate.R`, the project gate helper). R does no data sourcing. State this in every Stage 3 handoff and builder packet; correct any packet or AI reply that assumes R-side database access.
+8. **Ablation KEEP-only:** Only ablations returning `KEEP` may authorize reusable Stage 3/4 framework edits. `REVERT` / `HALT` / deferred items / forward upgrades that are not KEEP-authorized do not rewrite frozen project evidence. Ablation batch A01–A08 returned **0 KEEP**; batch trees live in the project evidence repo.
 
 ## R Procedure Referee (always on for prospective runs)
 
@@ -105,8 +106,10 @@ gate_script <- normalizePath(
 )
 
 # This helper executes the existing gate CLI; the gate files own all checks.
-run_procedure_gate <- function(action, step = NULL) {
-  arguments <- c(gate_script, action, project_root, step)
+# For an owner-approved amendment, pass the new receipt and the change record as `extra`.
+run_procedure_gate <- function(action, step = NULL, extra = character()) {
+  if (action == "amend") stopifnot(length(extra) == 2L)
+  arguments <- c(gate_script, action, project_root, step, if (action == "amend") extra)
   error_log <- tempfile("procedure-gate-stderr-")
   on.exit(unlink(error_log), add = TRUE)
 
@@ -126,7 +129,7 @@ run_procedure_gate <- function(action, step = NULL) {
   response <- jsonlite::fromJSON(paste(output, collapse = "\n"), simplifyVector = FALSE)
   expected <- switch(action,
     start = "STARTED", begin = "AUTHORIZED", complete = "PASS",
-    finalize = "PASS", status = NULL,
+    finalize = "PASS", status = NULL, amend = "AMENDED",
     stop("Unknown gate action")
   )
   actual <- if (action == "finalize") response$result else response$status
@@ -239,6 +242,19 @@ Execute and require `PASS`:
 run_procedure_gate("complete", "finish")
 ```
 
+### Owner-approved change to a completed lock
+
+If a completed receipt must change (for example a locked design clause found under-specified during Stage 4), obtain the owner's explicit change-control approval, write the new receipt (with `supersedes_sha256`) and a change record, and record it without reopening the stage. Require `AMENDED`; then rerun every dependent tier (rebuild or re-reconcile as the change requires) before the next completion check:
+
+```r
+run_procedure_gate("amend", "design", c(
+  "docs/stage-03-measurement-design/change-control/<CHANGE_ID>/stage3_locked_design.vN.json",
+  "docs/stage-03-measurement-design/change-control/<CHANGE_ID>/<CHANGE_ID>_change_record.json"
+))
+```
+
+A project that keeps a mirror of the receipt outside `artifacts/` must update that mirror from the installed receipt after `AMENDED`, archiving the superseded bytes first.
+
 ### Final certification and failure handling
 
 After Finish passes, execute:
@@ -258,7 +274,7 @@ stopifnot(
 
 Report certification only after successful execution and confirmation of the generated certificate. The certificate covers the gate's observable checks and recorded attestations; it does not prove private AI context or authenticate a self-reported human approval.
 
-On `BLOCKED`, `FAIL`, malformed output, or execution error, stop progression and report the actual failed checks. Repair an incomplete stage under its existing framework and retry its completion check. Do not rerun `begin` for a stage already recorded as active or reopen a completed stage by editing state. Material changes to completed locks require the framework's owner-approved change control; if the existing gate cannot represent the required reopening, pause and report that limitation. Never overwrite prior evidence, change the gate, or manufacture a receipt to force a pass.
+On `BLOCKED`, `FAIL`, malformed output, or execution error, stop progression and report the actual failed checks. Repair an incomplete stage under its existing framework and retry its completion check. Do not rerun `begin` for a stage already recorded as active or reopen a completed stage by editing state. Material changes to completed locks require the framework's owner-approved change control, recorded with the Procedure Gate `amend` command (the old receipt is archived and the stage is not reopened); if the gate cannot represent the required change, pause and report that limitation. Never overwrite prior evidence, change the gate, or manufacture a receipt to force a pass.
 
 ## Orchestrator hard stops (paste block)
 

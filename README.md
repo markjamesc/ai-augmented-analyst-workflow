@@ -87,6 +87,7 @@ Case-specific evidence lives in separate project repositories. This workflow rep
 | Project | Decision supported | Evidence |
 |---|---|---|
 | [Bitcoin Proxy Analysis](https://github.com/markjamesc/ai-augmented-bitcoin-proxy-analysis) | Which public Bitcoin proxies, if any, are preferable to owning Bitcoin directly? | scenario model, executed notebook, internal QA checks, report and presentation |
+| [PricePoint](https://github.com/markjamesc/pricepoint) (PRICEPOINT-001) | For each reviewed product at the California pilot store, recommend a pilot price raise, a pilot price cut, no change, or “hold — not enough evidence” for the next four-week cycle (at most about 25 price changes) | full five-stage run certified by the Procedure Gate (simulation / non-live); outcome: 0 changes, all items held for insufficient evidence. Workflow versions used: [governance-history audit](docs/governance-history/PRICEPOINT-001_GOVERNANCE_HISTORY_AUDIT.md) |
 
 The R Workflow Gate is intended for prospective use on new projects rather than retrofitting prior locked packs merely for conformity.
 
