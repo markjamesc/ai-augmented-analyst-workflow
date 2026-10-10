@@ -936,7 +936,7 @@ Suggested severity categories:
 1. Reviewer records the finding.
 2. Author responds with evidence.
 3. Code is corrected if necessary.
-4. A different AI verifies the correction.
+4. A different AI verifies the correction. **Re-review scope (ablation C44, KEEP):** once an artifact has had a full cross-review in the stage, a later re-review round receives only (a) the changed artifacts, (b) a diff from the reviewed version, (c) the SHA-256 of every unchanged input, and (d) the **affected dependencies**: a list of callers and dependents of the changed code or text, included even when their files were not edited. The first cross-review in each stage stays full scope. Tested scope: a changed-file defect only; a defect in an unchanged file whose behavior depends on a changed one was not measured, which is why the dependency list is required.
 5. Any source-delivery change triggers Source Gate rerun plus rebuild of both judged paths.
 6. Any judged-construction change triggers fixture rerun and exact reconciliation.
 7. The finding is marked resolved, accepted limitation, or unresolved.
@@ -1280,7 +1280,7 @@ If a change is required, AI 1 modifies the analysis and reruns affected outputs.
 
 ### Verification round
 
-The original reviewer verifies the correction. For important changes, the other reviewer also checks for downstream consequences.
+The original reviewer verifies the correction. For important changes, the other reviewer also checks for downstream consequences. A verification or re-review round is scoped under the changed-artifacts-plus-diff-plus-hashes-plus-affected-dependencies rule of §9 (ablation C44); the first review of each artifact stays full scope.
 
 ### No voting rule
 
