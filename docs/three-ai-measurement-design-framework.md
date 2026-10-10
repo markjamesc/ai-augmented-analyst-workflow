@@ -1066,7 +1066,9 @@ Examples:
 
 ## 22. Phase 2 — Independent first-pass designs
 
-AI 1, AI 2, and AI 3 work independently from the shared packet.
+AI 1, AI 2, and AI 3 work from the shared packet. A coordinator draft is not a first-pass input.
+
+> **Blindness relaxed (ablation C01, KEEP).** Mutual blindness between Design A, Design B, and the Data and Risk Dossier is no longer required during the first pass. A designer **may** be given a peer's design or the dossier before producing its own. When it is, the designer must (1) treat the peer material as a source of defects to find, not as text to adopt, and (2) report any peer rule it rejects, with the reason. The remaining Stage 3 controls are unchanged: no coordinator draft as first-pass input (ablation C02, REVERT), the Phase 3 cross-review, and the Design Gate after cross-review (ablation C03, REVERT). Tested scope: one unblinded design chat; the reverse direction was not tested.
 
 ### AI 1 output: Design A
 

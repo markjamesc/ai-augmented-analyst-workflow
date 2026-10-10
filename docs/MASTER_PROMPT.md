@@ -64,7 +64,7 @@ Prospective for new / forward publishable packs only — do not retrofit frozen 
 
 1. **Autonomy / owner gates:** Orchestrator may advance within locked contracts; owner gates (Framing / Design / Validation / Finish / change-control freezes) require explicit owner action. Do not invent owner approval from chat consensus.
 2. **Immediate mismatches:** Surface Design↔implementation, fixture, recon, or receipt mismatches as soon as detected; do not defer to Stage 5 narration.
-3. **Stage 3 independence:** Design A / Design B / Data-Risk blindness before cross-review; no coordinator draft as first-pass input (shared packet only).
+3. **Stage 3 independence:** no coordinator draft as first-pass input (shared packet only). Mutual blindness between Design A / Design B / Data-Risk first passes is relaxed (ablation C01, KEEP): a designer may see a peer's design or the dossier first, must critique rather than adopt it, and must report any peer rule it rejects. The cross-review and the Design Gate after cross-review are unchanged.
 4. **Method B:** Dual R-A/R-B for judged contracts under the independence bright line above.
 5. **ML Mode:** Fail-closed `None` / `A` / `B` as locked in Stage 3.
 6. **Wall-clock / timezone parse consistency:** Naive export clocks and timezone conversions must follow the locked Stage 3/4 contract for the project timezone; both judged paths must parse the same way. Treat silent clock/tz divergence as a judged-path defect, not a cosmetic formatting issue.
