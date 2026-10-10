@@ -533,6 +533,18 @@ General pattern:
 
 This table guides reasoning; it does not replace project-specific judgment.
 
+### Mechanical proportionality check (ablation C37, KEEP)
+
+Recommendation proportionality is checked by the following table. The coordinator assigns **one evidence tag** to the recommendation before the check (not per claim), from the Stage 4 evidence actually available:
+
+| Evidence tag | Highest permitted action |
+|---|---|
+| Descriptive | Monitor or collect more evidence |
+| Associational | Pilot |
+| Causal-supported | Act |
+
+Action words are classified with a lexicon declared in advance (an instruction such as "accept the frozen labels" is not an action word). A recommendation whose action is above the permitted level for its tag fails the check. This table stands in for the AI audit **on this one point**: AI 2 is not required to re-audit action-versus-evidence proportionality. The table does not replace the claim-ceiling judgment of §10 or the rest of the AI 2 inference audit. Tested scope: one over-confident action seeded into one real text; the clean edit and the original passed.
+
 ## 21. Recommendation contract
 
 The final recommendation must state:
@@ -737,7 +749,7 @@ Check:
 - causal ceiling respected;
 - hypothesis verdict supported;
 - action options fairly compared;
-- recommendation proportionate to risk and reversibility;
+- recommendation proportionate to risk and reversibility (action-versus-evidence-tag proportionality is checked by the §20 table, ablation C37; AI 2 audits risk and reversibility here);
 - no-action or pilot considered where relevant;
 - and monitoring capable of testing the recommendation.
 
@@ -825,7 +837,7 @@ Every required revision must quote the affected language and provide a precise c
 
 ### Gate 9 — Recommendation proportionality
 
-- Action strength matches evidence strength.
+- Action strength matches evidence strength (checked by the §20 evidence-tag table, ablation C37).
 - Exact owner, target, timing, and constraint stated.
 - Most important caveat appears beside the recommendation.
 - Confidence is explicit.
