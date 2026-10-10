@@ -42,6 +42,7 @@ The outer Procedure Gate does not change the five stages. It records which stage
 ## Current implementation status
 
 - **Ablation batch A01–A08:** adjudicated; 0 KEEP, 7 REVERT, 1 HALT. No framework changes were authorized by that batch.
+- **Numbered ablation program:** 14 KEEP verdicts adopted into the stage documents; REVERT and HALT rules unchanged. See [CHANGES_FROM_ABLATIONS.md](docs/framework-refinement/CHANGES_FROM_ABLATIONS.md). The executable gates and receipt templates have not been changed for these adoptions (open items are listed there).
 - **Prospective upgrades:** approved separately, recorded in [Master Prompt](docs/MASTER_PROMPT.md) and [cross-review](docs/CROSS_REVIEW.md).
 - **Executable gate v2:** enforces explicit capacity/ML-mode declarations and content-addressed receipts, including fixture/reconciliation scorecards. See [contract and limitations](workflow-gate/CONTRACT_V2.md).
 - **Whole-run referee:** tracks and certifies the existing five-stage sequence without changing its analytical method.
