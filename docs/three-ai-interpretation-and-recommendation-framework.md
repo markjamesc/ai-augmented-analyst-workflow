@@ -782,6 +782,16 @@ Final status:
 
 Every required revision must quote the affected language and provide a precise correction.
 
+### Verification of revisions: no second final audit (ablation C48, KEEP)
+
+After the constructor applies the required revisions, a second AI 2 / AI 3 audit is **not required** when a **mechanical revision checklist** passes. For each revision the checklist verifies:
+
+1. the replacement text appears verbatim exactly once (for a deletion, the target is absent);
+2. the quoted target language is gone;
+3. the multiset of numbers in the revised text equals the original's numbers, minus the numbers in the targets, plus the numbers in the replacements.
+
+Any failed check is a FLAG; flagged text does not pass the Finish Gates until it is corrected and the checklist passes. The verifier must be mechanical (quote match and number diff), not a judgment by the coordinator that its own packet came out right. Tested scope: one seeded mis-applied revision (one number changed) was flagged and the clean revision passed; a second audit found nothing the checklist missed. The checklist does not check new claims that a revision introduces without quoting a source.
+
 ## 29. Mandatory Finish Gates
 
 ### Gate 1 — Input and validation
@@ -1013,7 +1023,7 @@ These files may be combined into one controlled document when every component re
 11. Reconcile interpretations through evidence and decision rules rather than voting.
 12. Construct the candidate decision evaluation.
 13. Run the final inference and evidence audits independently.
-14. Revise every claim defeated by a successful objection.
+14. Revise every claim defeated by a successful objection, and verify the revisions with the mechanical checklist of §28 (no second final audit; ablation C48).
 15. Complete all eleven Finish Gates.
 16. Produce the six-part executive output.
 17. Preserve the complete technical appendix and ledgers.
