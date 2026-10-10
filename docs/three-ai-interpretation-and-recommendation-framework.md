@@ -44,8 +44,8 @@ flowchart TD
 
     G -->|"Decision or design conflict"| U["Escalate to the proper<br/>earlier stage"]
 
-    G -->|"Revision required"| R["Revise interpretation<br/>and re-audit"]
-    R --> X
+    G -->|"Revision required"| R["One consolidated revision<br/>+ mechanical checklist"]
+    R --> G
 
     G -->|"Pass"| D["Stage 5 decision<br/>evaluation"]
     D --> O["Recommendation,<br/>monitoring, and next question"]
@@ -791,6 +791,17 @@ After the constructor applies the required revisions, a second AI 2 / AI 3 audit
 3. the multiset of numbers in the revised text equals the original's numbers, minus the numbers in the targets, plus the numbers in the replacements.
 
 Any failed check is a FLAG; flagged text does not pass the Finish Gates until it is corrected and the checklist passes. The verifier must be mechanical (quote match and number diff), not a judgment by the coordinator that its own packet came out right. Tested scope: one seeded mis-applied revision (one number changed) was flagged and the clean revision passed; a second audit found nothing the checklist missed. The checklist does not check new claims that a revision introduces without quoting a source.
+
+### One consolidated revision pass replaces the revise / re-audit loop (ablation C50, KEEP)
+
+Revision is one pass, not a loop:
+
+- consolidate every required revision from both final audits into **one** revision request;
+- allow **exactly one** constructor revision pass against that request;
+- verify it with the mechanical checklist above;
+- disclose any remaining presentational residue instead of iterating.
+
+Audit rounds fall from an open-ended revise → re-audit cycle (three rounds in the tested replay, one of them projected) to one audit plus one checked revision. Tested scope: a replay of the frozen second-audit replies, with no new audit chats; the presentational seed was not flagged and neither audit graded it as failed. A material defect introduced by the revision itself is covered only by the checklist.
 
 ## 29. Mandatory Finish Gates
 
