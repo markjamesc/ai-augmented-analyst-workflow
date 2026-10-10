@@ -1023,7 +1023,7 @@ Before the Design Gate, check the locked text for these recurring gaps. Each one
 - **Every field for every action class.** Specify the value of each output field (guardrail flags, ratios, ranks) for every action class, including `unchanged` and hold outcomes. This is a Design Gate requirement in the table form defined in §20.4A.1.
 - **Tie-breaks for every argmax / argmin and ranking**, including exact ties of unrounded values.
 - **Degenerate inputs.** Define behavior when a statistic is undefined (no positive training day for a quantile cap, an empty group, a zero denominator), rather than leaving builders to halt or emit `NA` differently.
-- **Small denominators in acceptance metrics.** For mean relative-error style acceptance tests, state how items with very small realized denominators are treated (exclusion floor, alternative statistic, or reporting a per-item influence breakdown), so one item cannot decide the gate unnoticed.
+- **Small denominators in acceptance metrics.** For mean relative-error style acceptance tests, state how items with very small realized denominators are treated (exclusion floor, alternative statistic, or reporting a per-item influence breakdown), so one item cannot decide the gate unnoticed. The predeclared minimum-total, eligibility, share thresholds and flag consequence of the Stage 4 dominance check (ablation C47) are locked here before execution.
 - **Calendar arithmetic.** Express windows in calendar ordinals or dates, not integer arithmetic on period codes that only happens to be contiguous.
 - **Grain assertions.** Require a uniqueness / completeness assertion wherever a dimension join defines the grain.
 

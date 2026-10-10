@@ -933,6 +933,16 @@ The process moves forward only when:
 - accepted limitations are documented;
 - and required corrections have been independently verified.
 
+## 9A. Small-denominator and single-unit dominance check (ablation C47, KEEP)
+
+Every headline or gating metric gets a dominance check at Stage 4. Its thresholds and consequence are **predeclared in Stage 3, before execution** (post hoc thresholds are not allowed). The tested configuration, which Stage 3 adopts unless it predeclares others, is:
+
+- the check applies only when the total number of rows in the headline class is at least **1,000** (otherwise status `NOT_APPLICABLE_BELOW_MIN_TOTAL`);
+- a unit (for example a category or entity) is **eligible** if it has at least **30** rows in the class;
+- an eligible unit is **flagged** when its share of the class exceeds **1/3** (status `FLAG`; otherwise `NO_FLAG`).
+
+A flag never drops, excludes, or changes a row: the result stays as computed. The flag is written to the Stage 4 report and routed to the owner, and Stage 3 states in advance what a flag obliges (for example, the unit's share and count are disclosed as the leading caveat in Stage 5). A rule that auto-excludes a dominant unit would be a silent KPI change and is not permitted. For ratio or mean-error metrics, Stage 3 also predeclares the minimum denominator per unit and reports a per-unit influence breakdown (see the Stage 3 specification-completeness checks). Tested scope: one seeded dominant unit and a clean control with no false flag; this supports a catch-rate claim, not prevalence.
+
 ## 10. Freeze the validated analytical data
 
 Once the SQL Source Gate, Fixture Gate, reconciliation, and cross-review pass, the validated data should receive a stable version.
