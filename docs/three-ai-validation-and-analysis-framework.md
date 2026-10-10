@@ -496,6 +496,18 @@ Blank, `PENDING`, or placeholder lineage fails Stage 4 readiness.
 
 The SQL source path does not need to predict fixture actions. Its fixture-related responsibility is to faithfully deliver fixture/source fields when fixture delivery is part of the test harness.
 
+### Reduced-scale smoke run before the full run (ablation C51, KEEP)
+
+After the Fixture Gate passes and before any full pipeline run, each judged path runs a declared end-to-end **smoke run** on a fixed subset of the frozen extract:
+
+- **Declared subset rule.** The subset is a deterministic function of the frozen file: the header plus every k-th data line in file order (data lines 1, 1+k, 1+2k, …). Run at k = 16, then k = 4. Companion files (for example peer statistics and lineage) are copied unchanged. Declare the rule before the run.
+- **Detection rule.** The k = 16 run exiting non-zero or hitting its time cap is detected at k = 16. Otherwise the k = 4 run exiting non-zero, hitting its cap, or taking more than 6 times the k = 16 time (more than 1.5 times the linear 4× ratio, a super-linear signal) is detected at k = 4.
+- **Caps.** The tested cap was 600 seconds per smoke run.
+- **Non-reporting.** Smoke runs are real-data, non-reporting runs. They live outside every reporting root and carry a `NON_REPORTING` marker. They are never reconciled, never used as results, and never enter a receipt. Every builder packet must say this explicitly (the "never simulate" rule is not relaxed: the smoke run uses real data).
+- **No substitute for the full run.** The smoke run does not replace the full run; defects that appear only at full scale or on rare entities are still found there.
+
+Tested benefit: the smoke run caught a seeded late-pipeline crash and a seeded super-linear loop before any full run. It saves time only when a full run would otherwise have failed late; it adds time when nothing fails.
+
 ### Hard recon contract
 
 Validation Gate Pass requires **exact** match between R-A and R-B on the locked decision-grain fields.
@@ -1418,6 +1430,7 @@ Live release remains a separate owner decision after current data and operationa
 11. Preserve information barriers until both first-pass judged outputs are frozen.
 12. Score frozen known-case fixtures against both judged paths, including the depth gate (§6A item 6 of the Fixture Gate; ablation C41).
 13. If either fixture path fails, repair toward locked Stage 3; do not rewrite the failed fixture to force a pass.
+13a. Run the reduced-scale smoke run on each judged path (§6A; ablation C51) before any full run.
 14. Reconcile R-A against R-B mechanically on all locked decision-critical fields.
 15. If they differ, diagnose without treating either path as automatically correct.
 16. Check whether the disagreement originates in R-A, R-B, reconciliation code, or the common source-delivery layer.
