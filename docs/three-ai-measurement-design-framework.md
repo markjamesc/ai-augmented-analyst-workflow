@@ -1020,12 +1020,23 @@ For every reconciliation-critical field, state whether it is compared **exactly*
 Before the Design Gate, check the locked text for these recurring gaps. Each one let two faithful builders implement different behavior in a past run:
 
 - **Exact source field names.** Name the exact column a rule reads (e.g. `event_name_1` versus either event field), not a concept.
-- **Every field for every action class.** Specify the value of each output field (guardrail flags, ratios, ranks) for every action class, including `unchanged` and hold outcomes.
+- **Every field for every action class.** Specify the value of each output field (guardrail flags, ratios, ranks) for every action class, including `unchanged` and hold outcomes. This is a Design Gate requirement in the table form defined in §20.4A.1.
 - **Tie-breaks for every argmax / argmin and ranking**, including exact ties of unrounded values.
 - **Degenerate inputs.** Define behavior when a statistic is undefined (no positive training day for a quantile cap, an empty group, a zero denominator), rather than leaving builders to halt or emit `NA` differently.
 - **Small denominators in acceptance metrics.** For mean relative-error style acceptance tests, state how items with very small realized denominators are treated (exclusion floor, alternative statistic, or reporting a per-item influence breakdown), so one item cannot decide the gate unnoticed.
 - **Calendar arithmetic.** Express windows in calendar ordinals or dates, not integer arithmetic on period codes that only happens to be contiguous.
 - **Grain assertions.** Require a uniqueness / completeness assertion wherever a dimension join defines the grain.
+
+### 20.4A.1 Output-field × outcome table (Design Gate requirement; ablation C53, KEEP)
+
+The Design Gate requires an **output-field × outcome table** approved by the owner before Stage 4:
+
+- one row per output field and one column per outcome (every action or label class, including hold, unchanged, collapsed, and insufficient-evidence outcomes);
+- each cell states the required value, presence or absence, or the rule that computes it, including the value when a field has no input (for example a count of zero versus missing);
+- every diagnostic metric states its population;
+- where wall-clock times are compared, the table states the rule for ambiguous or repeated local times, so that both judged paths parse them the same way.
+
+Stage 4 checks each builder's classifications file against the table cell by cell (label and key uniqueness, field presence, value, clock rule, and conditional presence), recomputing expected clock values from the frozen source under the stated rule. A cell violation is a builder defect settled by the table; it does not need an owner ruling. The table is a specification check, not a replacement for exact reconciliation. Its tested benefit is fewer Stage 4 interpretive rulings and repair rounds; design-time minutes were not measured, and long tables with low-value cells are a cost risk.
 
 ### 20.4B Database access and the role of R
 
@@ -1357,6 +1368,7 @@ The design passes only when all of the following are satisfied.
 - Known-case Fixture Gate authority recorded before R builders run.
 - R-A / R-B independence required: no shared judged code, judged ID list, selected set, membership list, or final action table as build input.
 - Lineage field mapping present for validation-green claims.
+- Output-field × outcome table (§20.4A.1) approved and attached.
 - Capacity/simulation label mapping present when those gates are used.
 - Permitted SQL mechanical transformations are explicit and separated from R judged analytical logic.
 - No production SQL or R has been written in Stage 3.
