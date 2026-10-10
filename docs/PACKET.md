@@ -17,7 +17,7 @@ Portfolio method packet for [ai-augmented-analyst-workflow](https://github.com/m
 
 **ML / predictive analytics modes (None / A / B)** live in the Stage 3 measurement-design and Stage 4 validation frameworks; ENGINE Expand is a Mode B helper only.
 
-**The R Workflow Gate is separate from Stage 4 analytical validation.** Stage 4 performs SQL source validation, independent R-A / R-B judged construction, exact reconciliation, structural review, and deeper analysis. The Workflow Gate verifies that the prescribed stage locks and validation controls were actually completed using the correct Stage 3 design version before Stage 5 may begin.
+**The R Workflow Gate is separate from Stage 4 analytical validation.** Stage 4 performs SQL source validation, independent R-A / R-B judged construction, exact reconciliation, optional structural review (ablation C30), and deeper analysis. The Workflow Gate verifies that the prescribed stage locks and validation controls were actually completed using the correct Stage 3 design version before Stage 5 may begin.
 
 **The R Procedure Gate wraps the complete five-stage run without changing it.** It records stage state, verifies the required receipts in order, delegates the Execution release decision to the existing Workflow Gate, and produces the final protocol certificate after Finish.
 

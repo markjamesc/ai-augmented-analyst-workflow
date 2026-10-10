@@ -47,7 +47,7 @@ Independent R-A / R-B apply to **judged** Stage 3 decisions (rules or Mode A). S
 
 ### 4. Failability ladder
 
-Treat as hard fails (not advisory): fixtures → SQL Source Gate → exact recon → structural cross-review → Validation Gate → R Workflow Gate. Narration cannot waive a failed tier. Owner correction = dated change-control + **new freeze** + rerun of that tier and dependents. Higher tiers do not substitute for lower ones. Workflow Gate **consumes** lower-tier receipts; it does not author PASS without their hashes.
+Treat as hard fails (not advisory): fixtures → SQL Source Gate → exact recon → Validation Gate → R Workflow Gate. Structural cross-review is optional after ablation C30 (KEEP); when it is run, its unresolved material findings still block the Validation Gate. Narration cannot waive a failed tier. Owner correction = dated change-control + **new freeze** + rerun of that tier and dependents. Higher tiers do not substitute for lower ones. Workflow Gate **consumes** lower-tier receipts; it does not author PASS without their hashes.
 
 ### 5. Evidence-package schema (publishable packs)
 
@@ -283,7 +283,7 @@ FORWARD HARD STOPS (portable method):
 1) Framing Gate requires capacity_stance = unordered_ok | hard_attention_budget (always; missing = Fail).
 2) Design Gate requires explicit ml_mode = None | A | B (fail-closed; no blank/inference).
 3) Dual R-A/R-B only for judged contracts; shared judged helpers forbidden; dumb comparator only.
-4) Fixture / Source / Recon / Cross-review / Validation / Workflow gates can fail the work — no verbal waiver; owner change-control = new freeze + rerun.
+4) Fixture / Source / Recon / Validation / Workflow gates (and a structural cross-review, when one is run) can fail the work — no verbal waiver; owner change-control = new freeze + rerun.
 5) Stage 5 blocked unless workflow_gate_status.json PASS with stage5_allowed and lineage + scorecard receipts present (Workflow Gate consumes lower receipts).
 6) The complete run is not protocol-compliant unless the R Procedure Gate certifies all five stages and writes final_certificate.json with result = PASS and certified = true.
 Do NOT retrofit or mutate prior locked / frozen historical packs. Apply these rules to this project prospectively. Case evidence stays in the project repo.

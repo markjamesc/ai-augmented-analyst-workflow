@@ -4,7 +4,7 @@ This framework describes an end-to-end system for using three independent AI sys
 
 From this version forward, the default Stage 4 validation architecture is:
 
-> **controlled SQL source delivery → SQL Source Gate → independent R-A and R-B judged implementations → exact reconciliation → structural cross-review → validated-data freeze**
+> **controlled SQL source delivery → SQL Source Gate → independent R-A and R-B judged implementations → exact reconciliation → validated-data freeze** (structural cross-review is optional; see §9, ablation C30)
 
 The three AIs perform different functions as the type of error risk changes:
 
@@ -770,7 +770,11 @@ Manual edits to result tables are prohibited.
 
 ## 9. Cross-review after reconciliation
 
-### Why cross-review is separate
+> **Structural cross-review is no longer universally required (ablation C30, KEEP).** After exact reconciliation, matching totals together with exit status 0 and passing fixtures on both paths are accepted as sufficient; a structural (logic) cross-review is not a mandatory tier. It may still be run, and when it is run its findings and gate bullets below apply. Tested scope: five seeded common-mode errors on one frozen pack; every seeded change that altered a locked output was still caught by the remaining mechanical checks, but the seeds were covered by fixtures, so the result may reflect the seed choice. A judged rule that no fixture exercises is therefore not covered by this relaxation: add a fixture for it (Stage 3 fixture map) or run the structural review for that rule.
+>
+> **Gate-receipt interim rule.** The executable Workflow Gate still reads `structural_cross_review` and requires `PASS`. Do not record `PASS` for a review that was not run. A run that skips the review needs the gate to accept a non-run value first; until then, treat that as a gate change that requires owner change control.
+
+### Why cross-review is separate (when it is run)
 
 Suppose R-A and R-B match exactly.
 
@@ -919,7 +923,7 @@ The process moves forward only when:
 - SQL Source Gate still passes;
 - Fixture Gate still passes;
 - exact R-A / R-B reconciliation still passes;
-- no blocking structural issue remains;
+- no blocking structural issue remains (when a structural review was run);
 - no material issue remains unresolved;
 - accepted limitations are documented;
 - and required corrections have been independently verified.
@@ -1404,7 +1408,7 @@ Live release remains a separate owner decision after current data and operationa
 16. Check whether the disagreement originates in R-A, R-B, reconciliation code, or the common source-delivery layer.
 17. Correct code, rebuild from source, rerun affected gates, and preserve failed reports.
 18. After exact reconciliation, remove the information barriers.
-19. Cross-review both R implementations and the SQL Source Gate for hidden structural weaknesses.
+19. Optionally cross-review both R implementations and the SQL Source Gate for hidden structural weaknesses (not required after exact reconciliation, ablation C30).
 20. Resolve every material finding through evidence, not voting.
 21. Rerun the Source Gate if source delivery changes.
 22. Rerun fixtures and reconciliation if judged construction changes.
@@ -1468,7 +1472,7 @@ Prior dual-path trees, recon freezes, and labels stay frozen as historical archi
 | 1 | **Fixtures** (frozen known cases vs R-A and R-B) | Judged path does not implement locked Stage 3 on known cases → repair toward design; do not rewrite fixtures to force green |
 | 2 | **SQL Source Gate** | Shared delivery is not faithful → repair source; do not proceed to judged trust |
 | 3 | **Exact reconciliation** (R-A vs R-B on locked fields) | Independent judged translations disagree → diagnose; never copy IDs/actions across paths to manufacture agreement |
-| 4 | **Structural cross-review** (recorded status feeding Validation Gate) | Shared weakness / silent coupling / undisclosed plumbing → unresolved material finding blocks Validation Gate |
+| 4 | **Structural cross-review** (optional after ablation C30; when run, its recorded status feeds the Validation Gate) | Shared weakness / silent coupling / undisclosed plumbing → unresolved material finding blocks Validation Gate |
 | 5 | **Validation Gate** | Aggregate analytical validation fail → no validated-data freeze for Stage 5 interpretation of judged results. Verbs: Fail / repair / rerun / Pass (not soft “issues remain”) |
 | 6 | **R Workflow Gate** (`workflow_gate.R`) | Procedural receipts incomplete / wrong design version / unresolved issues → Stage 5 blocked even if narrators claim “done” |
 
