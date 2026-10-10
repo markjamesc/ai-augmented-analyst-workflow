@@ -446,7 +446,7 @@ Before implementation or execution begins, each path must attest to its own lock
 - **R-A** independently attests that it implements the complete judged / final decision logic.
 - **R-B** independently attests that it implements the complete judged / final decision logic.
 
-Optional persistence, twin, capacity, and simulation mechanics may be marked **N/A** only with an explicit design cite that the mechanic is unused. Packet completeness, lineage, source fidelity, and judged-path independence remain mandatory.
+Optional persistence, twin, capacity, and simulation mechanics may be marked **N/A** only with an explicit design cite that the mechanic is unused. Complete translation content, lineage, source fidelity, and judged-path independence remain mandatory.
 
 ### Judged-path decision-logic items
 
@@ -540,7 +540,7 @@ When capacity/simulation is unused, this block is design-cited N/A.
 
 | # | Item | Blocking if missing / soft |
 |---|---|---|
-| 1 | Packet-complete Stage 3 → path translation | Yes |
+| 1 | Stage 3 → path translation carried in the authoritative contracts (no separate completeness review; omissions are caught by items 3 and 5, ablation C16) | Yes, through items 3 and 5 |
 | 2 | SQL Source Gate Pass | Yes |
 | 3 | Fixture Gate Pass | Yes |
 | 4 | R-A and R-B independent judged construction | Yes |

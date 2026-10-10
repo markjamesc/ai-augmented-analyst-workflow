@@ -830,7 +830,7 @@ The technology roles are deliberate:
 
 Only the orchestrator touches the database, through its command-line client; R reads the frozen extract and never connects to the database (§20.4B).
 
-Minimum gate classes when the design uses them follow below. Optional persistence, twin, capacity, and simulation mechanics may be marked **N/A** only with an explicit design cite that the mechanic is unused. Packet completeness, lineage mapping, SQL/R separation, and R-path independence remain mandatory.
+Minimum gate classes when the design uses them follow below. Optional persistence, twin, capacity, and simulation mechanics may be marked **N/A** only with an explicit design cite that the mechanic is unused. Complete translation content, lineage mapping, SQL/R separation, and R-path independence remain mandatory.
 
 | Gate class | Mechanic R-A and R-B must independently translate |
 |---|---|
@@ -842,7 +842,9 @@ Minimum gate classes when the design uses them follow below. Optional persistenc
 | Lineage field mapping | Both R outputs must identify the same verified SQL source freeze using `snapshot_id`, `source_version`, extraction / observation-boundary, or locked equivalents. |
 | Capacity / simulation labels | Capacity and simulation / occupancy labels required by the design are mapped into both R outputs so Stage 4 can enforce non-live labeling when applicable. Design-cited N/A is allowed when the design does not use capacity/simulation. |
 
-Packet completeness rule: every design-used gate class must appear with (1) exact clause cite, (2) fixture-map entry where applicable, and (3) covering attestation requirements for both R-A and R-B. Unused optional mechanics require an explicit design-cited N/A. Omitting any used gate, required source field, or required lineage mapping means Stage 4 is not ready.
+Packet content rule: every design-used gate class must appear with (1) exact clause cite, (2) fixture-map entry where applicable, and (3) covering attestation requirements for both R-A and R-B. Unused optional mechanics require an explicit design-cited N/A.
+
+> **No separate packet-completeness review (ablation C16, KEEP).** Completeness of the translation content is a property of the authoritative Stage 3 contracts. It is not a separate blocking review or gate item. An omitted rule, required source field, or lineage mapping is caught by the Fixture Gate and exact R-A / R-B reconciliation. The tested result is bounded by the seeded omissions that a frozen pack could exercise; an omission that no fixture and no reconciled field exercises is not covered by this relaxation, so design the fixture map to exercise each decision-changing rule.
 
 ### Known-case / gold fixtures (Fixture Gate)
 
@@ -1351,7 +1353,7 @@ The design passes only when all of the following are satisfied.
 - R-A / R-B judged-output contract complete.
 - R-A versus R-B exact reconciliation contract complete.
 - Fixture and lineage contract complete.
-- Spec→builder translation packet complete for all locked decision-changing gates.
+- Translation requirements for all locked decision-changing gates are carried in the authoritative contracts (no separate packet-completeness review; omissions are caught by the Fixture Gate and exact reconciliation, ablation C16).
 - Known-case Fixture Gate authority recorded before R builders run.
 - R-A / R-B independence required: no shared judged code, judged ID list, selected set, membership list, or final action table as build input.
 - Lineage field mapping present for validation-green claims.
