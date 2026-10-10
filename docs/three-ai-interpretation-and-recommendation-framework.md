@@ -143,6 +143,10 @@ Before interpreting, record every file or verified repository link found and eve
 
 Do not claim access to a file that was not retrieved. Do not invent missing execution results, targets, constraints, fields, or validations.
 
+### Evidence delivery requirement (ablation C49R, KEEP)
+
+Deliver the Stage 5 evidence to each first-pass reviewer as **individual files**, plus a checksum file named `SHA256SUMS.txt` (with the `.txt` extension: a reviewer model refused an extensionless checksum file) that lists the SHA-256 of every evidence file. An archive (zip) must not be the only delivery. Each reviewer's reply must begin with a **file inventory** listing, for every evidence file, its name, its SHA-256 (matching `SHA256SUMS.txt`), whether it was opened, its line count, and its first and last non-empty lines. A file counts as accessed only when the first and last lines match. A first pass without a complete inventory is not a usable first pass and is reissued; do not treat a reviewer's "recompute" requests as findings when the inventory shows the files were not opened. Tested scope: in the test one reviewer model could not open the zip at all (0 of 9 files) and opened all 9 individual files; n = 1 per model, and other models' zip handling was not tested. Check any per-chat upload limit before dispatch.
+
 ## 4. Lock-preservation rule
 
 Stage 5 consumes earlier locks; it does not reopen them merely because a different definition would produce a cleaner story.
@@ -640,7 +644,7 @@ AI 2 independently produces:
 
 AI 3 independently produces:
 
-1. File inventory.
+1. File inventory, as the first section, with the SHA-256 of every file (ablation C49R).
 2. Result Inventory.
 3. Independent checks of critical values.
 4. Population, grain, and time-window verification.
