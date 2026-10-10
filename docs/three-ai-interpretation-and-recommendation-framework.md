@@ -615,9 +615,11 @@ AI 1 produces:
 5. Most important caveat.
 6. Decision-option matrix.
 7. Primary recommendation.
-8. Monitoring plan.
-9. Next analytical question.
+8. Monitoring plan (optional; ablation C38).
+9. Next analytical question (optional; ablation C38).
 10. Weakest bridge in its own reasoning.
+
+> **Follow-up tag dropped (ablation C38, KEEP).** Sections 8 and 9 are no longer required when evidence is incomplete. In their place a mechanical **finality check** applies to the interpretation: if the limitations list is non-empty, no sentence may assert finality without negation (for example "this settles the question" or "no further work is needed"); finality words are a list declared in advance, with a negation set that does not include "no" (otherwise "no further work" exempts itself). A flagged sentence must be corrected. This does not remove the monitoring contract of §22 for a recommended action. Tested scope: one real text with the follow-up deleted raised no flag, a seeded finality sentence was flagged; the real text contains no finality words, so the no-harm result is partly a property of that text.
 
 ### AI 2 output
 
@@ -847,7 +849,7 @@ Every required revision must quote the affected language and provide a precise c
 - Primary and guardrail monitoring defined.
 - Success, failure, escalation, and rollback triggers stated.
 - Review timing and owner stated.
-- Next analytical question identified.
+- Next analytical question identified when the analyst chooses to include one (optional after ablation C38); finality check of §24 passed.
 
 ### Gate 11 — Communication and ownership
 
