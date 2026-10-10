@@ -488,6 +488,11 @@ Blank, `PENDING`, or placeholder lineage fails Stage 4 readiness.
 3. **No rewrite after Fail.** On fixture Fail, repair the implementation toward locked Stage 3 and rerun. Builders must not rewrite fixture IDs, expected outcomes, or predicates to greenwash.
 4. **Owner-authorized correction = new freeze.** A legitimate fixture correction creates a new version and requires fresh validation.
 5. **Block recon-green.** A fixture Fail, missing freeze identity, or post-fail rewritten pack blocks Validation Gate Pass.
+6. **Depth over count (ablation C41, KEEP).** An N/N count is not sufficient. The Fixture Gate passes only when the same frozen fixture rows also pass a **depth gate**:
+   - **Production read path.** Write the fixture rows as text in the production source layout (same delimiter and header lines as the frozen extract, the source's own timestamp and null renderings, and raw-style date text where the source uses it), read them back through each path's production reader and normalizers, then through the judged logic, and score them against the unchanged locked expectations. Any read or parse error fails the gate.
+   - **Stub probe.** Replace each path's judged logic with a poison judge (every label set to a value no expectation allows) and rerun the fixture scoring. Any fixture that still passes is a stub and fails the gate.
+   - **Cost bound.** Both gates are mechanical (no extra AI chats). Tested cost: depth-gate wall time no more than count-gate wall time plus 60 seconds.
+   The depth gate catches defects in file reading, parsing, flag coercion, and always-pass fixtures that synthetic pre-parsed fixtures cannot. It does not replace exact reconciliation.
 
 The SQL source path does not need to predict fixture actions. Its fixture-related responsibility is to faithfully deliver fixture/source fields when fixture delivery is part of the test harness.
 
@@ -542,7 +547,7 @@ When capacity/simulation is unused, this block is design-cited N/A.
 |---|---|---|
 | 1 | Stage 3 → path translation carried in the authoritative contracts (no separate completeness review; omissions are caught by items 3 and 5, ablation C16) | Yes, through items 3 and 5 |
 | 2 | SQL Source Gate Pass | Yes |
-| 3 | Fixture Gate Pass | Yes |
+| 3 | Fixture Gate Pass (count gate and depth gate, ablation C41) | Yes |
 | 4 | R-A and R-B independent judged construction | Yes |
 | 5 | Exact recon on locked decision fields | Yes |
 | 6 | Build-time independence + repair-time never-copy | Yes |
@@ -1401,7 +1406,7 @@ Live release remains a separate owner decision after current data and operationa
 9. Have AI 1 build R-A independently.
 10. Have AI 3 build R-B independently.
 11. Preserve information barriers until both first-pass judged outputs are frozen.
-12. Score frozen known-case fixtures against both judged paths.
+12. Score frozen known-case fixtures against both judged paths, including the depth gate (§6A item 6 of the Fixture Gate; ablation C41).
 13. If either fixture path fails, repair toward locked Stage 3; do not rewrite the failed fixture to force a pass.
 14. Reconcile R-A against R-B mechanically on all locked decision-critical fields.
 15. If they differ, diagnose without treating either path as automatically correct.
