@@ -35,7 +35,7 @@ In the table, "Stage 3 doc" is `docs/three-ai-measurement-design-framework.md`, 
 
 ## Not changed on purpose
 
-- No REVERT, HALT, or NOT_TRIGGERED rule was edited. In particular the coordinator-draft ban (C02), Design Gate after cross-review (C03), the claim-ceiling judgment (C05), the three Stage 5 roles (C04), the numerical-determinism proposal (C46), narrow freeze scope (C43), and the full-scope Source Gate and recon rules stay as they were.
+- No REVERT or HALT rule was edited (including A02R REVERT and C40R HALT: the mandatory Known-case Fixture Gate and the unlimited repair-round rule stay). In particular the coordinator-draft ban (C02), Design Gate after cross-review (C03), the claim-ceiling judgment (C05), the three Stage 5 roles (C04), the numerical-determinism proposal (C46), narrow freeze scope (C43), and the full-scope Source Gate and recon rules stay as they were.
 - No removed control was re-added under a new name. The finality check (C38) and the revision checklist (C48) are mechanical checks that replace a removed requirement. They are not new review rounds.
 - The post-ablation hardening changes (estimand contract, premise register, specification-uncertainty plan, change classification, intermediate reconciliation, metamorphic tests, reproducibility and AI-provenance records, claim-to-evidence ledger) are a separate step and are not part of this change.
 
@@ -77,7 +77,7 @@ In the table, "Stage 3 doc" is `docs/three-ai-measurement-design-framework.md`, 
 | C31 | Lineage attestation | REVERT |
 | C33 | Naive clock contract | REVERT |
 | C39 | Recon scope and tolerance | REVERT |
-| C40 | Repair-round cap | NOT_TRIGGERED |
+| C40 | Repair-round cap | HALT (C40R, mechanical; outcome BOTH_CENSORED: neither the incumbent builder through round 6 nor the fresh builder within its cap produced a valid build, so no Builder/Validator/Adjudicator chats were run per its spec; the existing unlimited-repair rule stays; supersedes the earlier NOT_TRIGGERED, kept on record) |
 | C41 | Fixture depth over count | **KEEP** |
 | C42 | Batched owner rulings | REVERT |
 | C45 | Parallel R-A / R-B runs | **KEEP** |
@@ -112,9 +112,9 @@ In the table, "Stage 3 doc" is `docs/three-ai-measurement-design-framework.md`, 
 | C54 | Builder file-download capture channel | REVERT |
 
 ### Earlier A-batch (no rule changed)
-A01 Dual-path independence REVERT · A02 Known-case Fixture Gate HALT · A03 SQL nonjudgment bright line REVERT · A04 SQL Source Gate vs raw REVERT · A05 Single owner knob only REVERT · A06 Integrity-gate INCONCLUSIVE REVERT · A07 Primary construct REVERT · A08 Exact recon critical-field set REVERT. A09 and A10 were deferred.
+A01 Dual-path independence REVERT · A02 Known-case Fixture Gate REVERT (A02R re-run; supersedes the original A02 HALT, kept on record) · A03 SQL nonjudgment bright line REVERT · A04 SQL Source Gate vs raw REVERT · A05 Single owner knob only REVERT · A06 Integrity-gate INCONCLUSIVE REVERT · A07 Primary construct REVERT · A08 Exact recon critical-field set REVERT. A09 and A10 were deferred.
 
-Tally: 14 KEEP, 27 REVERT, 0 HALT, 1 NOT_TRIGGERED across the numbered program; with A01-A08, 14 KEEP, 34 REVERT, 1 HALT (A02), 1 NOT_TRIGGERED over 50 controls. Locked-forward, untested by design: capacity stance at Framing, ML Mode declaration, dual-path only where judgment lives (scoped), the failability ladder, and the evidence-package schema.
+Tally: 14 KEEP, 27 REVERT, 1 HALT (C40R), 0 NOT_TRIGGERED across the numbered program; with A01-A08, 14 KEEP, 35 REVERT, 1 HALT (C40R) over 50 controls. A02R (REVERT) and C40R (HALT) are the latest additions; neither changes any rule, so no workflow document was edited for them. Locked-forward, untested by design: capacity stance at Framing, ML Mode declaration, dual-path only where judgment lives (scoped), the failability ladder, and the evidence-package schema.
 
 ## Caveats carried by the verdicts
 
@@ -125,10 +125,12 @@ Tally: 14 KEEP, 27 REVERT, 0 HALT, 1 NOT_TRIGGERED across the numbered program; 
 
 ## Open items needing an owner ruling
 
-1. **Gate and receipt consistency (C30).** `workflow-gate/workflow_gate.R` still requires `structural_cross_review == "PASS"`, and the Stage 4 receipt template carries that field. The documents now treat the review as optional. Decide whether the gate should accept a `NOT_REQUIRED` value (a code and test change) or whether the review stays recorded as a receipt field.
-2. **Exact meaning of C16.** The tested change omitted a locked rule from one builder's packet and found the remaining mechanical checks caught it. This change reads KEEP as "no separate completeness review; completeness is content of the contracts". Confirm that reading.
+Items 1, 2, 4, 5 and 7 (the #30 gate, #16 meaning, #37 tag, #48/#50 FLAG handling and #47 thresholds rulings) are open as of 2026-10-10. Items 3 and 6 are notes and unchanged.
+
+1. **Gate and receipt consistency (C30).** **[OPEN]** `workflow-gate/workflow_gate.R` still requires `structural_cross_review == "PASS"`, and the Stage 4 receipt template carries that field. The documents now treat the review as optional. Decide whether the gate should accept a `NOT_REQUIRED` value (a code and test change) or whether the review stays recorded as a receipt field.
+2. **Exact meaning of C16.** **[OPEN]** The tested change omitted a locked rule from one builder's packet and found the remaining mechanical checks caught it. This change reads KEEP as "no separate completeness review; completeness is content of the contracts". Confirm that reading.
 3. **Finish monitoring contract (C38).** Only the first-pass follow-up tag and Gate 10's next-question line were relaxed. The §21-§22 monitoring contract for a recommended action was not tested and is unchanged.
-4. **Recommendation tag (C37).** The test assigned one evidence tag to the whole recommendation, by the coordinator. Decide who assigns the tag and whether the action lexicon is project-declared.
-5. **Revision FLAG handling (C48/C50).** The tests did not define what happens after a FLAG beyond "correct and recheck". This change says flagged text does not pass the Finish Gates until corrected and the checklist passes.
+4. **Recommendation tag (C37).** **[OPEN]** The test assigned one evidence tag to the whole recommendation, by the coordinator. Decide who assigns the tag and whether the action lexicon is project-declared.
+5. **Revision FLAG handling (C48/C50).** **[OPEN]** The tests did not define what happens after a FLAG beyond "correct and recheck". This change says flagged text does not pass the Finish Gates until corrected and the checklist passes.
 6. **C01 attribution.** The tested unblinded chat also saw a coordinator draft (shared with C02). C02 returned REVERT, so the coordinator-draft ban stays; the C01 result is not cleanly separated from that effect.
-7. **Dominance thresholds (C47).** The tested values (≥ 1,000 total, ≥ 30 per unit, share > 1/3) are written as the default; confirm or replace them in Stage 3 per project.
+7. **Dominance thresholds (C47).** **[OPEN]** The tested values (≥ 1,000 total, ≥ 30 per unit, share > 1/3) are written as the default; confirm or replace them in Stage 3 per project.
