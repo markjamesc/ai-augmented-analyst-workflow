@@ -184,6 +184,16 @@ Before first-pass freeze, they must not share:
 | AI 2 | Build and audit controlled SQL source delivery | SQL source extract + Source Gate report | No need for judged output before source freeze |
 | AI 3 | Independently implement locked judged logic in R | R-B judged table | R-A code or judged output |
 
+### Execution scheduling: R-A and R-B runs may be concurrent (ablation C45, KEEP)
+
+Independence comes from separate construction and information barriers, not from running the two pipelines one after the other. R-A and R-B full runs (`all`, with fixtures) may be launched concurrently on the same frozen package, each in its own working root with its own outputs, provided a **declared memory check** passes first:
+
+- measure the serial peak working set of an earlier serial run (sum over R processes, sampled at about 0.5 s intervals);
+- require free physical memory of at least **2 × the serial peak working set + 2,048 MB**;
+- if the check fails, run serially (or stop and report the evidence as incomplete); do not start a concurrent run anyway.
+
+Concurrent runs must exit 0 and produce key outputs byte-identical to the serial runs; a failure caused by contention is a reason to rerun serially, not to edit either path. Tested: seven key outputs byte-identical across serial and concurrent arms, median concurrent wall-clock 0.717 of serial. Cross-path information barriers still apply until both first-pass outputs are frozen.
+
 The final judged comparison is:
 
 $$
