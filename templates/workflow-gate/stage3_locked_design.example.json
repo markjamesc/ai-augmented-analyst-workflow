@@ -16,12 +16,11 @@
   "ai1_independent_design": "PASS",
   "ai2_independent_design": "PASS",
   "ai3_independent_risk_dossier": "PASS",
-  "information_barrier": "PASS",
   "cross_review": "PASS",
   "design_gates": "PASS",
   "human_analyst_approval": "APPROVED",
   "unresolved_issues": 0,
-  "_forward_note": "ml_mode fail-closed required None|A|B on new projects; historical Mode None/rules on a past project is descriptive only — do not mutate frozen packs to insert the field",
+  "_forward_note": "ml_mode fail-closed required None|A|B on new projects; historical Mode None/rules on a past project is descriptive only \u2014 do not mutate frozen packs to insert the field",
   "fixture_version": "example-fixtures-v1",
   "fixture_ids": [
     "REPLACE_WITH_LOCKED_FIXTURE_ID"
@@ -29,5 +28,223 @@
   "reconciliation_critical_fields": [
     "REPLACE_WITH_LOCKED_FIELD"
   ],
-  "_template_note": "Example only; owner must explicitly lock mode and replace placeholders before use."
+  "_template_note": "Example only; owner must explicitly lock mode and replace placeholders before use.",
+  "_methodology_note": "Prospective methodology-v3. Replace examples and placeholders; do not create PASS attestations without executing/reviewing evidence.",
+  "design_exposure_disclosed": "PASS",
+  "methodology": {
+    "version": "methodology-v3",
+    "analytical_target": {
+      "id": "target-1",
+      "decision_id": "decision-1",
+      "question_id": "question-1",
+      "question_type": "descriptive",
+      "target_population": "test population",
+      "observed_population": "Define the observable analytical population",
+      "analysis_unit": "test unit",
+      "decision_unit": "Define the decision grain",
+      "outcome": "Locked action label",
+      "time_origin": "2026-01-01",
+      "horizon": "Through 2026-02-01",
+      "contrast": "Complete eligible set, no intervention contrast",
+      "aggregation": "One record per unit",
+      "weighting": "Equal unit weights",
+      "quantity": "Finite-population labels and counts",
+      "estimator": "Apply locked rules",
+      "decision_rule_ref": "stage3.decision_rules",
+      "validation_argument": "Source fidelity and fixtures verify computation; measurement limitations constrain inference.",
+      "measurement_validity": "Operational definition only; no claim about unobserved true needs.",
+      "allowed_claim_types": [
+        "descriptive"
+      ]
+    },
+    "exposure": {
+      "data_seen": "Source profiling only",
+      "results_seen": "No outcome results before this illustrative lock",
+      "test_set_access": "Not applicable to census",
+      "recorded_at_utc": "2026-01-01T00:00:00Z"
+    },
+    "premises": [
+      {
+        "id": "P1",
+        "kind": "assumption",
+        "status": "accepted_with_scope",
+        "testability": "external",
+        "statement": "Recorded events represent the declared source population.",
+        "basis": "Source documentation",
+        "consequence": "Does not establish complete real-world coverage.",
+        "response": "Restrict claims to recorded events."
+      }
+    ],
+    "triggers": {
+      "missingness": false,
+      "dependence": false,
+      "multiplicity": false,
+      "transportability": false,
+      "causal_policy": false,
+      "decision_outcome": false
+    },
+    "modules": {
+      "measurement": {
+        "required": true,
+        "rationale": "Finite-population descriptive census; review applicability for each project.",
+        "plan": "Inspect measurement definitions and decision uncertainty against source limitations."
+      },
+      "causal": {
+        "required": false,
+        "rationale": "Finite-population descriptive census; review applicability for each project.",
+        "status": "NOT_APPLICABLE"
+      },
+      "predictive": {
+        "required": false,
+        "rationale": "Finite-population descriptive census; review applicability for each project.",
+        "status": "NOT_APPLICABLE"
+      },
+      "missingness": {
+        "required": false,
+        "rationale": "Finite-population descriptive census; review applicability for each project.",
+        "status": "NOT_APPLICABLE"
+      },
+      "dependence": {
+        "required": false,
+        "rationale": "Finite-population descriptive census; review applicability for each project.",
+        "status": "NOT_APPLICABLE"
+      },
+      "multiplicity": {
+        "required": false,
+        "rationale": "Finite-population descriptive census; review applicability for each project.",
+        "status": "NOT_APPLICABLE"
+      },
+      "transportability": {
+        "required": false,
+        "rationale": "Finite-population descriptive census; review applicability for each project.",
+        "status": "NOT_APPLICABLE"
+      },
+      "decision_uncertainty": {
+        "required": true,
+        "rationale": "Finite-population descriptive census; review applicability for each project.",
+        "plan": "Inspect measurement definitions and decision uncertainty against source limitations."
+      }
+    },
+    "sensitivity": {
+      "required": false,
+      "rationale": "No material unresolved specification for this illustrative deterministic contract.",
+      "instability_rule": "Disclose failed branches and restrict any unstable claim.",
+      "specifications": []
+    },
+    "checkpoints": [
+      {
+        "id": "judged",
+        "keys": [
+          "id"
+        ],
+        "exact_fields": [
+          "action"
+        ],
+        "numeric_fields": [],
+        "absolute_tolerance": 0,
+        "relative_tolerance": 0,
+        "rationale": "Canonical table includes every candidate and explicit exclusion/eligibility fields in real projects."
+      }
+    ],
+    "checkpoint_coverage": [
+      "population",
+      "exclusions",
+      "components",
+      "results"
+    ],
+    "numerics": {
+      "boundary_rule": "Locked exact action comparisons; no tolerance for labels.",
+      "nonfinite_rule": "Fail numeric checkpoints; meaningful missing values use exact status fields.",
+      "stochastic_rule": "No stochastic fit in this example."
+    },
+    "metamorphic": [
+      {
+        "id": "row_order",
+        "applicable": true,
+        "preconditions": "Stable IDs and no semantic row order.",
+        "rationale": "Judged membership depends on values, not source position.",
+        "transformation": "Reverse input rows",
+        "expected_relation": "Identical keyed decisions"
+      }
+    ],
+    "structural_review": {
+      "policy": "conditional",
+      "rationale": "Review uncovered rules; fixture coverage permits a documented skip.",
+      "fixture_covered_rule_ids": [
+        "rule-1"
+      ]
+    },
+    "judged_rule_ids": [
+      "rule-1"
+    ],
+    "dominance": {
+      "unit": "entity",
+      "metric": "class count",
+      "thresholds": "Project owner must declare minimum denominator and dominance share before locking.",
+      "rationale": "Thresholds depend on target, not universal 1000/30/one-third cutoffs.",
+      "flag_consequence": "Disclose concentration and interpretation; never auto-exclude."
+    },
+    "output_fields": [
+      {
+        "field": "id",
+        "outcome_semantics": "Stable unique ID; never missing"
+      },
+      {
+        "field": "action",
+        "outcome_semantics": "Locked label for each unit including ineligible status"
+      }
+    ],
+    "receipt_dependencies": {
+      "source": [
+        "inputs/source.csv",
+        "code/analysis.R",
+        "config/analysis.json",
+        "outputs/judged.csv"
+      ],
+      "fixtures": [
+        "inputs/source.csv",
+        "code/analysis.R",
+        "config/analysis.json",
+        "outputs/judged.csv"
+      ],
+      "reconciliation": [
+        "inputs/source.csv",
+        "code/analysis.R",
+        "config/analysis.json",
+        "outputs/judged.csv"
+      ],
+      "structural": [
+        "inputs/source.csv",
+        "code/analysis.R",
+        "config/analysis.json",
+        "outputs/judged.csv"
+      ],
+      "validation": [
+        "inputs/source.csv",
+        "code/analysis.R",
+        "config/analysis.json",
+        "outputs/judged.csv"
+      ],
+      "lineage": [
+        "inputs/source.csv",
+        "code/analysis.R",
+        "config/analysis.json",
+        "outputs/judged.csv"
+      ],
+      "methodology": [
+        "inputs/source.csv",
+        "code/analysis.R",
+        "config/analysis.json",
+        "outputs/judged.csv"
+      ]
+    },
+    "exact_decision_fields": [
+      "id",
+      "action"
+    ],
+    "replay_outputs": [
+      "outputs/judged.csv"
+    ]
+  },
+  "ai_provenance": []
 }

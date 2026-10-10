@@ -1,5 +1,7 @@
 # Three-AI Start and Framing Dialogue Framework
 
+> **Prospective methodology-v3:** apply [Methodology hardening](METHODOLOGY_HARDENING.md) alongside this framework. It consolidates the target/premise/sensitivity contracts, semantic checks, reproducibility and claim evidence. Its prospective contract resolves older conflicting wording; frozen historical runs keep their pinned version.
+
 This framework governs the first two phases of the five-stage AI-Augmented Analyst process:
 
 1. **Start:** Discover the business decision concealed behind an initial request for data, a metric, a dashboard, or an analysis.

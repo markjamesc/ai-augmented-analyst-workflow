@@ -1,6 +1,6 @@
 {
   "procedure_id": "five-stage-ai-augmented-analyst-workflow",
-  "procedure_version": "1.0",
+  "procedure_version": "2.0-methodology-v3",
   "steps": [
     {
       "id": "start",
@@ -13,21 +13,27 @@
       "id": "framing",
       "stage": 2,
       "framework": "docs/three-ai-start-and-framing-dialogue-framework.md",
-      "requires": ["start"],
+      "requires": [
+        "start"
+      ],
       "artifact": "artifacts/stage2_framing.json"
     },
     {
       "id": "design",
       "stage": 3,
       "framework": "docs/three-ai-measurement-design-framework.md",
-      "requires": ["framing"],
+      "requires": [
+        "framing"
+      ],
       "artifact": "artifacts/stage3_locked_design.json"
     },
     {
       "id": "execution",
       "stage": 4,
       "framework": "docs/three-ai-validation-and-analysis-framework.md",
-      "requires": ["design"],
+      "requires": [
+        "design"
+      ],
       "artifact": "artifacts/stage4_validation_status.json",
       "completion_gate": "workflow-gate/workflow_gate.R"
     },
@@ -35,7 +41,9 @@
       "id": "finish",
       "stage": 5,
       "framework": "docs/three-ai-interpretation-and-recommendation-framework.md",
-      "requires": ["execution"],
+      "requires": [
+        "execution"
+      ],
       "artifact": "artifacts/stage5_interpretation_status.json"
     }
   ]

@@ -1,0 +1,198 @@
+{
+  "status": "PENDING",
+  "design_version": "REPLACE",
+  "fixture_version": "REPLACE",
+  "checked_at_utc": "REPLACE",
+  "design_sha256": "REPLACE",
+  "target_id": "REPLACE",
+  "dependencies": [
+    {
+      "path": "REPLACE",
+      "sha256": "REPLACE"
+    }
+  ],
+  "changes": [],
+  "checkpoints": [
+    {
+      "id": "REPLACE",
+      "a": {
+        "path": "REPLACE",
+        "sha256": "REPLACE"
+      },
+      "b": {
+        "path": "REPLACE",
+        "sha256": "REPLACE"
+      }
+    }
+  ],
+  "metamorphic": [
+    {
+      "id": "REPLACE",
+      "path_id": "R-A",
+      "result": "PENDING",
+      "report": {
+        "path": "REPLACE",
+        "sha256": "REPLACE"
+      }
+    },
+    {
+      "id": "REPLACE",
+      "path_id": "R-B",
+      "result": "PENDING",
+      "report": {
+        "path": "REPLACE",
+        "sha256": "REPLACE"
+      }
+    }
+  ],
+  "sensitivity": [],
+  "modules": {
+    "measurement": {
+      "disposition": "PENDING",
+      "interpretation": "REPLACE",
+      "report": {
+        "path": "REPLACE",
+        "sha256": "REPLACE"
+      }
+    },
+    "causal": {
+      "disposition": "PENDING",
+      "interpretation": "REPLACE",
+      "report": {
+        "path": "REPLACE",
+        "sha256": "REPLACE"
+      }
+    },
+    "predictive": {
+      "disposition": "PENDING",
+      "interpretation": "REPLACE",
+      "report": {
+        "path": "REPLACE",
+        "sha256": "REPLACE"
+      }
+    },
+    "missingness": {
+      "disposition": "PENDING",
+      "interpretation": "REPLACE",
+      "report": {
+        "path": "REPLACE",
+        "sha256": "REPLACE"
+      }
+    },
+    "dependence": {
+      "disposition": "PENDING",
+      "interpretation": "REPLACE",
+      "report": {
+        "path": "REPLACE",
+        "sha256": "REPLACE"
+      }
+    },
+    "multiplicity": {
+      "disposition": "PENDING",
+      "interpretation": "REPLACE",
+      "report": {
+        "path": "REPLACE",
+        "sha256": "REPLACE"
+      }
+    },
+    "transportability": {
+      "disposition": "PENDING",
+      "interpretation": "REPLACE",
+      "report": {
+        "path": "REPLACE",
+        "sha256": "REPLACE"
+      }
+    },
+    "decision_uncertainty": {
+      "disposition": "PENDING",
+      "interpretation": "REPLACE",
+      "report": {
+        "path": "REPLACE",
+        "sha256": "REPLACE"
+      }
+    }
+  },
+  "fixtures": {
+    "production_reader_a": "PENDING",
+    "production_reader_b": "PENDING",
+    "poison_probe_a": "PENDING",
+    "poison_probe_b": "PENDING",
+    "report": {
+      "path": "REPLACE",
+      "sha256": "REPLACE"
+    }
+  },
+  "smoke": {
+    "status": "PENDING",
+    "non_reporting": true,
+    "report": {
+      "path": "REPLACE",
+      "sha256": "REPLACE"
+    }
+  },
+  "dominance": {
+    "status": "PENDING",
+    "disposition": "REPLACE",
+    "report": {
+      "path": "REPLACE",
+      "sha256": "REPLACE"
+    }
+  },
+  "reproducibility": {
+    "r_version": "REPLACE or explicitly unavailable/not-applicable with reason",
+    "os": "REPLACE or explicitly unavailable/not-applicable with reason",
+    "locale": "REPLACE or explicitly unavailable/not-applicable with reason",
+    "timezone": "REPLACE or explicitly unavailable/not-applicable with reason",
+    "encoding": "REPLACE or explicitly unavailable/not-applicable with reason",
+    "rng": "REPLACE or explicitly unavailable/not-applicable with reason",
+    "seeds": "REPLACE or explicitly unavailable/not-applicable with reason",
+    "sql_client": "REPLACE or explicitly unavailable/not-applicable with reason",
+    "sql_mode": "REPLACE or explicitly unavailable/not-applicable with reason",
+    "threads": "REPLACE or explicitly unavailable/not-applicable with reason",
+    "workflow_commit": "REPLACE or explicitly unavailable/not-applicable with reason",
+    "project_commit": "REPLACE or explicitly unavailable/not-applicable with reason",
+    "working_tree": "REPLACE or explicitly unavailable/not-applicable with reason",
+    "replay_command": "REPLACE or explicitly unavailable/not-applicable with reason",
+    "retention": "REPLACE or explicitly unavailable/not-applicable with reason",
+    "package_lock": {
+      "path": "REPLACE",
+      "sha256": "REPLACE"
+    },
+    "session_info": {
+      "path": "REPLACE",
+      "sha256": "REPLACE"
+    }
+  },
+  "replay": {
+    "status": "PENDING",
+    "clean_session": false,
+    "exit_status": null,
+    "report": {
+      "path": "REPLACE",
+      "sha256": "REPLACE"
+    },
+    "outputs": [
+      {
+        "original": {
+          "path": "REPLACE",
+          "sha256": "REPLACE"
+        },
+        "replayed": {
+          "path": "REPLACE",
+          "sha256": "REPLACE"
+        }
+      }
+    ]
+  },
+  "results": [
+    {
+      "id": "REPLACE",
+      "target_id": "REPLACE",
+      "locator": "REPLACE",
+      "artifact": {
+        "path": "REPLACE",
+        "sha256": "REPLACE"
+      }
+    }
+  ]
+}

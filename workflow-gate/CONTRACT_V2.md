@@ -1,3 +1,5 @@
+> **Prospective v3:** [Current methodology contract](../docs/METHODOLOGY_HARDENING.md) supplements the older contract below. New runs require its target, dependencies, semantic checkpoints, replay and claim evidence. Historical packs keep their pinned version.
+
 # Prospective workflow gate v2
 
 This executable contract applies to new project runs. Frozen historical packs and their gate scripts are not retrofitted.

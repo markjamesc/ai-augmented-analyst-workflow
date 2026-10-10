@@ -48,6 +48,10 @@ procedure_paths <- function(project_root) {
   )
 }
 
+load_methodology <- function() {
+  sys.source(file.path(procedure_repo_root(), "methodology/contracts.R"), envir = environment(load_methodology))
+}
+
 read_procedure <- function() {
   file.path(procedure_repo_root(), "procedure-gate", "procedure.json") %>%
     fromJSON(simplifyVector = FALSE)
@@ -109,6 +113,7 @@ completed_ids <- function(state) {
 
 verify_completed_artifacts <- function(state, project_root) {
   completed <- state$completed_steps %||% list()
+  if (!is.null(state$predecessor) && !verify_file_manifest(list(state$predecessor$state, state$predecessor$change_record), project_root)) return(FALSE)
   if (length(completed) == 0L) return(TRUE)
   artifact_checks <- completed %>% map_lgl(function(value) {
     relative_path <- value$artifact$path %||% ""
@@ -118,7 +123,9 @@ verify_completed_artifacts <- function(state, project_root) {
       !dir.exists(path) && identical(tolower(expected_hash), sha256_file(path))
   })
 
-  all(artifact_checks) && verify_amendment_history(state, project_root)
+  all(artifact_checks) && all(map_lgl(completed, function(value) {
+    !length(value$supporting_files) || verify_file_manifest(value$supporting_files, project_root)
+  })) && verify_amendment_history(state, project_root)
 }
 
 ######### Verify owner-approved receipt amendments ################################################
@@ -205,7 +212,9 @@ framework_hashes <- function(procedure) {
     "docs/MASTER_PROMPT.md",
     map_chr(procedure$steps, function(step) step$framework),
     "docs/r-workflow-gate-enforcement.md",
-    "workflow-gate/workflow_gate.R"
+    "workflow-gate/workflow_gate.R", "procedure-gate/procedure_gate.R",
+    "methodology/contracts.R", "methodology/tools.R", "methodology/schema.json",
+    "docs/METHODOLOGY_HARDENING.md"
   ))
   values <- files %>% map(function(relative_path) {
     path <- file.path(procedure_repo_root(), relative_path)
@@ -260,7 +269,8 @@ save_checks <- function(project_root, step_id, phase, checks) {
     checked_at_utc = timestamp_utc(),
     checks = checks
   )
-  path <- file.path(paths$checks_dir, paste0(step_id, "-", phase, ".json"))
+  path <- tempfile(paste0(step_id, "-", phase, "-"), tmpdir = paths$checks_dir, fileext = ".json")
+  record$attempt_id <- basename(path)
   write_json_atomic(record, path)
   list(path = path, sha256 = sha256_file(path), result = record$result)
 }
@@ -273,6 +283,7 @@ read_artifact_safe <- function(path) {
 ######### Verify the required receipt for each stage ##############################################
 
 validate_stage_receipt <- function(step_id, receipt, project_root) {
+  load_methodology()
   checks <- list()
   add <- function(name, pass, detail) {
     checks[[length(checks) + 1L]] <<- check_result(name, pass, detail)
@@ -322,7 +333,7 @@ validate_stage_receipt <- function(step_id, receipt, project_root) {
       "stage", "status", "design_version", "population", "grain",
       "window_start", "window_end", "decision_rules", "required_outputs",
       "ml_mode", "ai1_independent_design", "ai2_independent_design",
-      "ai3_independent_risk_dossier", "information_barrier", "cross_review",
+      "ai3_independent_risk_dossier", "design_exposure_disclosed", "cross_review",
       "design_gates", "human_analyst_approval", "unresolved_issues"
     )
     add("Stage 3 required fields", has_fields(receipt, required), paste(required, collapse = ", "))
@@ -330,7 +341,7 @@ validate_stage_receipt <- function(step_id, receipt, project_root) {
     add("Stage 3 locked", is_value(receipt, "status", "LOCKED"), "status must equal LOCKED")
     mode_ok <- is.list(receipt) && text_scalar(receipt$ml_mode) && receipt$ml_mode %in% c("None", "A", "B")
     add("ML mode explicit", mode_ok, "ml_mode must be None, A, or B")
-    for (field in c("ai1_independent_design", "ai2_independent_design", "ai3_independent_risk_dossier", "information_barrier", "cross_review", "design_gates")) {
+    for (field in c("ai1_independent_design", "ai2_independent_design", "ai3_independent_risk_dossier", "design_exposure_disclosed", "cross_review", "design_gates")) {
       add(paste("Stage 3", field), is_value(receipt, field, "PASS"), paste(field, "must equal PASS"))
     }
     add("Stage 3 human approval", is_value(receipt, "human_analyst_approval", "APPROVED"), "human_analyst_approval must equal APPROVED")
@@ -375,6 +386,18 @@ validate_stage_receipt <- function(step_id, receipt, project_root) {
     add("Stage 5 used certified Workflow Gate report", workflow_hash_ok, "workflow gate report hash must match")
   }
 
+  if (step_id == "start") add("Decision identity", m_text(receipt$decision_id), "Stable decision ID")
+  if (step_id == "framing") add("Question identity/type", m_text(receipt$question_id) &&
+    m_enum(receipt$question_type, c("descriptive", "associational", "predictive", "causal", "decision")), "Explicit target family")
+  if (step_id == "design") checks <- c(checks, m_design(receipt,
+    m_read(file.path(project_root, "artifacts/stage2_framing.json")),
+    m_read(file.path(project_root, "artifacts/stage1_decision.json")), project_root),
+    m_ai(receipt$ai_provenance, c("designer_a", "designer_b", "risk_reviewer"), project_root, "design"))
+  if (step_id == "finish") checks <- c(checks,
+    m_finish(m_read(file.path(project_root, "artifacts/stage3_locked_design.json")),
+      m_read(file.path(project_root, "artifacts/stage4_validation_status.json")), receipt, project_root),
+    m_ai(receipt$ai_provenance, c("interpreter", "inference_reviewer", "numerical_auditor"), project_root, "finish"))
+  add("Referenced evidence current", m_refs_ok(receipt, project_root, required = FALSE), "Every declared file reference must match its hash")
   checks
 }
 
@@ -394,6 +417,7 @@ run_workflow_gate <- function(project_root) {
   )
   exit_status <- attr(output, "status") %||% 0L
   dir.create(dirname(paths$workflow_console), recursive = TRUE, showWarnings = FALSE)
+  writeLines(output, tempfile("execution-workflow-console-", dirname(paths$workflow_console), ".txt"))
   writeLines(output, paths$workflow_console)
   report <- read_artifact_safe(paths$workflow_report)
   passed <- identical(as.integer(exit_status), 0L) && is.list(report) &&
@@ -445,6 +469,7 @@ procedure_begin <- function(project_root, step_id) {
     check_result("Step is not already complete", step_id %not_in% completed_ids(state), "completed steps cannot be reopened"),
     check_result("Completed receipts unchanged", verify_completed_artifacts(state, project_root), "completed artifact hashes must still match"),
     check_result("Workflow Gate report unchanged", verify_workflow_report(state, project_root), "recorded workflow report hash must still match"),
+    check_result("Released dependencies unchanged", is.null(state$workflow_gate) || verify_supporting_evidence(project_root), "Recheck source, code, configuration, outputs and supporting reports"),
     check_result(
       "Prerequisites complete",
       all(unlist(step$requires, use.names = FALSE) %in% completed_ids(state)),
@@ -473,6 +498,7 @@ procedure_complete <- function(project_root, step_id) {
     check_result("Controlling documents unchanged", verify_framework_hashes(state), "framework hashes must match run start"),
     check_result("Previously completed receipts unchanged", verify_completed_artifacts(state, project_root), "completed artifact hashes must still match"),
     check_result("Workflow Gate report unchanged", verify_workflow_report(state, project_root), "recorded workflow report hash must still match"),
+    check_result("Released dependencies unchanged", is.null(state$workflow_gate) || verify_supporting_evidence(project_root), "Recheck source, code, configuration, outputs and supporting reports"),
     check_result("Required receipt exists and parses", is.list(receipt), step$artifact)
   )
   checks <- c(checks, validate_stage_receipt(step_id, receipt, project_root))
@@ -496,6 +522,7 @@ procedure_complete <- function(project_root, step_id) {
   state$completed_steps[[step_id]] <- list(
     completed_at_utc = timestamp_utc(),
     artifact = artifact_record,
+    supporting_files = m_refs(receipt),
     check_report = list(path = record$path, sha256 = record$sha256)
   )
   if (identical(step_id, "execution")) {
@@ -571,6 +598,7 @@ procedure_amend <- function(project_root, step_id, new_receipt_path, change_reco
     check_result("Controlling documents unchanged", verify_framework_hashes(state), "framework hashes must match run start"),
     check_result("Completed receipts unchanged", verify_completed_artifacts(state, project_root), "completed artifact hashes must still match"),
     check_result("Workflow Gate report unchanged", verify_workflow_report(state, project_root), "recorded workflow report hash must still match"),
+    check_result("Released dependencies unchanged", is.null(state$workflow_gate) || verify_supporting_evidence(project_root), "Recheck source, code, configuration, outputs and supporting reports"),
     check_result("Change record exists and parses", is.list(change), change_record_path),
     check_result("Change record required fields", fields_ok, paste(required_change, collapse = ", ")),
     check_result("Change identifier valid and unused", id_ok, "change_id uses letters, digits, '.', '_' or '-' and is not already in amendment_history"),
@@ -582,7 +610,8 @@ procedure_amend <- function(project_root, step_id, new_receipt_path, change_reco
     check_result("New receipt names what it supersedes", text_scalar(recorded) && is_value(receipt, "supersedes_sha256", tolower(recorded)), "supersedes_sha256 must equal the superseded sha256"),
     check_result("Archive path is safe", archive_ok, "archive_path must be a new project-relative file (or already hold the superseded bytes), distinct from live receipts")
   )
-  checks <- c(checks, validate_stage_receipt(step_id, receipt, project_root))
+  load_methodology()
+  checks <- c(checks, validate_stage_receipt(step_id, receipt, project_root), m_change(change))
 
   record <- save_checks(project_root, step_id, if (id_ok) paste0("amend-", change_id) else "amend", checks)
   if (!checks_pass(checks)) return(list(status = "FAIL", step = step_id, checks = checks))
@@ -615,6 +644,7 @@ procedure_amend <- function(project_root, step_id, new_receipt_path, change_reco
     check_report = list(path = record$path, sha256 = record$sha256)
   )
   state$amendment_history <- c(history, list(entry))
+  state$completed_steps[[step_id]]$supporting_files <- m_refs(receipt)
   state$completed_steps[[step_id]]$artifact$sha256 <- new_sha
   state$updated_at_utc <- timestamp_utc()
   save_state(state, project_root)
@@ -662,6 +692,7 @@ procedure_finalize <- function(project_root) {
     check_result("Workflow Gate certified Execution", is.list(state$workflow_gate) && identical(state$workflow_gate$status, "PASS"), "workflow_gate status must equal PASS"),
     check_result("Completed receipts unchanged", verify_completed_artifacts(state, project_root), "completed artifact hashes must still match"),
     check_result("Workflow Gate report unchanged", verify_workflow_report(state, project_root), "recorded workflow report hash must still match"),
+    check_result("Released dependencies unchanged", is.null(state$workflow_gate) || verify_supporting_evidence(project_root), "Recheck source, code, configuration, outputs and supporting reports"),
     check_result("Supporting evidence unchanged", verify_supporting_evidence(project_root), "evidence files must match the released Workflow Gate report"),
     check_result("Stage 5 deliverables unchanged", verify_file_manifest(state$completed_steps$finish$deliverables, project_root), "deliverables must match their Finish completion hashes"),
     check_result("Controlling documents unchanged", verify_framework_hashes(state), "framework hashes must match run start")
@@ -703,6 +734,11 @@ procedure_finalize <- function(project_root) {
     certified_at_utc = timestamp_utc()
   )
   if (length(amendment_history(state)) > 0L) certificate$amendment_history <- amendment_history(state)
+  certificate$predecessor <- state$predecessor
+  certificate$assurance <- read_artifact_safe(file.path(project_root, "artifacts/stage5_interpretation_status.json"))$assurance
+  certificate$assurance$procedure <- "complied"
+  certificate$assurance_note <- "Recorded checks and attestations; not a proof of scientific truth, AI independence, or profitable action."
+  certificate$framework_hashes <- state$framework_hashes
   certificate$certificate_sha256 <- digest::digest(certificate, algo = "sha256")
   write_json_atomic(certificate, paths$certificate)
 
@@ -714,6 +750,31 @@ procedure_finalize <- function(project_root) {
   state$updated_at_utc <- timestamp_utc()
   save_state(state, project_root)
   certificate
+}
+
+# Late defects start a linked successor. Never edit or reopen the predecessor.
+procedure_successor <- function(project_root, predecessor_root, run_id, change_record_path) {
+  load_methodology()
+  if (identical(normalizePath(project_root), normalizePath(predecessor_root))) stop("Successor needs a separate project root")
+  old <- read_state(predecessor_root)
+  change <- read_artifact_safe(file.path(project_root, change_record_path))
+  checks <- m_change(change)
+  if (!checks_pass(checks) || !m_text(change$approval_text) || !m_text(change$approval_timestamp))
+    stop("Successor requires classified change, exposure, invalidation and explicit owner approval")
+  if (file.exists(procedure_paths(project_root)$state)) stop("Successor already exists")
+  old_path <- procedure_paths(predecessor_root)$state
+  directory <- file.path(project_root, "artifacts", "predecessor")
+  dir.create(directory, recursive = TRUE, showWarnings = FALSE)
+  archive <- file.path(directory, "run_state.json")
+  if (!file.copy(old_path, archive, overwrite = FALSE)) stop("Could not preserve predecessor state")
+  certificate <- procedure_paths(predecessor_root)$certificate
+  if (file.exists(certificate)) file.copy(certificate, file.path(directory, "final_certificate.json"), overwrite = FALSE)
+  result <- procedure_start(project_root, run_id)
+  state <- read_state(project_root)
+  state$predecessor <- list(run_id = old$run_id, state = list(path = "artifacts/predecessor/run_state.json", sha256 = sha256_file(archive)),
+    change_record = list(path = change_record_path, sha256 = sha256_file(file.path(project_root, change_record_path))))
+  save_state(state, project_root)
+  result
 }
 
 ######### Command-line entry point ###############################################################
@@ -734,6 +795,7 @@ procedure_main <- function() {
         "Rscript procedure-gate/procedure_gate.R status <project-root>",
         "Rscript procedure-gate/procedure_gate.R finalize <project-root>",
         "Rscript procedure-gate/procedure_gate.R amend <project-root> <completed-step> <new-receipt> <change-record>",
+        "Rscript procedure-gate/procedure_gate.R successor <new-project-root> <predecessor-root> <new-run-id> <change-record>",
         sep = "\n  "
       )
     )
@@ -755,6 +817,10 @@ procedure_main <- function() {
       procedure_complete(project_root, args[[3]])
     },
     status = procedure_status(project_root),
+    successor = {
+      if (length(args) < 5L) stop("successor requires <new-project-root> <predecessor-root> <new-run-id> <change-record>")
+      procedure_successor(project_root, args[[3]], args[[4]], args[[5]])
+    },
     finalize = procedure_finalize(project_root),
     amend = {
       if (length(args) < 5L) stop("amend requires <completed-step> <new-receipt> <change-record>")

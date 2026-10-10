@@ -20,6 +20,10 @@ Use the current `main` (or verified commit) of:
 - Optional ENGINE: `docs/ENGINE.md` (Mode B helper only)
 - Stage 5: `docs/three-ai-interpretation-and-recommendation-framework.md`
 
+## Methodology-v3 release
+
+Read [METHODOLOGY_HARDENING.md](METHODOLOGY_HARDENING.md) before starting. New receipts require `methodology-v3`; use the current templates and emit actual evidence, not template PASS values. The research hardening release was explicitly authorized separately from ablation promotion. It does not manufacture KEEP verdicts or change historical evidence. C40 remains inconclusive HALT; its existing rule stays.
+
 ## Locked forward upgrades (must appear in the project master prompt)
 
 ### 1. Framing — `capacity_stance`
@@ -69,7 +73,7 @@ Prospective for new / forward publishable packs only — do not retrofit frozen 
 5. **ML Mode:** Fail-closed `None` / `A` / `B` as locked in Stage 3.
 6. **Wall-clock / timezone parse consistency:** Naive export clocks and timezone conversions must follow the locked Stage 3/4 contract for the project timezone; both judged paths must parse the same way. Treat silent clock/tz divergence as a judged-path defect, not a cosmetic formatting issue.
 7. **Database access and the role of R:** Only the orchestrator accesses the database, and only through the database command-line client (for MySQL, the `mysql` CLI with a stored login path; credentials never appear in prompts, packets or repositories). It delivers frozen, hashed, Source-Gate-verified extracts. R / RStudio never connect to the database (no DBI / RMariaDB / odbc). R does (1) the analysis on the frozen extract (tidyverse wrangling, the locked model such as parsnip/glmnet, outputs) and (2) procedure enforcement (`procedure_gate.R`, `workflow_gate.R`, the project gate helper). R does no data sourcing. State this in every Stage 3 handoff and builder packet; correct any packet or AI reply that assumes R-side database access.
-8. **Ablation KEEP-only:** Only ablations returning `KEEP` may authorize reusable Stage 3/4 framework edits. `REVERT` / `HALT` / deferred items / forward upgrades that are not KEEP-authorized do not rewrite frozen project evidence. Ablation batch A01–A08 returned **0 KEEP**. The numbered ablation program returned 14 KEEP verdicts (C01, C16, C30, C37, C38, C41, C44, C45, C47, C48, C49R, C50, C51, C53), adopted in the stage documents as mapped in [framework-refinement/CHANGES_FROM_ABLATIONS.md](framework-refinement/CHANGES_FROM_ABLATIONS.md). Every other numbered control returned REVERT or HALT, or was not triggered, and its rule is unchanged. Batch trees live in the project evidence repo.
+8. **Ablation KEEP-only:** Ablation-based promotion requires `KEEP`. The separately owner-authorized methodology-v3 release follows the research hardening design and records its own implementation decisions; it is not an ablation KEEP. `REVERT` / `HALT` / deferred items / forward upgrades that are not KEEP-authorized do not rewrite frozen project evidence. Ablation batch A01–A08 returned **0 KEEP**. The numbered ablation program returned 14 KEEP verdicts (C01, C16, C30, C37, C38, C41, C44, C45, C47, C48, C49R, C50, C51, C53), adopted in the stage documents as mapped in [framework-refinement/CHANGES_FROM_ABLATIONS.md](framework-refinement/CHANGES_FROM_ABLATIONS.md). Every other numbered control returned REVERT or HALT, and its rule is unchanged (C40R is now an inconclusive HALT). Batch trees live in the project evidence repo.
 
 ## R Procedure Referee (always on for prospective runs)
 
@@ -274,7 +278,7 @@ stopifnot(
 
 Report certification only after successful execution and confirmation of the generated certificate. The certificate covers the gate's observable checks and recorded attestations; it does not prove private AI context or authenticate a self-reported human approval.
 
-On `BLOCKED`, `FAIL`, malformed output, or execution error, stop progression and report the actual failed checks. Repair an incomplete stage under its existing framework and retry its completion check. Do not rerun `begin` for a stage already recorded as active or reopen a completed stage by editing state. Material changes to completed locks require the framework's owner-approved change control, recorded with the Procedure Gate `amend` command (the old receipt is archived and the stage is not reopened); if the gate cannot represent the required change, pause and report that limitation. Never overwrite prior evidence, change the gate, or manufacture a receipt to force a pass.
+On `BLOCKED`, `FAIL`, malformed output, or execution error, stop progression and report the actual failed checks. Repair an incomplete stage under its existing framework and retry its completion check. Do not rerun `begin` for a stage already recorded as active or reopen a completed stage by editing state. Material changes to completed locks require the framework's owner-approved change control, recorded with the Procedure Gate `amend` command (the old receipt is archived and the stage is not reopened); if a later dependent stage is already complete, use the documented `successor` command in a new root with an approved change record and repeat all five stages. Never overwrite prior evidence, change the gate, or manufacture a receipt to force a pass.
 
 ## Orchestrator hard stops (paste block)
 

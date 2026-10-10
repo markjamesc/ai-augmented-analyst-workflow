@@ -111,3 +111,7 @@ SQL, R, Tidyverse, interpretable statistical modeling, Excel reporting and autom
 Copyright © 2026 Mark Ciganovic. All rights reserved.
 
 This repository is not open source and does not grant permission to copy, distribute, modify, or incorporate its protected materials without prior written permission, except as permitted by applicable law and GitHub's Terms of Service. See [COPYRIGHT.md](COPYRIGHT.md) for the full notice.
+
+## Prospective methodology-v3 release candidate
+
+[Methodology hardening design and migration](docs/METHODOLOGY_HARDENING.md) integrates the final ablation dispositions with research-backed contracts and R enforcement. This branch is a Step-2 implementation candidate, not evidence that the complete three-AI workflow improves accuracy. See [implementation map](docs/framework-refinement/HARDENING_IMPLEMENTATION.md).

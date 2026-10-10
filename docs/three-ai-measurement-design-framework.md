@@ -1,5 +1,7 @@
 # Three-AI Measurement Design Framework
 
+> **Prospective methodology-v3:** apply [Methodology hardening](METHODOLOGY_HARDENING.md) alongside this framework. It consolidates the target/premise/sensitivity contracts, semantic checks, reproducibility and claim evidence. Its prospective contract resolves older conflicting wording; frozen historical runs keep their pinned version.
+
 This framework governs Stage 3, **Design**, of the five-stage AI-Augmented Analyst process.
 
 Its purpose is to convert an approved business decision and analytical question into a complete measurement contract before any production SQL or R code is written.

@@ -1,3 +1,5 @@
+> **Prospective v3:** [Current methodology contract](../docs/METHODOLOGY_HARDENING.md) supplements the older contract below. New runs require its target, dependencies, semantic checkpoints, replay and claim evidence. Historical packs keep their pinned version.
+
 # R Workflow Gate
 
 **Prospective executable contract v2:** explicit capacity/ML modes, SHA-256 receipt verification, fixture and reconciliation scorecards, and lineage contents are now required. Install both `jsonlite` and `digest`. See [the schema and evidence boundary](CONTRACT_V2.md). Historical frozen project gates retain their original contract.

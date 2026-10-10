@@ -1,5 +1,7 @@
 # Three-AI Interpretation and Recommendation Framework
 
+> **Prospective methodology-v3:** apply [Methodology hardening](METHODOLOGY_HARDENING.md) alongside this framework. It consolidates the target/premise/sensitivity contracts, semantic checks, reproducibility and claim evidence. Its prospective contract resolves older conflicting wording; frozen historical runs keep their pinned version.
+
 This framework governs Stage 5, **Finish**, of the five-stage AI-Augmented Analyst process.
 
 Its purpose is to convert validated analytical evidence into a disciplined interpretation, evaluate whether the evidence is sufficient for the approved decision, and recommend a proportionate next action.
@@ -120,8 +122,8 @@ All three AIs receive the same versioned Stage 5 Evidence Package.
 
 ### Validated Stage 4 inputs
 
-- SQL A and SQL B outputs where relevant;
-- R(B) reconstruction output;
+- the controlled SQL source package and SQL Source Gate evidence;
+- independent R-A/R-B results and semantic checkpoint reconciliation;
 - exact reconciliation report;
 - cross-review reports;
 - issue register and dispositions;

@@ -37,7 +37,14 @@
     "lineage": {
       "path": "evidence/lineage.json",
       "sha256": "REPLACE_WITH_ACTUAL_SHA256"
+    },
+    "methodology": {
+      "path": "evidence/methodology.json",
+      "sha256": "REPLACE"
     }
   },
-  "_template_note": "Example only, not evidence of completed validation. Actual receipt files and hashes are mandatory."
+  "_template_note": "Example only, not evidence of completed validation. Actual receipt files and hashes are mandatory.",
+  "_methodology_note": "Prospective methodology-v3. Replace examples and placeholders; do not create PASS attestations without executing/reviewing evidence.",
+  "ai_provenance": [],
+  "structural_review_reason": "REPLACE with performed review or justified locked fixture coverage"
 }

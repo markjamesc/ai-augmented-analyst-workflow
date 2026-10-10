@@ -1,3 +1,5 @@
+> **Prospective v3:** [Current methodology contract](METHODOLOGY_HARDENING.md) supplements the older contract below. New runs require its target, dependencies, semantic checkpoints, replay and claim evidence. Historical packs keep their pinned version.
+
 # R Procedure Gate — Whole-Run Procedural Referee
 
 ## Purpose

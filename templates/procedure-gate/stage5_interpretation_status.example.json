@@ -19,5 +19,31 @@
     "08_CROSS_REVIEW_AND_RECONCILIATION.md",
     "11_STAGE_05_DECISION_EVALUATION.md",
     "12_MONITORING_AND_NEXT_QUESTION_PLAN.md"
-  ]
+  ],
+  "substantive_claim_ids": [
+    "claim-1"
+  ],
+  "claim_ledger": [],
+  "ai_provenance": [],
+  "claim_coverage_review": {
+    "status": "PENDING",
+    "report": {
+      "path": "REPLACE",
+      "sha256": "REPLACE"
+    }
+  },
+  "revision": {
+    "status": "PENDING",
+    "unresolved_flags": 1,
+    "report": {
+      "path": "REPLACE",
+      "sha256": "REPLACE"
+    }
+  },
+  "assurance": {
+    "computation": "unverified",
+    "inference": "insufficient",
+    "decision": "insufficient_evidence",
+    "outcome_evaluation": "not_applicable"
+  }
 }

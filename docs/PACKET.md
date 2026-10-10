@@ -1,3 +1,5 @@
+> **Prospective v3:** [Current methodology contract](METHODOLOGY_HARDENING.md) supplements the older contract below. New runs require its target, dependencies, semantic checkpoints, replay and claim evidence. Historical packs keep their pinned version.
+
 # Workflow packet index
 
 Portfolio method packet for [ai-augmented-analyst-workflow](https://github.com/markjamesc/ai-augmented-analyst-workflow). Five stage frameworks plus the Stage 4 R execution engine, the Stage 4→5 deterministic Workflow Gate, and a whole-run R Procedure Gate.

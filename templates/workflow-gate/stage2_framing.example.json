@@ -12,5 +12,8 @@
   "human_analyst_approval": "APPROVED",
   "unresolved_issues": 0,
   "_forward_note": "capacity_stance required on new projects (unordered_ok | hard_attention_budget); do not retrofit prior locked packs",
-  "_template_note": "Example only; owner must explicitly select and lock capacity stance."
+  "_template_note": "Example only; owner must explicitly select and lock capacity stance.",
+  "_methodology_note": "Prospective methodology-v3. Replace examples and placeholders; do not create PASS attestations without executing/reviewing evidence.",
+  "question_id": "question-1",
+  "question_type": "descriptive"
 }

@@ -26,6 +26,9 @@ suppressPackageStartupMessages({
 })
 if (!requireNamespace("digest", quietly = TRUE)) stop("Install digest to verify SHA-256 receipts")
 
+script_arg <- grep("^--file=", commandArgs(), value = TRUE)[[1]]
+repo_root <- normalizePath(file.path(dirname(sub("^--file=", "", script_arg)), ".."))
+source(file.path(repo_root, "methodology/contracts.R"))
 args <- commandArgs(trailingOnly = TRUE)
 project_root <- if (length(args) >= 1) normalizePath(args[[1]], mustWork = FALSE) else getwd()
 artifacts_dir <- file.path(project_root, "artifacts")
@@ -60,6 +63,7 @@ read_json_safe <- function(path, label) {
     error = function(e) e
   )
 
+  if (!inherits(out, "error") && (!is.list(out) || is.data.frame(out) || is.null(names(out)))) out <- simpleError("Expected a JSON object")
   if (inherits(out, "error")) {
     add_check(paste(label, "artifact parses"), FALSE, conditionMessage(out))
     return(NULL)
@@ -202,7 +206,15 @@ if (identical(stage2$capacity_stance, "hard_attention_budget")) {
        is.finite(ranking$n) && ranking$n >= 1 && ranking$n == floor(ranking$n))),
     "Budget requires key, tie-break, unit, membership-first, no padding and N or explicit owner deferral")
 }
-add_check("Structural cross-review PASS", is_value(stage4, "structural_cross_review", "PASS"), "Required lower-tier receipt")
+design_v3 <- m_read(paths$stage3)
+execution_v3 <- m_read(paths$stage4)
+policy <- design_v3$methodology$structural_review
+skip_structural <- identical(stage4$structural_cross_review, "NOT_REQUIRED") &&
+  identical(policy$policy, "conditional") &&
+  m_equal_ids(policy$fixture_covered_rule_ids, design_v3$methodology$judged_rule_ids) &&
+  m_text(stage4$structural_review_reason)
+add_check("Structural cross-review disposition", is_value(stage4, "structural_cross_review", "PASS") || skip_structural,
+  "PASS for executed review or justified NOT_REQUIRED with complete locked fixture coverage")
 add_check("Fixture identity", text_scalar(stage3$fixture_version) &&
   identical(stage3$fixture_version, stage4$fixture_version_used), "Frozen fixture version must match")
 model_required <- identical(stage3$ml_mode, "A")
@@ -213,7 +225,7 @@ add_check("Model validation matches ML mode",
   else identical(stage4$decision_critical_model_validation, "NOT_REQUIRED"),
   "Mode A requires PASS; None/B require NOT_REQUIRED for the judged path")
 
-receipt_roles <- c("source", "fixtures", "reconciliation", "structural", "validation", "lineage")
+receipt_roles <- c("source", "fixtures", "reconciliation", "structural", "validation", "lineage", "methodology")
 if (model_required) receipt_roles <- c(receipt_roles, "model")
 manifest <- stage4$evidence_receipts
 verified_receipts <- list()
@@ -233,7 +245,11 @@ for (role in receipt_roles) {
   add_check(paste("Receipt hash", role), hash_ok, "Nonempty local receipt and exact SHA-256 required")
   if (!hash_ok) next
   receipt <- tryCatch(fromJSON(file, simplifyVector = TRUE), error = function(e) NULL)
-  metadata_ok <- is.list(receipt) && identical(receipt$status, "PASS") &&
+  if (!is.list(receipt) || is.data.frame(receipt) || is.null(names(receipt))) {
+    add_check(paste("Receipt object", role), FALSE, "Expected a JSON object")
+    next
+  }
+  metadata_ok <- is.list(receipt) && (identical(receipt$status, "PASS") || (role == "structural" && skip_structural && identical(receipt$status, "NOT_REQUIRED"))) &&
     identical(receipt$design_version, stage3$design_version) &&
     identical(receipt$fixture_version, stage3$fixture_version) && text_scalar(receipt$checked_at_utc)
   add_check(paste("Receipt metadata", role), metadata_ok, "PASS, design/fixture identities and timestamp required")
@@ -264,6 +280,20 @@ for (role in receipt_roles) {
   verified_receipts[[role]] <- entry
 }
 
+# All v3 references are read without simplifying arrays, for consistent schema checks.
+checks <- c(checks,
+  m_design(design_v3, m_read(paths$stage2), m_read(paths$stage1), project_root),
+  m_execution(design_v3, execution_v3, project_root),
+  m_ai(execution_v3$ai_provenance, c("R-A", "R-B"), project_root, "execution"))
+# Freeze the transitive file references actually inspected, not just receipt wrappers.
+for (entry in execution_v3$evidence_receipts) {
+  if (m_ref_ok(entry, project_root)) {
+    nested <- m_refs(m_read(file.path(project_root, entry$path)))
+    for (ref in nested) verified_receipts[[paste0("dependency:", ref$path)]] <- ref
+  }
+}
+for (ref in m_refs(execution_v3$ai_provenance)) verified_receipts[[paste0("ai:", ref$path)]] <- ref
+
 ######### Release only when every required check passes ###########################################
 
 check_results <- checks %>%
@@ -275,7 +305,7 @@ all_pass <- length(checks) > 0 && all(check_results)
 dir.create(artifacts_dir, recursive = TRUE, showWarnings = FALSE)
 
 gate_output <- list(
-  contract_version = "prospective-v2",
+  contract_version = "methodology-v3",
   design_version = stage3$design_version,
   fixture_version = stage3$fixture_version,
   evidence_receipts = verified_receipts,
@@ -287,6 +317,11 @@ gate_output <- list(
   checks = checks
 )
 
+attempt_dir <- file.path(artifacts_dir, "workflow-attempts")
+dir.create(attempt_dir, recursive = TRUE, showWarnings = FALSE)
+attempt <- tempfile("attempt-", tmpdir = attempt_dir, fileext = ".json")
+gate_output$attempt_id <- basename(attempt)
+write_json(gate_output, attempt, pretty = TRUE, auto_unbox = TRUE, null = "null")
 write_json(gate_output, paths$gate, pretty = TRUE, auto_unbox = TRUE, null = "null")
 
 cat("\nFive-Stage Workflow Gate\n")

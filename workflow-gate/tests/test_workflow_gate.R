@@ -121,8 +121,9 @@ upgrade_fixture <- function(root, files) {
 
 fixture_files <- c("artifacts/stage1_decision.json", "artifacts/stage2_framing.json", "artifacts/stage3_locked_design.json", "artifacts/stage4_validation_status.json")
 report_path <- "artifacts/workflow_gate_status.json"
+source(file.path(repo_root, "methodology/tests/fixtures.R"))
 original_fixture <- write_project
-write_project <- function(root, ...) { original_fixture(root, ...); upgrade_fixture(root, fixture_files) }
+write_project <- function(root, ...) { original_fixture(root, ...); upgrade_fixture(root, fixture_files); t_design(root); t_execution(root) }
 make_fixture <- function(root) write_project(root)
 
 pass_root <- tempfile("workflow-gate-pass-")
@@ -203,6 +204,7 @@ for (mode in c("None", "B")) {
       membership_first = TRUE, padding_allowed = FALSE, owner_n_deferred = TRUE)
     x
   })
+  t_execution(root)
   status <- system2(file.path(R.home("bin"), "Rscript"), c(shQuote(gate_script), shQuote(root)), stdout = FALSE, stderr = FALSE)
   stopifnot(identical(status, 0L))
   unlink(root, recursive = TRUE)

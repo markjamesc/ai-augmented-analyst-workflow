@@ -1,5 +1,7 @@
 # Three-AI Independent Validation and Analysis Framework
 
+> **Prospective methodology-v3:** apply [Methodology hardening](METHODOLOGY_HARDENING.md) alongside this framework. It consolidates the target/premise/sensitivity contracts, semantic checks, reproducibility and claim evidence. Its prospective contract resolves older conflicting wording; frozen historical runs keep their pinned version.
+
 This framework describes an end-to-end system for using three independent AI systems to construct, validate, review, analyze, and interpret business data. It begins with a locked measurement design and ends with an evidence-traceable recommendation.
 
 From this version forward, the default Stage 4 validation architecture is:
@@ -513,7 +515,7 @@ After the Fixture Gate passes and before any full pipeline run, each judged path
 - **Declared subset rule.** The subset is a deterministic function of the frozen file: the header plus every k-th data line in file order (data lines 1, 1+k, 1+2k, …). Run at k = 16, then k = 4. Companion files (for example peer statistics and lineage) are copied unchanged. Declare the rule before the run.
 - **Detection rule.** The k = 16 run exiting non-zero or hitting its time cap is detected at k = 16. Otherwise the k = 4 run exiting non-zero, hitting its cap, or taking more than 6 times the k = 16 time (more than 1.5 times the linear 4× ratio, a super-linear signal) is detected at k = 4.
 - **Caps.** The tested cap was 600 seconds per smoke run.
-- **Non-reporting.** Smoke runs are real-data, non-reporting runs. They live outside every reporting root and carry a `NON_REPORTING` marker. They are never reconciled, never used as results, and never enter a receipt. Every builder packet must say this explicitly (the "never simulate" rule is not relaxed: the smoke run uses real data).
+- **Non-reporting.** Smoke runs are real-data, non-reporting runs. They live outside every reporting root and carry a `NON_REPORTING` marker. They are never reconciled, never used as results, and never enter an analytical result receipt. A hashed smoke execution report records completion, separately from smoke outputs. Every builder packet must say this explicitly (the "never simulate" rule is not relaxed: the smoke run uses real data).
 - **No substitute for the full run.** The smoke run does not replace the full run; defects that appear only at full scale or on rare entities are still found there.
 
 Tested benefit: the smoke run caught a seeded late-pipeline crash and a seeded super-linear loop before any full run. It saves time only when a full run would otherwise have failed late; it adds time when nothing fails.
@@ -799,7 +801,7 @@ Manual edits to result tables are prohibited.
 
 > **Structural cross-review is no longer universally required (ablation C30, KEEP).** After exact reconciliation, matching totals together with exit status 0 and passing fixtures on both paths are accepted as sufficient; a structural (logic) cross-review is not a mandatory tier. It may still be run, and when it is run its findings and gate bullets below apply. Tested scope: five seeded common-mode errors on one frozen pack; every seeded change that altered a locked output was still caught by the remaining mechanical checks, but the seeds were covered by fixtures, so the result may reflect the seed choice. A judged rule that no fixture exercises is therefore not covered by this relaxation: add a fixture for it (Stage 3 fixture map) or run the structural review for that rule.
 >
-> **Gate-receipt interim rule.** The executable Workflow Gate still reads `structural_cross_review` and requires `PASS`. Do not record `PASS` for a review that was not run. A run that skips the review needs the gate to accept a non-run value first; until then, treat that as a gate change that requires owner change control.
+> **Gate-receipt v3 rule.** The Workflow Gate accepts an executed review `PASS`, or honest `NOT_REQUIRED` with a locked conditional policy, full rule-to-fixture coverage and skip rationale. An uncovered rule requires a fixture or review. See METHODOLOGY_HARDENING.md; never record PASS for an unrun review.
 
 ### Why cross-review is separate (when it is run)
 
@@ -957,7 +959,7 @@ The process moves forward only when:
 
 ## 9A. Small-denominator and single-unit dominance check (ablation C47, KEEP)
 
-Every headline or gating metric gets a dominance check at Stage 4. Its thresholds and consequence are **predeclared in Stage 3, before execution** (post hoc thresholds are not allowed). The tested configuration, which Stage 3 adopts unless it predeclares others, is:
+Every headline or gating metric gets a dominance check at Stage 4. Its thresholds and consequence are **predeclared in Stage 3, before execution** (post hoc thresholds are not allowed). The ablation tested the following configuration as an example. Prospective v3 requires justified project-specific thresholds; these are not automatic defaults:
 
 - the check applies only when the total number of rows in the headline class is at least **1,000** (otherwise status `NOT_APPLICABLE_BELOW_MIN_TOTAL`);
 - a unit (for example a category or entity) is **eligible** if it has at least **30** rows in the class;
@@ -967,7 +969,7 @@ A flag never drops, excludes, or changes a row: the result stays as computed. Th
 
 ## 10. Freeze the validated analytical data
 
-Once the SQL Source Gate, Fixture Gate, reconciliation, and cross-review pass, the validated data should receive a stable version.
+Once the SQL Source Gate, Fixture Gate, reconciliation, and any required/performed cross-review pass, the validated data should receive a stable version.
 
 Otherwise, deeper analysis could unknowingly use:
 

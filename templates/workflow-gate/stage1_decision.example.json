@@ -9,5 +9,7 @@
   "stakeholder_confirmation": "CONFIRMED",
   "human_analyst_approval": "APPROVED",
   "unresolved_issues": 0,
-  "_procedure_note": "Prospective Procedure Gate fields record the existing Start protocol; replace example content with run evidence."
+  "_procedure_note": "Prospective Procedure Gate fields record the existing Start protocol; replace example content with run evidence.",
+  "_methodology_note": "Prospective methodology-v3. Replace examples and placeholders; do not create PASS attestations without executing/reviewing evidence.",
+  "decision_id": "decision-1"
 }

@@ -1,0 +1,791 @@
+{
+  "type": "object",
+  "required": [
+    "version",
+    "analytical_target",
+    "exposure",
+    "premises",
+    "triggers",
+    "modules",
+    "sensitivity",
+    "checkpoints",
+    "checkpoint_coverage",
+    "numerics",
+    "metamorphic",
+    "structural_review",
+    "judged_rule_ids",
+    "dominance",
+    "output_fields",
+    "receipt_dependencies",
+    "exact_decision_fields",
+    "replay_outputs"
+  ],
+  "properties": {
+    "version": {
+      "const": "methodology-v3"
+    },
+    "analytical_target": {
+      "type": "object",
+      "required": [
+        "id",
+        "decision_id",
+        "question_id",
+        "question_type",
+        "target_population",
+        "observed_population",
+        "analysis_unit",
+        "decision_unit",
+        "outcome",
+        "time_origin",
+        "horizon",
+        "contrast",
+        "aggregation",
+        "weighting",
+        "quantity",
+        "estimator",
+        "decision_rule_ref",
+        "validation_argument",
+        "measurement_validity",
+        "allowed_claim_types"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "decision_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "question_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "question_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_population": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observed_population": {
+          "type": "string",
+          "minLength": 1
+        },
+        "analysis_unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "decision_unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outcome": {
+          "type": "string",
+          "minLength": 1
+        },
+        "time_origin": {
+          "type": "string",
+          "minLength": 1
+        },
+        "horizon": {
+          "type": "string",
+          "minLength": 1
+        },
+        "contrast": {
+          "type": "string",
+          "minLength": 1
+        },
+        "aggregation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "weighting": {
+          "type": "string",
+          "minLength": 1
+        },
+        "quantity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "estimator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "decision_rule_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "validation_argument": {
+          "type": "string",
+          "minLength": 1
+        },
+        "measurement_validity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "allowed_claim_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "exposure": {
+      "type": "object",
+      "required": [
+        "data_seen",
+        "results_seen",
+        "test_set_access",
+        "recorded_at_utc"
+      ],
+      "properties": {
+        "data_seen": {
+          "type": "string",
+          "minLength": 1
+        },
+        "results_seen": {
+          "type": "string",
+          "minLength": 1
+        },
+        "test_set_access": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recorded_at_utc": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "premises": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "testability",
+          "statement",
+          "basis",
+          "consequence",
+          "response"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "minLength": 1
+          },
+          "testability": {
+            "type": "string",
+            "minLength": 1
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1
+          },
+          "basis": {
+            "type": "string",
+            "minLength": 1
+          },
+          "consequence": {
+            "type": "string",
+            "minLength": 1
+          },
+          "response": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "triggers": {
+      "type": "object",
+      "required": [
+        "missingness",
+        "dependence",
+        "multiplicity",
+        "transportability",
+        "causal_policy",
+        "decision_outcome"
+      ],
+      "properties": {
+        "missingness": {
+          "type": "boolean"
+        },
+        "dependence": {
+          "type": "boolean"
+        },
+        "multiplicity": {
+          "type": "boolean"
+        },
+        "transportability": {
+          "type": "boolean"
+        },
+        "causal_policy": {
+          "type": "boolean"
+        },
+        "decision_outcome": {
+          "type": "boolean"
+        }
+      }
+    },
+    "modules": {
+      "type": "object",
+      "required": [
+        "measurement",
+        "causal",
+        "predictive",
+        "missingness",
+        "dependence",
+        "multiplicity",
+        "transportability",
+        "decision_uncertainty"
+      ],
+      "properties": {
+        "measurement": {
+          "type": "object",
+          "required": [
+            "required",
+            "rationale",
+            "plan"
+          ],
+          "properties": {
+            "required": {
+              "type": "boolean"
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 1
+            },
+            "plan": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "causal": {
+          "type": "object",
+          "required": [
+            "required",
+            "rationale",
+            "status"
+          ],
+          "properties": {
+            "required": {
+              "type": "boolean"
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 1
+            },
+            "status": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "predictive": {
+          "type": "object",
+          "required": [
+            "required",
+            "rationale",
+            "status"
+          ],
+          "properties": {
+            "required": {
+              "type": "boolean"
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 1
+            },
+            "status": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "missingness": {
+          "type": "object",
+          "required": [
+            "required",
+            "rationale",
+            "status"
+          ],
+          "properties": {
+            "required": {
+              "type": "boolean"
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 1
+            },
+            "status": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "dependence": {
+          "type": "object",
+          "required": [
+            "required",
+            "rationale",
+            "status"
+          ],
+          "properties": {
+            "required": {
+              "type": "boolean"
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 1
+            },
+            "status": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "multiplicity": {
+          "type": "object",
+          "required": [
+            "required",
+            "rationale",
+            "status"
+          ],
+          "properties": {
+            "required": {
+              "type": "boolean"
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 1
+            },
+            "status": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "transportability": {
+          "type": "object",
+          "required": [
+            "required",
+            "rationale",
+            "status"
+          ],
+          "properties": {
+            "required": {
+              "type": "boolean"
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 1
+            },
+            "status": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "decision_uncertainty": {
+          "type": "object",
+          "required": [
+            "required",
+            "rationale",
+            "plan"
+          ],
+          "properties": {
+            "required": {
+              "type": "boolean"
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 1
+            },
+            "plan": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "sensitivity": {
+      "type": "object",
+      "required": [
+        "required",
+        "rationale",
+        "instability_rule",
+        "specifications"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "instability_rule": {
+          "type": "string",
+          "minLength": 1
+        },
+        "specifications": {
+          "type": "array",
+          "items": {}
+        }
+      }
+    },
+    "checkpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "keys",
+          "exact_fields",
+          "numeric_fields",
+          "absolute_tolerance",
+          "relative_tolerance",
+          "rationale"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "exact_fields": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "numeric_fields": {
+            "type": "array",
+            "items": {}
+          },
+          "absolute_tolerance": {
+            "type": "number",
+            "minimum": 0
+          },
+          "relative_tolerance": {
+            "type": "number",
+            "minimum": 0
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "checkpoint_coverage": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "numerics": {
+      "type": "object",
+      "required": [
+        "boundary_rule",
+        "nonfinite_rule",
+        "stochastic_rule"
+      ],
+      "properties": {
+        "boundary_rule": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nonfinite_rule": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stochastic_rule": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "metamorphic": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "applicable",
+          "preconditions",
+          "rationale",
+          "transformation",
+          "expected_relation"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "applicable": {
+            "type": "boolean"
+          },
+          "preconditions": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1
+          },
+          "transformation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected_relation": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "structural_review": {
+      "type": "object",
+      "required": [
+        "policy",
+        "rationale",
+        "fixture_covered_rule_ids"
+      ],
+      "properties": {
+        "policy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fixture_covered_rule_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "judged_rule_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "dominance": {
+      "type": "object",
+      "required": [
+        "unit",
+        "metric",
+        "thresholds",
+        "rationale",
+        "flag_consequence"
+      ],
+      "properties": {
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "metric": {
+          "type": "string",
+          "minLength": 1
+        },
+        "thresholds": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "flag_consequence": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "output_fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "field",
+          "outcome_semantics"
+        ],
+        "properties": {
+          "field": {
+            "type": "string",
+            "minLength": 1
+          },
+          "outcome_semantics": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "receipt_dependencies": {
+      "type": "object",
+      "required": [
+        "source",
+        "fixtures",
+        "reconciliation",
+        "structural",
+        "validation",
+        "lineage",
+        "methodology"
+      ],
+      "properties": {
+        "source": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "fixtures": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "reconciliation": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "structural": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "validation": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "lineage": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "methodology": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "exact_decision_fields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "outcome_contract": {
+      "type": "object",
+      "required": [
+        "action",
+        "alternative",
+        "window",
+        "metric",
+        "counterfactual_design",
+        "minimum_worthwhile_gain",
+        "guardrails",
+        "owner",
+        "followup_run_id"
+      ],
+      "properties": {
+        "action": {
+          "type": "string",
+          "minLength": 1
+        },
+        "alternative": {
+          "type": "string",
+          "minLength": 1
+        },
+        "window": {
+          "type": "string",
+          "minLength": 1
+        },
+        "metric": {
+          "type": "string",
+          "minLength": 1
+        },
+        "counterfactual_design": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minimum_worthwhile_gain": {
+          "type": "string",
+          "minLength": 1
+        },
+        "guardrails": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "followup_run_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "replay_outputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Methodology v3 design",
+  "description": "Structural validation only; contracts.R owns conditional and cross-artifact checks."
+}
