@@ -69,7 +69,7 @@ In the table, "Stage 3 doc" is `docs/three-ai-measurement-design-framework.md`, 
 | Control | Rule | Verdict |
 |---|---|---|
 | C18 | No fixture rewrite on fail | REVERT |
-| C24 | Mechanical vs judged population | HALT |
+| C24 | Mechanical vs judged population | REVERT (C24V3, chunked; supersedes the earlier HALT and the v2 memory-kill attempts, kept on record) |
 | C26 | Frozen source package | REVERT |
 | C27 | Fixtures on both paths | REVERT |
 | C29 | Recon investigation | REVERT |
@@ -114,7 +114,7 @@ In the table, "Stage 3 doc" is `docs/three-ai-measurement-design-framework.md`, 
 ### Earlier A-batch (no rule changed)
 A01 Dual-path independence REVERT · A02 Known-case Fixture Gate HALT · A03 SQL nonjudgment bright line REVERT · A04 SQL Source Gate vs raw REVERT · A05 Single owner knob only REVERT · A06 Integrity-gate INCONCLUSIVE REVERT · A07 Primary construct REVERT · A08 Exact recon critical-field set REVERT. A09 and A10 were deferred.
 
-Tally: 14 KEEP, 26 REVERT, 1 HALT, 1 NOT_TRIGGERED across the numbered program; with A01-A08, 14 KEEP, 33 REVERT, 2 HALT, 1 NOT_TRIGGERED over 50 controls. Locked-forward, untested by design: capacity stance at Framing, ML Mode declaration, dual-path only where judgment lives (scoped), the failability ladder, and the evidence-package schema.
+Tally: 14 KEEP, 27 REVERT, 0 HALT, 1 NOT_TRIGGERED across the numbered program; with A01-A08, 14 KEEP, 34 REVERT, 1 HALT (A02), 1 NOT_TRIGGERED over 50 controls. Locked-forward, untested by design: capacity stance at Framing, ML Mode declaration, dual-path only where judgment lives (scoped), the failability ladder, and the evidence-package schema.
 
 ## Caveats carried by the verdicts
 
