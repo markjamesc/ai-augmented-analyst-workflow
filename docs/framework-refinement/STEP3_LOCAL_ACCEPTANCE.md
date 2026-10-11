@@ -35,7 +35,7 @@ These are implementation corrections to the authorized contracts, not new ablati
 
 ## Reproduce
 
-Use Linux R 4.4.3 with jsonlite, digest, purrr and magrittr. The evidence includes exact conda package URLs with SHA-256 fragments and a Python package inventory. `r-linux-64-explicit.txt` can be supplied to `micromamba create -p <new-env> -f <file>`. It is platform-specific, not a Windows environment specification. Run from the repository root:
+The supported R version is R 4.6.1, with jsonlite, digest, purrr and magrittr. See [R version change and verification status](R_4_6_1_ENVIRONMENT_CHANGE.md). The retained conda package URLs, SHA-256 fragments and Python inventory describe the original historical test environment, not the new supported version. `r-linux-64-explicit.txt` can be supplied to `micromamba create -p <new-env> -f <file>` to reproduce that historical environment only; it is neither an R 4.6.1 lockfile nor a Windows environment specification. Run from the repository root:
 
 ```sh
 Rscript workflow-gate/tests/test_workflow_gate.R .
