@@ -1,0 +1,48 @@
+{
+  "scope": "Local synthetic integration and mechanical acceptance; no actual AI or live SQL run",
+  "base_commit": "3d10f534f632236b9de3c62ac1914e527794f04c",
+  "tested_source_sha256": {
+    "methodology/contracts.R": "6b869183e0c5169afa55dc1d13dfcba5640425d5620871b4279c7ba84147f02f",
+    "methodology/tools.R": "2b1661545e77582f2f32c497bef445fe750e484acc0e9bd63172b4d952486f4a",
+    "methodology/schema.json": "25d1e8d7631882decb37c6e087911fbb3fe1d4867230ae480314c6badc0cfa06",
+    "methodology/tests/fixtures.R": "d12638ceb94fcccb4a27fae4d8e4998409b7088bd351b41ea32b9a57a8b850f4",
+    "methodology/tests/test_methodology.R": "e1da2861e566b471ad51f9fd567c35fc02ed00fedd6479fc10e9e22afbc7d9c7",
+    "methodology/tests/test_acceptance.R": "461d7993dfcde78f77ec39b423a61dfef770aff8575ac2c06f011838285cc5d7",
+    "methodology/tests/test_schema.py": "a4ececbf0b171e448e2ea14ca4b4334a9b27c8761bc05f959737e9693ca85c03",
+    "procedure-gate/procedure_gate.R": "02260469b28505c72c37d527930a5997ce4a3223ae2030f95483fc559ecbf69f",
+    "procedure-gate/procedure.json": "1fd9dd8d065a707109fa4e78830d59bb5647a4a752da7a328da15e9b8db55d26",
+    "procedure-gate/tests/test_procedure_gate.R": "17458a5ff7603c9534290e77bb46c3b0b3a875044685051d41c312d7c94bc10e",
+    "workflow-gate/workflow_gate.R": "a94d24bf89e532ab2eda89b7769b545a076b677dde71b4dd495f1060e8e1f9dd",
+    "workflow-gate/tests/test_workflow_gate.R": "85a0ad3868ac698af2355619363a13d1529da45ab2dff11cfbe07c09abf7d4c4"
+  },
+  "suites": [
+    {
+      "name": "workflow",
+      "exit_code": 0,
+      "deliberate_defects_rejected": 17
+    },
+    {
+      "name": "procedure",
+      "exit_code": 0,
+      "invalid_amendments_rejected": 23,
+      "five_stage_synthetic_certification": "PASS"
+    },
+    {
+      "name": "methodology",
+      "exit_code": 0,
+      "contract_defects_rejected": 28
+    },
+    {
+      "name": "local_acceptance",
+      "exit_code": 0,
+      "checks_passed": 46,
+      "checks_total": 46
+    },
+    {
+      "name": "schema",
+      "exit_code": 0,
+      "checks_passed": 18,
+      "checks_total": 18
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+$path
+[1] "answer.md"
+
+$sha256
+[1] "53ecf75dacc041ac3412ea2434712b56ebc3f34b810888dde5ded95ef298ed68"
+
+PASS baseline design/execution/finish 
+PASS missingness missing plan rejected 
+PASS missingness active plan accepted 
+PASS dependence missing plan rejected 
+PASS dependence active plan accepted 
+PASS multiplicity missing plan rejected 
+PASS multiplicity active plan accepted 
+PASS transportability missing plan rejected 
+PASS transportability active plan accepted 
+FAIL optional sensitivity branch still validated 
+PASS valid optional sensitivity accepted 
+PASS design complete AI metadata 
+PASS design missing role rejected 
+PASS design stale AI output rejected 
+PASS execution complete AI metadata 
+PASS execution missing role rejected 
+PASS execution stale AI output rejected 
+PASS finish complete AI metadata 
+PASS finish missing role rejected 
+PASS finish stale AI output rejected 
+PASS builder contamination rejected 
+PASS coordinator first draft rejected 
+FAIL pending required outcome accepted 
+FAIL required outcome cannot become not applicable 
+FAIL changed outcome owner rejected 
+FAIL rehashed changed comparison rejected 
+PASS evaluated outcome with report accepted 
+PASS malformed receipt 27 
+PASS malformed receipt 28 
+PASS malformed receipt 29 
+PASS malformed receipt 30 
+PASS computed replay valid 
+PASS computed replay wrong 
+PASS computed replay missing 
+PASS computed replay exit 
+PASS computed replay mutate 
+PASS unsafe path ../answer.md 
+PASS unsafe path /tmp/answer.md 
+PASS unsafe path C:/answer.md 
+PASS unsafe path ./answer.md 
+PASS unsafe path x/../answer.md 
+PASS symlink escape rejected 
+Local acceptance: 37 / 42 checks passed
+Error: Local acceptance failures: optional sensitivity branch still validated, pending required outcome accepted, required outcome cannot become not applicable, changed outcome owner rejected, rehashed changed comparison rejected
+Execution halted

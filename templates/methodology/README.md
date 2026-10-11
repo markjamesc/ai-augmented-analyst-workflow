@@ -30,3 +30,8 @@ report_path <- m_metamorphic(
 `m_replay(script, frozen_root, output_root, outputs, report_directory)` executes a reviewed R script under `--vanilla`. The script receives frozen-root and fresh-output-root arguments. It must actually recompute the result from frozen inputs, not copy expected outputs; review establishes that property. The helper detects modification of existing frozen files and compares replayed output hashes to the **pre-run** originals. Reference its report and both sets of output files from the methodology receipt. Preserve failures; do not set `clean_session` or PASS from an unexecuted command.
 
 `m_environment` captures session/package inventory. Supply a retrievable package lock separately. Project-specific source/query checks, fixture adapters, numerical/stochastic policy and substantive method reviews remain project work. This reusable framework cannot honestly generate their scientific evidence in advance.
+# Step 3 synchronization clarification
+
+Active scientific modules use `required: true`, a rationale and a plan; inactive modules use `required: false`, a rationale and `status: NOT_APPLICABLE`. The JSON schema and R gate now accept both shapes consistently. The R gate remains responsible for checking whether the declared trigger actually requires the module.
+
+For a required outcome follow-up, `outcome_followup.contract` references a JSON copy of the locked `methodology.outcome_contract` object, with its SHA-256. Preserve its owner, comparison and follow-up run ID. Use `pending` until evaluated; `not_applicable` cannot discharge a required follow-up.

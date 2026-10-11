@@ -259,12 +259,11 @@
           "type": "object",
           "required": [
             "required",
-            "rationale",
-            "plan"
+            "rationale"
           ],
           "properties": {
             "required": {
-              "type": "boolean"
+              "const": true
             },
             "rationale": {
               "type": "string",
@@ -273,15 +272,41 @@
             "plan": {
               "type": "string",
               "minLength": 1
+            },
+            "status": {
+              "const": "NOT_APPLICABLE"
             }
-          }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "required": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "required"
+                ]
+              },
+              "then": {
+                "required": [
+                  "plan"
+                ]
+              },
+              "else": {
+                "required": [
+                  "status"
+                ]
+              }
+            }
+          ]
         },
         "causal": {
           "type": "object",
           "required": [
             "required",
-            "rationale",
-            "status"
+            "rationale"
           ],
           "properties": {
             "required": {
@@ -292,17 +317,43 @@
               "minLength": 1
             },
             "status": {
+              "const": "NOT_APPLICABLE"
+            },
+            "plan": {
               "type": "string",
               "minLength": 1
             }
-          }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "required": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "required"
+                ]
+              },
+              "then": {
+                "required": [
+                  "plan"
+                ]
+              },
+              "else": {
+                "required": [
+                  "status"
+                ]
+              }
+            }
+          ]
         },
         "predictive": {
           "type": "object",
           "required": [
             "required",
-            "rationale",
-            "status"
+            "rationale"
           ],
           "properties": {
             "required": {
@@ -313,17 +364,43 @@
               "minLength": 1
             },
             "status": {
+              "const": "NOT_APPLICABLE"
+            },
+            "plan": {
               "type": "string",
               "minLength": 1
             }
-          }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "required": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "required"
+                ]
+              },
+              "then": {
+                "required": [
+                  "plan"
+                ]
+              },
+              "else": {
+                "required": [
+                  "status"
+                ]
+              }
+            }
+          ]
         },
         "missingness": {
           "type": "object",
           "required": [
             "required",
-            "rationale",
-            "status"
+            "rationale"
           ],
           "properties": {
             "required": {
@@ -334,17 +411,43 @@
               "minLength": 1
             },
             "status": {
+              "const": "NOT_APPLICABLE"
+            },
+            "plan": {
               "type": "string",
               "minLength": 1
             }
-          }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "required": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "required"
+                ]
+              },
+              "then": {
+                "required": [
+                  "plan"
+                ]
+              },
+              "else": {
+                "required": [
+                  "status"
+                ]
+              }
+            }
+          ]
         },
         "dependence": {
           "type": "object",
           "required": [
             "required",
-            "rationale",
-            "status"
+            "rationale"
           ],
           "properties": {
             "required": {
@@ -355,17 +458,43 @@
               "minLength": 1
             },
             "status": {
+              "const": "NOT_APPLICABLE"
+            },
+            "plan": {
               "type": "string",
               "minLength": 1
             }
-          }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "required": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "required"
+                ]
+              },
+              "then": {
+                "required": [
+                  "plan"
+                ]
+              },
+              "else": {
+                "required": [
+                  "status"
+                ]
+              }
+            }
+          ]
         },
         "multiplicity": {
           "type": "object",
           "required": [
             "required",
-            "rationale",
-            "status"
+            "rationale"
           ],
           "properties": {
             "required": {
@@ -376,17 +505,43 @@
               "minLength": 1
             },
             "status": {
+              "const": "NOT_APPLICABLE"
+            },
+            "plan": {
               "type": "string",
               "minLength": 1
             }
-          }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "required": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "required"
+                ]
+              },
+              "then": {
+                "required": [
+                  "plan"
+                ]
+              },
+              "else": {
+                "required": [
+                  "status"
+                ]
+              }
+            }
+          ]
         },
         "transportability": {
           "type": "object",
           "required": [
             "required",
-            "rationale",
-            "status"
+            "rationale"
           ],
           "properties": {
             "required": {
@@ -397,21 +552,47 @@
               "minLength": 1
             },
             "status": {
+              "const": "NOT_APPLICABLE"
+            },
+            "plan": {
               "type": "string",
               "minLength": 1
             }
-          }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "required": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "required"
+                ]
+              },
+              "then": {
+                "required": [
+                  "plan"
+                ]
+              },
+              "else": {
+                "required": [
+                  "status"
+                ]
+              }
+            }
+          ]
         },
         "decision_uncertainty": {
           "type": "object",
           "required": [
             "required",
-            "rationale",
-            "plan"
+            "rationale"
           ],
           "properties": {
             "required": {
-              "type": "boolean"
+              "const": true
             },
             "rationale": {
               "type": "string",
@@ -420,8 +601,35 @@
             "plan": {
               "type": "string",
               "minLength": 1
+            },
+            "status": {
+              "const": "NOT_APPLICABLE"
             }
-          }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "required": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "required"
+                ]
+              },
+              "then": {
+                "required": [
+                  "plan"
+                ]
+              },
+              "else": {
+                "required": [
+                  "status"
+                ]
+              }
+            }
+          ]
         }
       }
     },
@@ -447,9 +655,58 @@
         },
         "specifications": {
           "type": "array",
-          "items": {}
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "justification",
+              "target_id",
+              "relation"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "justification": {
+                "type": "string",
+                "minLength": 1
+              },
+              "target_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "relation": {
+                "enum": [
+                  "same_target",
+                  "supplementary_target"
+                ]
+              }
+            }
+          }
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "required": {
+                "const": true
+              }
+            },
+            "required": [
+              "required"
+            ]
+          },
+          "then": {
+            "properties": {
+              "specifications": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
     },
     "checkpoints": {
       "type": "array",
@@ -485,7 +742,10 @@
           },
           "numeric_fields": {
             "type": "array",
-            "items": {}
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
           },
           "absolute_tolerance": {
             "type": "number",

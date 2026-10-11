@@ -6,7 +6,7 @@ m_strings <- function(x, empty = FALSE) {
   if (!length(x)) return(empty)
   all(vapply(x, m_text, logical(1)))
 }
-m_enum <- function(x, choices) m_text(x) && x %in% choices
+m_enum <- function(x, choices) is.character(x) && length(x) == 1L && !is.na(x) && x %in% choices
 m_number <- function(x) is.numeric(x) && length(x) == 1L && !is.na(x) && is.finite(x)
 m_rows <- function(x) is.list(x) && !is.data.frame(x) && is.null(names(x))
 m_read <- function(path) tryCatch(jsonlite::fromJSON(path, simplifyVector = FALSE), error = function(e) NULL)
@@ -80,7 +80,7 @@ m_design <- function(s3, s2 = NULL, s1 = NULL, root) m_checks(function(add) {
   sp <- m$sensitivity
   add("sensitivity IDs unique", m_rows(sp$specifications) && !anyDuplicated(vapply(sp$specifications, function(x) x$id, character(1))), "No duplicated branch IDs")
   add("sensitivity screen", is.logical(sp$required) && length(sp$required) == 1 && m_text(sp$rationale) && m_text(sp$instability_rule) && m_rows(sp$specifications), "Bounded admissible alternatives; report failures and instability, never vote over specifications")
-  if (isTRUE(sp$required)) add("sensitivity branches", length(sp$specifications) > 0 && all(vapply(sp$specifications, function(x)
+  add("sensitivity branches", (!isTRUE(sp$required) || length(sp$specifications) > 0) && all(vapply(sp$specifications, function(x)
     m_text(x$id) && m_text(x$justification) && m_text(x$target_id) && m_enum(x$relation, c("same_target", "supplementary_target")) &&
       if (identical(x$relation, "same_target")) identical(x$target_id, t$id) else !identical(x$target_id, t$id), logical(1))), "Different targets are supplementary, not robustness votes")
   cp <- m$checkpoints
@@ -210,7 +210,18 @@ m_finish <- function(s3, s4, s5, root) m_checks(function(add) {
     m_enum(s5$assurance$inference, c("adequate", "scope_restricted", "insufficient")) &&
     m_enum(s5$assurance$decision, c("act", "pilot", "hold", "insufficient_evidence", "no_action_required")) &&
     m_enum(s5$assurance$outcome_evaluation, c("not_applicable", "pending", "evaluated")), "Procedure PASS does not imply profitable action or causal validity")
-  if (isTRUE(s3$methodology$triggers$decision_outcome)) add("outcome handoff", identical(s5$outcome_followup$run_id, s3$methodology$outcome_contract$followup_run_id) && m_text(s5$outcome_followup$owner) && m_ref_ok(s5$outcome_followup$contract, root), "Separate linked follow-up; unobserved counterfactual is not zero regret")
+  if (isTRUE(s3$methodology$triggers$decision_outcome)) {
+    locked <- s3$methodology$outcome_contract
+    handoff <- s5$outcome_followup
+    contract_ok <- m_ref_ok(handoff$contract, root)
+    saved <- if (contract_ok) m_read(file.path(root, handoff$contract$path)) else NULL
+    add("outcome handoff", identical(handoff$run_id, locked$followup_run_id) && identical(handoff$owner, locked$owner) &&
+      contract_ok && is.list(saved) && setequal(names(saved), names(locked)) &&
+      all(vapply(names(locked), function(id) identical(saved[[id]], locked[[id]]), logical(1))),
+      "Handoff JSON preserves the locked comparison and owner; changes require amendment")
+    add("required outcome status", m_enum(s5$assurance$outcome_evaluation, c("pending", "evaluated")),
+      "Required follow-up cannot be relabeled not applicable; pending is an honest unknown outcome")
+  }
 })
 
 m_change <- function(change) m_checks(function(add) {

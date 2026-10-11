@@ -17,6 +17,7 @@ on:
       - main
       - portfolio-refresh-20260920
       - "methodology-hardening-*"
+      - "regression-acceptance-*"
     paths:
       - "workflow-gate/**"
       - "procedure-gate/**"
@@ -52,3 +53,12 @@ jobs:
 
       - name: Run methodology contract tests
         run: Rscript methodology/tests/test_methodology.R .
+
+      - name: Run local acceptance tests
+        run: Rscript methodology/tests/test_acceptance.R .
+
+      - name: Check schema compatibility
+        run: |
+          python3 -m venv "$RUNNER_TEMP/schema-venv"
+          "$RUNNER_TEMP/schema-venv/bin/pip" install jsonschema==4.23.0
+          "$RUNNER_TEMP/schema-venv/bin/python" methodology/tests/test_schema.py .

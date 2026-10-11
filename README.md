@@ -1,5 +1,7 @@
 # Becoming an AI-Augmented Analyst
 
+Step 3 review: [local acceptance results and remaining live checks](docs/framework-refinement/STEP3_LOCAL_ACCEPTANCE.md).
+
 This portfolio artifact presents my five-stage analytical workflow for turning technical reporting into decision support:
 
 1. **Start** — identify the business decision behind the metric request.

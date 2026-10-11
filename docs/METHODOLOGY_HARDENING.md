@@ -81,6 +81,8 @@ Extend the existing Claim-to-Evidence Ledger, not a parallel review process. Eve
 
 Certification separates: procedure complied; computation verified; inference adequate/scope-restricted/insufficient; decision act/pilot/hold/insufficient evidence/no action required; outcome evaluation not applicable/pending/evaluated. Honest insufficient evidence can pass a correctly executed workflow. Broken computation cannot pass by recommending hold. An outcome marked evaluated still needs a linked follow-up report; it does not automatically establish optimality.
 
+When decision-outcome evaluation was required at lock, Finish must record `pending` or `evaluated`. The handoff's owner and run ID must match the lock. Its referenced JSON file must contain exactly the locked `outcome_contract` object (object key order is immaterial). Rehashing a changed alternative does not authorize it; use the amendment route. Optional sensitivity branches must still have valid IDs, targets, relations and justifications.
+
 ## Changes, late defects and preserved attempts
 
 Classify changes as implementation correction, design amendment, exploratory analysis or presentation. Record data/results already seen, reason, target effect, affected artifacts and rerun steps. A correction cites the unchanged locked clause; a changed threshold/target is an amendment. Exploration remains labeled and separate. Presentation-only changes cannot silently alter claims. The existing owner approval route for completed locks remains.

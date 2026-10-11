@@ -113,7 +113,11 @@ completed_ids <- function(state) {
 
 verify_completed_artifacts <- function(state, project_root) {
   completed <- state$completed_steps %||% list()
-  if (!is.null(state$predecessor) && !verify_file_manifest(list(state$predecessor$state, state$predecessor$change_record), project_root)) return(FALSE)
+  if (!is.null(state$predecessor)) {
+    refs <- list(state$predecessor$state, state$predecessor$change_record)
+    if (!is.null(state$predecessor$certificate)) refs <- c(refs, list(state$predecessor$certificate))
+    if (!verify_file_manifest(refs, project_root)) return(FALSE)
+  }
   if (length(completed) == 0L) return(TRUE)
   artifact_checks <- completed %>% map_lgl(function(value) {
     relative_path <- value$artifact$path %||% ""
@@ -277,7 +281,9 @@ save_checks <- function(project_root, step_id, phase, checks) {
 
 read_artifact_safe <- function(path) {
   if (!file.exists(path) || dir.exists(path) || file.info(path)$size <= 0) return(NULL)
-  tryCatch(fromJSON(path, simplifyVector = FALSE), error = function(e) NULL)
+  value <- tryCatch(fromJSON(path, simplifyVector = FALSE), error = function(e) NULL)
+  if (!is.list(value) || is.null(names(value))) return(NULL)
+  value
 }
 
 ######### Verify the required receipt for each stage ##############################################
@@ -757,6 +763,7 @@ procedure_successor <- function(project_root, predecessor_root, run_id, change_r
   load_methodology()
   if (identical(normalizePath(project_root), normalizePath(predecessor_root))) stop("Successor needs a separate project root")
   old <- read_state(predecessor_root)
+  if (!project_file_ok(change_record_path, project_root)) stop("Successor change record must be a nonempty file inside the new project")
   change <- read_artifact_safe(file.path(project_root, change_record_path))
   checks <- m_change(change)
   if (!checks_pass(checks) || !m_text(change$approval_text) || !m_text(change$approval_timestamp))
@@ -768,11 +775,17 @@ procedure_successor <- function(project_root, predecessor_root, run_id, change_r
   archive <- file.path(directory, "run_state.json")
   if (!file.copy(old_path, archive, overwrite = FALSE)) stop("Could not preserve predecessor state")
   certificate <- procedure_paths(predecessor_root)$certificate
-  if (file.exists(certificate)) file.copy(certificate, file.path(directory, "final_certificate.json"), overwrite = FALSE)
+  certificate_ref <- NULL
+  if (file.exists(certificate)) {
+    target <- file.path(directory, "final_certificate.json")
+    if (!file.copy(certificate, target, overwrite = FALSE)) stop("Could not preserve predecessor certificate")
+    certificate_ref <- list(path = "artifacts/predecessor/final_certificate.json", sha256 = sha256_file(target))
+  }
   result <- procedure_start(project_root, run_id)
   state <- read_state(project_root)
   state$predecessor <- list(run_id = old$run_id, state = list(path = "artifacts/predecessor/run_state.json", sha256 = sha256_file(archive)),
     change_record = list(path = change_record_path, sha256 = sha256_file(file.path(project_root, change_record_path))))
+  if (!is.null(certificate_ref)) state$predecessor$certificate <- certificate_ref
   save_state(state, project_root)
   result
 }
