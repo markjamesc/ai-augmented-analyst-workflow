@@ -8,7 +8,17 @@ This is a separate environment-documentation change, not a methodology change or
 
 ## Tested-version status
 
-Local execution is unavailable in this session. An R 4.6.1 GitHub CI run will be attempted on this branch. Until that run succeeds, all five suites on R 4.6.1 are **NOT VERIFIED**, not PASS. The original candidate's historical passes remain valid only for their recorded environment. The Python schema suite is not itself an R-version test.
+Local execution was unavailable in this session, but all five suites **passed in GitHub Actions with R 4.6.1** at commit `34345314c700eaab303b1c5623f31fa12ac9cd93`. [CI run 38102091164](https://github.com/markjamesc/ai-augmented-analyst-workflow/actions/runs/38102091164), job `114359933822`, completed successfully. Its logs confirm installation of R 4.6.1 and R/Rscript links to `/opt/R/4.6.1/bin/`.
+
+| Suite | Result |
+|---|---|
+| Workflow Gate | PASS; 17 deliberate defects rejected |
+| Procedure Gate | PASS; five-stage synthetic certification and 23 invalid-amendment checks |
+| Methodology contracts | PASS; 28 defect checks plus successor/retry checks |
+| Local acceptance | PASS; 46/46 checks |
+| Schema compatibility | PASS; 18/18 checks (Python, not itself an R-version test) |
+
+A documentation-only follow-up records this result and updates the README to say supported and CI-tested. It changes no CI configuration, R code, schema, contract or tests relative to the tested commit. This record does not claim a new local run or Windows/GrokBot acceptance. The original candidate's historical results remain tied to their recorded environment.
 
 ## References found before edits
 
@@ -100,7 +110,7 @@ This portfolio artifact presents
 New:
 
 ```text
-Supported R version: **R 4.6.1**. See [environment change and tested-version status](docs/framework-refinement/R_4_6_1_ENVIRONMENT_CHANGE.md). This version update is separate from the original candidate's acceptance results.
+Supported and CI-tested R version: **R 4.6.1** (Linux GitHub Actions). See [environment change and tested-version status](docs/framework-refinement/R_4_6_1_ENVIRONMENT_CHANGE.md). This version update is separate from the original candidate's acceptance results.
 
 This portfolio artifact presents
 ```
@@ -110,3 +120,7 @@ This portfolio artifact presents
 The two captured session files, captured package inventory and explicit historical environment lock are unchanged. Replacing their version strings or package URLs would falsely describe the executed tests and invalidate evidence hashes. Their old-version references are historical exceptions, as are the old-text inventory in this change record. GNU Make 4.4.1 is unrelated and unchanged. The new supported-version declaration does not manufacture R 4.6.1 test evidence.
 
 This record is a new file (no previous text). No existing published branch is updated; no merge or pull request is part of this change.
+
+## Result-recording follow-up
+
+The initial status paragraph said an R 4.6.1 CI run would be attempted and all five suites were NOT VERIFIED until success. It is replaced above by the verified PASS results and run/commit identifiers. README wording changed from `Supported R version: **R 4.6.1**.` to `Supported and CI-tested R version: **R 4.6.1** (Linux GitHub Actions).` The documentation-only follow-up skips CI because the tested configuration, code and tests are unchanged.

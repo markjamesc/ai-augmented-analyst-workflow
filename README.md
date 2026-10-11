@@ -2,7 +2,7 @@
 
 Step 3 review: [local acceptance results and remaining live checks](docs/framework-refinement/STEP3_LOCAL_ACCEPTANCE.md).
 
-Supported R version: **R 4.6.1**. See [environment change and tested-version status](docs/framework-refinement/R_4_6_1_ENVIRONMENT_CHANGE.md). This version update is separate from the original candidate's acceptance results.
+Supported and CI-tested R version: **R 4.6.1** (Linux GitHub Actions). See [environment change and tested-version status](docs/framework-refinement/R_4_6_1_ENVIRONMENT_CHANGE.md). This version update is separate from the original candidate's acceptance results.
 
 This portfolio artifact presents my five-stage analytical workflow for turning technical reporting into decision support:
 
