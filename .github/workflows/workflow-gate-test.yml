@@ -87,3 +87,6 @@ jobs:
 
       - name: Live findings regression
         run: Rscript methodology/tests/test_livefix.R .
+
+      - name: Successor project compatibility regression
+        run: Rscript methodology/tests/test_successor.R

@@ -131,8 +131,8 @@ m_compare <- function(a, b, plan) {
     if (!is.null(rule)) {
       if (!m_missing_rule(rule, plan) || !rule$flag_field %in% names(a)) return(FALSE)
       fa <- as.character(a[[rule$flag_field]]); fb <- as.character(b[[rule$flag_field]])
-      if (anyNA(fa) || !identical(fa, fb) || !all(fa %in% c(rule$missing_value, rule$present_value))) return(FALSE)
-      missing <- fa == rule$missing_value
+      if (anyNA(fa) || !identical(fa, fb) || !all(fa %in% c(m_missing_values(rule), rule$present_value))) return(FALSE)
+      missing <- fa %in% m_missing_values(rule)
       if (anyNA(a[[f]][missing]) || anyNA(b[[f]][missing]) ||
           !all(as.character(a[[f]][missing]) == rule$missing_token) ||
           !all(as.character(b[[f]][missing]) == rule$missing_token)) return(FALSE)
@@ -345,9 +345,14 @@ m_inventory <- function(refs,root) {
 
 
 # D-22: declared nullable numeric fields need an explicit, keyed missingness policy.
+m_missing_values <- function(rule) unlist(if (!is.null(rule[["missing_values"]])) rule[["missing_values"]] else rule[["missing_value"]], use.names=FALSE)
 m_missing_rule <- function(rule, plan) {
   is.list(rule) && m_text(rule$flag_field) && rule$flag_field %in% unlist(plan$exact_fields) &&
-    m_text(rule$missing_value) && m_text(rule$present_value) && !identical(rule$missing_value,rule$present_value) &&
+    xor(is.null(rule[["missing_value"]]), is.null(rule[["missing_values"]])) &&
+    length(m_missing_values(rule)) > 0L && is.character(m_missing_values(rule)) &&
+    !anyNA(m_missing_values(rule)) && all(nzchar(m_missing_values(rule))) &&
+    !anyDuplicated(m_missing_values(rule)) && m_text(rule$present_value) &&
+    !rule$present_value %in% m_missing_values(rule) &&
     is.character(rule$missing_token) && length(rule$missing_token)==1L && !is.na(rule$missing_token) &&
     rule$missing_token %in% c("", "null", "NA")
 }

@@ -1,0 +1,22 @@
+PASS received ledgers agree 
+PASS missing status blank 
+PASS missing status nonnumeric 
+PASS missing status nonfinite 
+PASS different missing reasons rejected 
+PASS missing versus zero rejected 
+PASS wrong token garbage 
+PASS wrong token Inf 
+PASS wrong token NaN 
+PASS wrong token NA 
+PASS wrong token null 
+PASS unknown enum rejected 
+PASS overlapping status rejected 
+PASS duplicate status rejected 
+PASS ambiguous singular/plural rejected 
+PASS declared null tokens retained 
+PASS harness refuses garbage 
+PASS harness refuses Inf 
+PASS harness refuses NaN 
+PASS harness refuses -Inf 
+PASS finite values retained 
+21 / 21 passed

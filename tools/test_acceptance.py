@@ -13,7 +13,7 @@ class Acceptance(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
 
     def put(self, p, text):
-        (self.root/p).write_text(text)
+        (self.root/p).write_bytes(text.encode("utf-8"))
         return dict(path=p, sha256=hashlib.sha256(text.encode()).hexdigest())
 
     def test_capture(self):

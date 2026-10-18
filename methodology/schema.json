@@ -772,7 +772,6 @@
               "type": "object",
               "required": [
                 "flag_field",
-                "missing_value",
                 "present_value",
                 "missing_token"
               ],
@@ -788,8 +787,39 @@
                 },
                 "missing_token": {
                   "type": "string"
+                },
+                "missing_values": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
                 }
-              }
+              },
+              "oneOf": [
+                {
+                  "required": [
+                    "missing_value"
+                  ],
+                  "not": {
+                    "required": [
+                      "missing_values"
+                    ]
+                  }
+                },
+                {
+                  "required": [
+                    "missing_values"
+                  ],
+                  "not": {
+                    "required": [
+                      "missing_value"
+                    ]
+                  }
+                }
+              ]
             }
           }
         }
