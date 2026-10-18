@@ -74,8 +74,30 @@
           "ready_at_utc",
           "sent_at_utc",
           "captured_at_utc",
-          "verified_at_utc"
-        ]
+          "verified_at_utc",
+          "timestamp_basis",
+          "timestamp_uncertainty_seconds",
+          "dispatch_evidence"
+        ],
+        "properties": {
+          "timestamp_basis": {
+            "enum": [
+              "machine_observed",
+              "dispatcher_reported"
+            ]
+          },
+          "timestamp_uncertainty_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "dispatch_evidence": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256"
+            ]
+          }
+        }
       }
     }
   }

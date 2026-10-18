@@ -1,0 +1,18 @@
+{
+  "status": "NOT_RUN",
+  "design_version": "NOT_SET__design",
+  "fixture_version": "NOT_SET__fixture",
+  "design_sha256": "NOT_SET__hash",
+  "checked_at_utc": "NOT_SET__actual time",
+  "source_kind": "file",
+  "sql_extraction_used": false,
+  "fidelity_check": {
+    "status": "NOT_RUN",
+    "report": {
+      "path": "NOT_SET__source-fidelity-report.json",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "dependencies": [],
+  "_note": "Fill actual locked source/code/output dependencies. N/A applies only to SQL extraction, never to source fidelity."
+}

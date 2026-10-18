@@ -161,7 +161,7 @@ if (!is.null(stage3) && !is.null(stage4) &&
   )
 }
 
-for (field in c("sql_source_gate", "fixtures", "r_a_status", "r_b_status", "reconciliation", "validation_gate")) {
+for (field in c("fixtures", "r_a_status", "r_b_status", "reconciliation", "validation_gate")) {
   add_check(
     paste("Stage 4", field),
     is_value(stage4, field, "PASS"),

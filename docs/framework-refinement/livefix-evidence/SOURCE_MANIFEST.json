@@ -1,0 +1,58 @@
+[
+  {
+    "path": "methodology/contracts.R",
+    "sha256": "aeba7dc0e21b80152da433de19c62878979b3e324dab8c13a270d8bf68e65edf"
+  },
+  {
+    "path": "methodology/tools.R",
+    "sha256": "2de0dcfc1a09fee2b3bb2677b035a8f4e990e1c2ecbd69a7088aca9ac59d8674"
+  },
+  {
+    "path": "methodology/schema.json",
+    "sha256": "d3f798e1bc6dad3219a3454a19fe25039b50c9a555db0ee3c970dac3c20d3cf0"
+  },
+  {
+    "path": "methodology/operations.schema.json",
+    "sha256": "f84b74498bed7cbdd8ec37796f7b7d79a38503a448dfb8a05b8c2ba0d5cf03df"
+  },
+  {
+    "path": "methodology/tests/fixtures.R",
+    "sha256": "4091f0e2b1351bb0dc99e7c3f0ab21c5f8bd04697d26e74523557f77a2e54be1"
+  },
+  {
+    "path": "methodology/tests/test_livefix.R",
+    "sha256": "e1170d27f33fcdfc025f29df90356f0ce1cda48860f94a3a01bc57082e7f45f8"
+  },
+  {
+    "path": "procedure-gate/procedure_gate.R",
+    "sha256": "a92a6eba11028a6a5b25859c49e5cd0126aad8a6865231c04ae6eeb598fa293a"
+  },
+  {
+    "path": "procedure-gate/procedure.json",
+    "sha256": "1c0bcb76ac10903c724e1c10cfd7e1432aca9625a0390f49eec45be4a6889209"
+  },
+  {
+    "path": "procedure-gate/tests/test_procedure_gate.R",
+    "sha256": "a264147a3a213122cfd2c475c4af0e64a25def7a8da2615c64cd377a0ace421d"
+  },
+  {
+    "path": "workflow-gate/workflow_gate.R",
+    "sha256": "03734030cb868a11d8748f2ab56dbc63800c94d3a89de88925ee25e83fc325f7"
+  },
+  {
+    "path": "tools/run_restore.R",
+    "sha256": "231160f16300792d64b693e2b714da8a2f20b54dafeb489fc60c9fe76484b222"
+  },
+  {
+    "path": "tools/acceptance.py",
+    "sha256": "f064985710ec4cd195d89433b1701067fc10df4d3940931297a39b3c5f7d0a3d"
+  },
+  {
+    "path": "tools/test_acceptance.py",
+    "sha256": "7729cf1b0052cc324948339c99ae335f6bf648e196b597fd3404176af1953d35"
+  },
+  {
+    "path": ".github/workflows/workflow-gate-test.yml",
+    "sha256": "75d23ee6cc6797d742bed5cc85b1ef8ef284acf1b7357ef93a4a37667f463843"
+  }
+]

@@ -124,3 +124,5 @@ This repository is not open source and does not grant permission to copy, distri
 ## Prospective acceptance remediation
 
 New runs must follow [docs/SEND_QUEUE_PROTOCOL.md](docs/SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.
+
+Prospective repairs from the small live acceptance test are documented in [Live failure repairs](docs/framework-refinement/LIVE_FAILURE_REPAIRS.md). The failed predecessor remains unchanged; successor acceptance is required before merge.

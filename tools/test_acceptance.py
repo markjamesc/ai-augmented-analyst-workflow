@@ -19,11 +19,21 @@ class Acceptance(unittest.TestCase):
     def test_capture(self):
         p = self.put('p.json', json.dumps(dict(send_id='s', nonce='n')))
         r = self.put('r.txt', 'actual reply\nEND_REPLY s n')
-        x = dict(send_id='s', nonce='n', packet=p, reply=r, screen_verified=True)
+        x = dict(send_id='s', nonce='n', packet=p, reply=r, screen_verified=True, capture_method='browser_export', capture_evidence=self.put('capture.txt','SYNTHETIC browser export'))
         self.assertEqual(check('capture', self.root, x)['status'], 'PASS')
         for key, value in [('nonce', 'old'), ('screen_verified', False), ('send_id', 'old')]:
             with self.subTest(key=key), self.assertRaises(ValueError):
                 check('capture', self.root, dict(x, **{key:value}))
+
+    def test_capture_requires_retained_evidence(self):
+        p=self.put('p.json',json.dumps(dict(send_id='s',nonce='n')))
+        r=self.put('r.txt','END_REPLY s n')
+        with self.assertRaises(ValueError):
+            check('capture',self.root,dict(send_id='s',nonce='n',packet=p,reply=r,screen_verified=True))
+
+    def test_uncertain_timing_cannot_be_claimed_timely(self):
+        x=dict(now_utc='2026-01-01T00:14:59Z',tasks=[dict(id='s',status='ready',ready_at_utc='2026-01-01T00:00:00Z',timestamp_uncertainty_seconds=5)])
+        self.assertEqual(check('watchdog',self.root,x)['status'],'FLAG')
 
     def test_changed_reply(self):
         p = self.put('p.json', json.dumps(dict(send_id='s', nonce='n')))

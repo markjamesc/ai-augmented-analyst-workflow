@@ -31,7 +31,13 @@
       "ready_at_utc": "NOT_SET__time",
       "sent_at_utc": "NOT_SET__time",
       "captured_at_utc": "NOT_SET__time",
-      "verified_at_utc": "NOT_SET__time"
+      "verified_at_utc": "NOT_SET__time",
+      "timestamp_basis": "machine_observed",
+      "timestamp_uncertainty_seconds": 0,
+      "dispatch_evidence": {
+        "path": "NOT_SET__dispatch-evidence.txt",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
     }
   ],
   "all_sends_recorded": false,

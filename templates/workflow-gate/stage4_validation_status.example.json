@@ -46,5 +46,6 @@
   "_template_note": "Example only, not evidence of completed validation. Actual receipt files and hashes are mandatory.",
   "_methodology_note": "Prospective methodology-v3. Replace examples and placeholders; do not create PASS attestations without executing/reviewing evidence.",
   "ai_provenance": [],
-  "structural_review_reason": "REPLACE with performed review or justified locked fixture coverage"
+  "structural_review_reason": "REPLACE with performed review or justified locked fixture coverage",
+  "_source_applicability_note": "SQL extraction requires PASS. A locked file-only source requires NOT_APPLICABLE, plus a PASS source receipt with source_kind=file, sql_extraction_used=false and hashed fidelity_check evidence."
 }

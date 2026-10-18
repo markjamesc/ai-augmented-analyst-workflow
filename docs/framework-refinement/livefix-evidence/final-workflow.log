@@ -1,0 +1,5 @@
+Warning message:
+In system2(command = file.path(R.home("bin"), "Rscript"), args = c(shQuote(gate_script),  :
+  running command ''/workspace/scratch/300679a5be94/runtime/r/lib/R/bin/Rscript' '/workspace/scratch/300679a5be94/candidate/workflow-gate/workflow_gate.R' '/tmp/RtmpmpWCyp/workflow-gate-fail-358543932' 2>&1' had status 1
+Workflow gate tests passed: known PASS accepted; deliberate reconciliation failure blocked.
+Forward regression tests passed: 17 defects rejected; explicit modes and deferred budget accepted.

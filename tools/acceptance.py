@@ -57,7 +57,10 @@ def check(command, root, x):
             ready = time(t['ready_at_utc'])
             if ready > now:
                 raise ValueError('future readiness')
-            if t['status'] == 'ready' and (now-ready).total_seconds() > 900:
+            uncertainty = t.get('timestamp_uncertainty_seconds', 0)
+            if not isinstance(uncertainty, (int, float)) or isinstance(uncertainty, bool) or not 0 <= uncertainty < float('inf'):
+                raise ValueError('invalid timing uncertainty')
+            if t['status'] == 'ready' and (now-ready).total_seconds() + uncertainty > 900:
                 overdue.append(t['id'])
         result.update(status='FLAG' if overdue else 'PASS', overdue=overdue)
     elif command == 'capture':
@@ -65,6 +68,9 @@ def check(command, root, x):
         reply = file(root, x['reply']).read_text(encoding='utf-8')
         if not x.get('screen_verified') or not x.get('nonce') or packet['nonce'] != x['nonce'] or packet['send_id'] != x['send_id'] or not reply.rstrip().endswith('END_REPLY '+x['send_id']+' '+x['nonce']):
             raise ValueError('stale/incomplete capture or missing visual verification')
+        if x.get('capture_method') not in ('screenshot', 'screen_recording', 'browser_export'):
+            raise ValueError('retained capture evidence required; bare attestation is insufficient')
+        file(root, x['capture_evidence'])
         result.update(x)
         result['recorded_at_utc'] = utc()
     elif command == 'packet':
@@ -74,11 +80,11 @@ def check(command, root, x):
         begin = read(file(root, x['authorization']))
         if begin['phase'] != 'begin' or begin['result'] != 'PASS' or begin['step'] != x['stage']:
             raise ValueError('begin not passed')
-        for ref in refs(x):
-            file(root, ref)
+        # D-20: preflight checks the full declared JSON reference closure.
+        check('file-inventory', root, {'seeds': list(refs(x))})
         if x['stage'] == 'execution':
             m = read(root/'artifacts/stage3_locked_design.json')['methodology']
-            if x['output_rules'] != m['operational']['output_rules'] or x['checkpoints'] != m['checkpoints'] or x['receipt_dependencies'] != m['receipt_dependencies'] or not isinstance(x['accepted_code'], list):
+            if x['output_rules'] != m['operational']['output_rules'] or x['checkpoint_output_rules'] != m['operational']['checkpoint_output_rules'] or x['checkpoints'] != m['checkpoints'] or x['receipt_dependencies'] != m['receipt_dependencies'] or not isinstance(x['accepted_code'], list):
                 raise ValueError('incomplete locked packet sections')
         result['non_authorizing'] = True
     elif command == 'inventory':

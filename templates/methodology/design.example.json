@@ -110,7 +110,9 @@
       "numeric_fields": [],
       "absolute_tolerance": 0,
       "relative_tolerance": 0,
-      "rationale": "Canonical table includes every candidate and explicit exclusion/eligibility fields in real projects."
+      "rationale": "Canonical table includes every candidate and explicit exclusion/eligibility fields in real projects.",
+      "field_nullability": {},
+      "numeric_missingness": {}
     }
   ],
   "checkpoint_coverage": [
@@ -259,7 +261,8 @@
       "output_rules",
       "checkpoints",
       "receipt_dependencies",
-      "accepted_code"
+      "accepted_code",
+      "checkpoint_output_rules"
     ],
     "validation_components": {
       "R-A": [
@@ -277,6 +280,11 @@
       "input": [
         "inputs/source.csv"
       ]
-    }
+    },
+    "source_contract": {
+      "kind": "sql",
+      "rationale": "NOT_SET__SQL extraction, or change kind to file with actual source rationale"
+    },
+    "checkpoint_output_rules": []
   }
 }

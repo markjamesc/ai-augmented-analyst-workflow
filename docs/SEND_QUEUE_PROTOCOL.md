@@ -41,3 +41,15 @@ Action lexicon hits require action/owner_tradeoff/evidence_tag/tag_assigned_by e
 Finalization recursively verifies JSON path/sha256 references from completed-stage evidence and writes a hashed evidence inventory. Generate supplementary `file-inventory` from the authoritative execution root with explicit seed refs for nonstandard references and original transcripts. A partial coordinator mirror is insufficient. This is declared-reference closure, not proof that every unrecorded file exists. Preserve every failed attempt, correction, console and hash; deliver individually accessible files. No backdated timestamps, invented missing timing or altered original evidence.
 
 Certificate assurance separates recorded checks, recorded order, manual-send prevention (not demonstrated), deviations and scientific/decision/outcome assurance. A gate PASS proves none of causal validity, profitability, genuine AI independence, or unobserved process compliance. Revocation is checked when received/recorded; real-time message monitoring remains procedural.
+
+## Live-finding corrections (prospective 2.2-livefix-v1)
+
+The controlling addendum is [LIVE_FAILURE_REPAIRS.md](framework-refinement/LIVE_FAILURE_REPAIRS.md). It supersedes earlier acceptance-v1 wording where the following fields were absent:
+
+1. Freeze a sent candidate using `m_freeze_file` before dispatch; reference that immutable path/hash. Write the final lock separately. Stage completion checks nested references and freezes their dependency closure.
+2. Lock `operational.checkpoint_output_rules` (checkpoint_id, field, nullable) for every numeric checkpoint column, corresponding `field_nullability`, and explicit `numeric_missingness` for nullable fields. Include checkpoint_output_rules verbatim in Execution packets and packet_requirements.
+3. Lock source_contract.kind/rationale; file-only extraction uses SQL NOT_APPLICABLE while source fidelity still must PASS.
+4. Each send adds timestamp_basis (machine_observed or dispatcher_reported), timestamp_uncertainty_seconds and dispatch_evidence ref. Machine observations have zero declared uncertainty; approximate observations must disclose a defensible bound. If no bound can be supported, do not fabricate one: the order claim is unverified and must be resolved before acceptance. Do not reconstruct timestamps from later capture checks. Watchdog input may include timestamp_uncertainty_seconds; potential overdue work is flagged conservatively.
+5. Capture requests and records add capture_method (screenshot, screen_recording or browser_export) and capture_evidence ref. Retain material showing the actual response ending and session context. A browser export is an allowed alternative to screenshots; an unsupported dispatcher assertion alone is not. Synthetic test exports are not live proof.
+
+The code checks record consistency; the coordinator remains responsible for faithful observation, model identity, complete logs and independent role execution. A disposed timing FLAG remains a FLAG in the record.

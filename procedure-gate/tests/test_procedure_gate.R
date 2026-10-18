@@ -224,6 +224,8 @@ result <- run_gate("begin", project_root, "execution")
 stopifnot(identical(result$status, 0L))
 result <- run_gate("complete", project_root, "execution")
 stopifnot(!identical(result$status, 0L))
+blocked <- jsonlite::fromJSON(paste(result$output,collapse="\n"),simplifyVector=FALSE)
+stopifnot(identical(blocked$workflow_gate$status,"NOT_RUN"),length(blocked$workflow_gate$blocked_by)>0L)
 write_stage4(project_root)
 
 # A superficially PASS Stage 4 receipt still fails if lower-tier evidence fails.

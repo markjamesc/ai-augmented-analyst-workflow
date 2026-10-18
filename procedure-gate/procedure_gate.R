@@ -128,7 +128,8 @@ verify_completed_artifacts <- function(state, project_root) {
   })
 
   all(artifact_checks) && all(map_lgl(completed, function(value) {
-    !length(value$supporting_files) || verify_file_manifest(value$supporting_files, project_root)
+    (!length(value$supporting_files) || verify_file_manifest(value$supporting_files, project_root)) &&
+      (!length(value$evidence_closure) || verify_file_manifest(value$evidence_closure, project_root))
   })) && verify_amendment_history(state, project_root)
 }
 
@@ -218,7 +219,7 @@ framework_hashes <- function(procedure) {
     "docs/r-workflow-gate-enforcement.md",
     "workflow-gate/workflow_gate.R", "procedure-gate/procedure_gate.R",
     "methodology/contracts.R", "methodology/tools.R", "methodology/schema.json",
-    "docs/METHODOLOGY_HARDENING.md", "docs/SEND_QUEUE_PROTOCOL.md", "tools/acceptance.py", "methodology/operations.schema.json"
+    "docs/METHODOLOGY_HARDENING.md", "docs/SEND_QUEUE_PROTOCOL.md", "tools/acceptance.py", "methodology/operations.schema.json", "docs/framework-refinement/LIVE_FAILURE_REPAIRS.md", "tools/run_restore.R"
   ))
   values <- files %>% map(function(relative_path) {
     path <- file.path(procedure_repo_root(), relative_path)
@@ -263,7 +264,7 @@ checks_pass <- function(checks) {
     all()
 }
 
-save_checks <- function(project_root, step_id, phase, checks) {
+save_checks <- function(project_root, step_id, phase, checks, context = NULL) {
   paths <- procedure_paths(project_root)
   dir.create(paths$checks_dir, recursive = TRUE, showWarnings = FALSE)
   record <- list(
@@ -271,6 +272,7 @@ save_checks <- function(project_root, step_id, phase, checks) {
     phase = phase,
     result = if (checks_pass(checks)) "PASS" else "FAIL",
     checked_at_utc = timestamp_utc(),
+    context = context,
     checks = checks
   )
   path <- tempfile(paste0(step_id, "-", phase, "-"), tmpdir = paths$checks_dir, fileext = ".json")
@@ -466,6 +468,7 @@ procedure_start <- function(project_root, run_id) {
 ######### Begin a stage only when its prerequisites pass ##########################################
 
 procedure_begin <- function(project_root, step_id) {
+  load_methodology()
   state <- read_state(project_root)
   procedure <- read_procedure()
   step <- step_by_id(procedure, step_id)
@@ -486,7 +489,7 @@ procedure_begin <- function(project_root, step_id) {
   record <- save_checks(project_root, step_id, "begin", checks)
   if (!checks_pass(checks)) return(list(status = "BLOCKED", step = step_id, checks = checks))
   state$current_step <- step_id
-  state$current_authorization <- list(path = substring(record$path, nchar(normalizePath(project_root, winslash="/"))+2), sha256 = record$sha256)
+  state$current_authorization <- list(path = m_relative_path(record$path, normalizePath(project_root, winslash="/")), sha256 = record$sha256)
   state$updated_at_utc <- timestamp_utc()
   save_state(state, project_root)
   list(status = "AUTHORIZED", step = step_id, framework = step$framework, check_report = record)
@@ -510,10 +513,15 @@ procedure_complete <- function(project_root, step_id) {
   )
   checks <- c(checks, validate_stage_receipt(step_id, receipt, project_root))
   checks <- c(checks, m_operations(project_root, state, step_id))
+  closure <- tryCatch(m_inventory(m_refs(list(receipt=receipt,operations=m_read(file.path(project_root,"artifacts/operations",paste0(step_id,".json"))))),project_root),error=function(e)NULL)
+  checks <- c(checks,list(check_result("Stage evidence closure",!is.null(closure),"All receipt and packet references must remain valid before completion")))
 
-  workflow <- NULL
+  workflow <- if (identical(step_id,"execution")) list(status="NOT_RUN", passed=FALSE,
+    reason="Earlier completion checks must pass before the nested Workflow Gate runs",
+    blocked_by=unname(Filter(function(x)!identical(x$result,"PASS"),checks))) else NULL
   if (identical(step_id, "execution") && checks_pass(checks)) {
     workflow <- run_workflow_gate(project_root)
+    workflow$status <- if(isTRUE(workflow$passed)) "PASS" else "FAIL"
     checks[[length(checks) + 1L]] <- check_result(
       "Existing Workflow Gate PASS",
       workflow$passed,
@@ -521,7 +529,7 @@ procedure_complete <- function(project_root, step_id) {
     )
   }
 
-  record <- save_checks(project_root, step_id, "complete", checks)
+  record <- save_checks(project_root, step_id, "complete", checks, list(workflow_gate=workflow))
   if (!checks_pass(checks)) {
     return(list(status = "FAIL", step = step_id, checks = checks, workflow_gate = workflow))
   }
@@ -531,6 +539,7 @@ procedure_complete <- function(project_root, step_id) {
     completed_at_utc = timestamp_utc(),
     artifact = artifact_record,
     supporting_files = c(m_refs(receipt), list(list(path=paste0("artifacts/operations/",step_id,".json"),sha256=m_hash(file.path(project_root,"artifacts/operations",paste0(step_id,".json")))))),
+    evidence_closure = closure,
     authorization = state$current_authorization,
     check_report = list(path = record$path, sha256 = record$sha256)
   )
@@ -621,6 +630,8 @@ procedure_amend <- function(project_root, step_id, new_receipt_path, change_reco
   )
   load_methodology()
   checks <- c(checks, validate_stage_receipt(step_id, receipt, project_root), m_change(change))
+  closure <- tryCatch(m_inventory(m_refs(list(receipt=receipt,operations=m_read(file.path(project_root,"artifacts/operations",paste0(step_id,".json"))))),project_root),error=function(e)NULL)
+  checks <- c(checks,list(check_result("Amendment preserves referenced history",!is.null(closure) && !any(vapply(closure,function(x) identical(x$path,step$artifact) && !identical(x$sha256,new_sha),logical(1))),"Do not overwrite a candidate referenced by a past packet; use immutable versions or a successor")))
 
   record <- save_checks(project_root, step_id, if (id_ok) paste0("amend-", change_id) else "amend", checks)
   if (!checks_pass(checks)) return(list(status = "FAIL", step = step_id, checks = checks))
@@ -653,7 +664,8 @@ procedure_amend <- function(project_root, step_id, new_receipt_path, change_reco
     check_report = list(path = record$path, sha256 = record$sha256)
   )
   state$amendment_history <- c(history, list(entry))
-  state$completed_steps[[step_id]]$supporting_files <- m_refs(receipt)
+  state$completed_steps[[step_id]]$supporting_files <- c(m_refs(receipt),list(list(path=paste0("artifacts/operations/",step_id,".json"),sha256=m_hash(file.path(project_root,"artifacts/operations",paste0(step_id,".json"))))))
+  state$completed_steps[[step_id]]$evidence_closure <- closure
   state$completed_steps[[step_id]]$artifact$sha256 <- new_sha
   state$updated_at_utc <- timestamp_utc()
   save_state(state, project_root)

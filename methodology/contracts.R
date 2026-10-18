@@ -44,6 +44,7 @@ m_checks <- function(fun) {
   checks
 }
 m_design <- function(s3, s2 = NULL, s1 = NULL, root) m_checks(function(add) {
+  for (x in m_checkpoint_contract(s3)) add(x$check, x$result == "PASS", x$detail)
   for (x in m_operational_design(s3, root)) add(x$check, x$result == "PASS", x$detail)
   m <- s3$methodology
   add("version", identical(m$version, "methodology-v3"), "New runs require methodology-v3; old packs use their pinned referee")
@@ -124,12 +125,25 @@ m_compare <- function(a, b, plan) {
   if (!all(vapply(exact, function(f) identical(as.character(a[[f]]), as.character(b[[f]])), logical(1)))) return(FALSE)
   all(vapply(unlist(plan$numeric_fields), function(f) {
     x <- suppressWarnings(as.numeric(a[[f]])); y <- suppressWarnings(as.numeric(b[[f]]))
-    # Nonfinite values fail; represent meaningful missingness as exact semantic fields.
-    all(is.finite(x)) && all(is.finite(y)) && all(abs(x-y) <= plan$absolute_tolerance + plan$relative_tolerance * pmax(abs(x), abs(y)))
+    # Missingness is permitted ONLY under an explicit locked flag/token contract.
+    rule <- plan$numeric_missingness[[f]]
+    keep <- rep(TRUE, nrow(a))
+    if (!is.null(rule)) {
+      if (!m_missing_rule(rule, plan) || !rule$flag_field %in% names(a)) return(FALSE)
+      fa <- as.character(a[[rule$flag_field]]); fb <- as.character(b[[rule$flag_field]])
+      if (anyNA(fa) || !identical(fa, fb) || !all(fa %in% c(rule$missing_value, rule$present_value))) return(FALSE)
+      missing <- fa == rule$missing_value
+      if (anyNA(a[[f]][missing]) || anyNA(b[[f]][missing]) ||
+          !all(as.character(a[[f]][missing]) == rule$missing_token) ||
+          !all(as.character(b[[f]][missing]) == rule$missing_token)) return(FALSE)
+      keep <- !missing
+    }
+    all(is.finite(x[keep])) && all(is.finite(y[keep])) && all(abs(x[keep]-y[keep]) <= plan$absolute_tolerance + plan$relative_tolerance * pmax(abs(x[keep]), abs(y[keep])))
   }, logical(1)))
 }
 m_csv <- function(ref, root) read.csv(file.path(root, ref$path), colClasses = "character", check.names = FALSE, na.strings = character())
 m_execution <- function(s3, s4, root) m_checks(function(add) {
+  for (x in m_source(s3, s4, root)) add(x$check, x$result == "PASS", x$detail)
   m <- s3$methodology
   add("design gate", all(vapply(m_design(s3, root = root), function(x) x$result == "PASS", logical(1))), "Design contract must pass even when Workflow Gate is called directly")
   roles <- names(s4$evidence_receipts)
@@ -247,11 +261,12 @@ m_words <- function(text, lexicon) {
 }
 m_operational_design <- function(s3, root) m_checks(function(add) {
   o <- s3$methodology$operational
+  add("source applicability locked", m_enum(o$source_contract$kind,c("sql","file")) && m_text(o$source_contract$rationale), "File-only inputs do not imply a SQL gate PASS")
   add("operational version", identical(o$version, "acceptance-v1"), "Prospective contracts require acceptance-v1")
   add("language rules", m_strings(o$action_lexicon) && m_strings(o$finality_lexicon) && m_text(o$negation_rule) && m_text(o$evidence_tag_rule), "Lock lexical triggers; contextual review remains human/AI work")
   add("frozen fixture oracle", m_ref_ok(o$fixture_inputs, root) && m_ref_ok(o$fixture_expected, root) && m_text(o$oracle_basis) && m_text(o$oracle_reviewer), "Input and independently justified expected answers frozen in Design")
   add("output rules", m_rows(o$output_rules) && m_equal_ids(lapply(o$output_rules, function(x) x$field), s3$required_outputs) && all(vapply(o$output_rules, function(x) m_enum(x$kind, c("literal", "enum", "computed")) && m_text(x$rule), logical(1))), "Every output defines literal, enum or computed semantics")
-  add("packet contract", m_strings(o$packet_requirements) && all(c("output_rules", "checkpoints", "receipt_dependencies", "accepted_code") %in% unlist(o$packet_requirements)), "Execution packets carry authoritative sections, not summaries")
+  add("packet contract", m_strings(o$packet_requirements) && all(c("output_rules", "checkpoint_output_rules", "checkpoints", "receipt_dependencies", "accepted_code") %in% unlist(o$packet_requirements)), "Execution packets carry authoritative sections, not summaries")
   v <- o$validation_components
   add("test component coverage", is.list(v) && setequal(names(v), c("R-A", "R-B", "harness", "configuration", "input")) && all(vapply(v, m_strings, logical(1))) && all(vapply(unlist(v), function(p) !grepl("^(/|[A-Za-z]:)", p) && !any(strsplit(p, "/", fixed=TRUE)[[1]] %in% c("", ".", "..")), logical(1))), "Lock project-relative component paths, bind hashes at execution")
   for (x in s3$methodology$metamorphic) if (isTRUE(x$applicable)) add(paste("MR discrimination", x$id), m_enum(x$coverage_type, c("nonconstant", "boundary", "negative_control")) && m_text(x$detectable_defect), "Do not certify effectiveness from an empty or constant output alone")
@@ -291,28 +306,33 @@ m_operations <- function(root,state,stage,final=FALSE) m_checks(function(add) {
   add("send coverage", m_rows(sends) && length(sends)>0 && !anyDuplicated(vapply(sends,function(x)x$id,character(1))) && isTRUE(o$all_sends_recorded) && m_ref_ok(o$transcript_index,root), "Completeness attestation remains procedural")
   for(s in sends) {
     times <- vapply(c("ready_at_utc","sent_at_utc","captured_at_utc","verified_at_utc"),function(k)m_time(s[[k]]),numeric(1))
-    add(paste("send chronology",s$id), all(is.finite(times)) && all(diff(times)>=0) && times[1]>=m_time(br$checked_at_utc) && times[4]<=at, "No stage send before authorization; no future or reversed captures")
+    uncertainty <- s$timestamp_uncertainty_seconds
+    add(paste("dispatch timing provenance",s$id), m_enum(s$timestamp_basis,c("machine_observed","dispatcher_reported")) && m_number(uncertainty) && uncertainty>=0 && (!identical(s$timestamp_basis,"machine_observed") || uncertainty==0) && m_ref_ok(s$dispatch_evidence,root), "Keep observation basis and uncertainty; no reconstructed precision")
+    add(paste("send chronology",s$id), all(is.finite(times)) && m_number(uncertainty) && all(diff(times)>=0) && times[1]>=m_time(br$checked_at_utc) && times[2]-uncertainty>=m_time(br$checked_at_utc) && times[2]+uncertainty<=times[3] && times[4]<=at, "No stage send before authorization; no future or reversed captures")
     add(paste("send identity",s$id), m_text(s$id) && m_text(s$ai) && m_text(s$nonce) && m_ref_ok(s$packet,root) && m_refs_ok(s$attachments,root,FALSE) && m_ref_ok(s$reply,root) && m_ref_ok(s$capture,root), "Preserve exact packet, files, reply and capture record")
     p <- if(m_ref_ok(s$packet,root)) m_read(file.path(root,s$packet$path)) else NULL
     add(paste("packet binding",s$id), identical(p$run_id,state$run_id) && identical(p$stage,stage) && identical(p$authorization,auth) && identical(p$send_id,s$id) && identical(p$nonce,s$nonce) && identical(p$attachments,s$attachments),"No stale packet or substituted attachment")
     if(stage=="execution") {
       locked <- m_read(file.path(root,"artifacts/stage3_locked_design.json"))$methodology
-      add(paste("execution packet completeness",s$id), identical(p$output_rules,locked$operational$output_rules) && identical(p$checkpoints,locked$checkpoints) && identical(p$receipt_dependencies,locked$receipt_dependencies) && m_rows(p$accepted_code) && m_refs_ok(p$accepted_code,root,FALSE),"Full locked sections and explicit accepted code references; preflight does not authorize a send")
+      add(paste("execution packet completeness",s$id), identical(p$output_rules,locked$operational$output_rules) && identical(p$checkpoint_output_rules,locked$operational$checkpoint_output_rules) && identical(p$checkpoints,locked$checkpoints) && identical(p$receipt_dependencies,locked$receipt_dependencies) && m_rows(p$accepted_code) && m_refs_ok(p$accepted_code,root,FALSE),"Full locked sections and explicit accepted code references; preflight does not authorize a send")
     }
     cap <- if(m_ref_ok(s$capture,root)) m_read(file.path(root,s$capture$path)) else NULL
     reply <- if(m_ref_ok(s$reply,root)) paste(readLines(file.path(root,s$reply$path),warn=FALSE),collapse="\n") else ""
     marker <- paste0("END_REPLY ",s$id," ",s$nonce)
-    add(paste("capture match",s$id), identical(cap$send_id,s$id) && identical(cap$nonce,s$nonce) && identical(cap$reply,s$reply) && identical(cap$packet,s$packet) && isTRUE(cap$screen_verified) && endsWith(trimws(reply),marker),"Nonce plus end marker and visual attestation; not cryptographic proof of model identity")
-    add(paste("send dependencies",s$id), m_strings(s$depends_on,TRUE) && all(vapply(s$depends_on,function(id) {d<-Filter(function(x)identical(x$id,id),sends); length(d)==1 && m_time(d[[1]]$verified_at_utc)<=times[2]},logical(1))),"Chain verified replies before dependent sends")
-    add(paste("watchdog",s$id), (times[2]-times[1]<=900) || m_ref_ok(s$overdue_report,root),"Strictly over 900 seconds requires retained escalation/disposition; polling is executor-side")
+    add(paste("capture match",s$id), identical(cap$send_id,s$id) && identical(cap$nonce,s$nonce) && identical(cap$reply,s$reply) && identical(cap$packet,s$packet) && isTRUE(cap$screen_verified) && m_enum(cap$capture_method,c("screenshot","screen_recording","browser_export")) && m_ref_ok(cap$capture_evidence,root) && endsWith(trimws(reply),marker),"Nonce plus end marker and visual attestation; not cryptographic proof of model identity")
+    add(paste("send dependencies",s$id), m_strings(s$depends_on,TRUE) && all(vapply(s$depends_on,function(id) {d<-Filter(function(x)identical(x$id,id),sends); length(d)==1 && m_time(d[[1]]$verified_at_utc)<=times[2]-uncertainty},logical(1))),"Chain verified replies before dependent sends")
+    add(paste("watchdog",s$id), (times[2]-times[1]+uncertainty<=900) || m_ref_ok(s$overdue_report,root),"Strictly over 900 seconds requires retained escalation/disposition; polling is executor-side")
     if(!identical(s$approval_id,"none")) add(paste("send approval",s$id), any(vapply(o$approvals,function(a) identical(a$id,s$approval_id) && m_approval(a,state$run_id,stage,s$scope,times[2],root,rev$events),logical(1))),"Conditional approval checked at dispatch")
   }
+  closure <- tryCatch(m_inventory(m_refs(o),root),error=function(e) NULL)
+  add("operations evidence closure", !is.null(closure), "At stage completion, reject stale nested packet references, including pre-lock candidates")
   add("deviation dispositions", m_rows(o$deviations) && all(vapply(o$deviations,function(x)m_text(x$id) && m_text(x$disposition) && m_ref_ok(x$evidence,root),logical(1))),"Recorded deviations do not override a failed check")
 })
 # Transitive JSON reference closure from the authoritative project root.
 m_inventory <- function(refs,root) {
   seen<-list(); root<-normalizePath(root,winslash="/",mustWork=TRUE)
   visit<-function(ref) {
+    ref$path <- gsub("\\\\", "/", ref$path)
     if(startsWith(ref$path,paste0(root,"/"))) ref$path<-substring(ref$path,nchar(root)+2)
     if(!m_ref_ok(ref,root)) stop("Missing, unsafe or stale inventory dependency: ",ref$path)
     if(!is.null(seen[[ref$path]])) {if(!identical(seen[[ref$path]]$sha256,ref$sha256))stop("Conflicting inventory identity");return(invisible(NULL))}
@@ -321,4 +341,56 @@ m_inventory <- function(refs,root) {
   }
   for(ref in refs) visit(ref)
   unname(seen[order(names(seen))])
+}
+
+
+# D-22: declared nullable numeric fields need an explicit, keyed missingness policy.
+m_missing_rule <- function(rule, plan) {
+  is.list(rule) && m_text(rule$flag_field) && rule$flag_field %in% unlist(plan$exact_fields) &&
+    m_text(rule$missing_value) && m_text(rule$present_value) && !identical(rule$missing_value,rule$present_value) &&
+    is.character(rule$missing_token) && length(rule$missing_token)==1L && !is.na(rule$missing_token) &&
+    rule$missing_token %in% c("", "null", "NA")
+}
+m_checkpoint_contract <- function(s3) m_checks(function(add) {
+  rules_out <- s3$methodology$operational$checkpoint_output_rules
+  # Empty numeric field sets must not invent a checkpoint entry.
+  expected <- unlist(lapply(s3$methodology$checkpoints,function(p)if(length(p$numeric_fields))paste(p$id,unlist(p$numeric_fields),sep=":") else character()))
+  add("checkpoint output schema coverage",m_rows(rules_out) && m_equal_ids(lapply(rules_out,function(r)paste(r$checkpoint_id,r$field,sep=":")),as.list(expected)),"Lock authoritative output nullability for every numeric checkpoint column")
+  for (p in s3$methodology$checkpoints) {
+    numeric <- unlist(p$numeric_fields)
+    declarations <- p$field_nullability
+    rules <- p$numeric_missingness
+    add(paste("checkpoint nullability",p$id),
+      (!length(numeric) && is.null(declarations) || is.list(declarations) &&
+       setequal(names(declarations),numeric) && !anyDuplicated(names(declarations)) &&
+       all(vapply(declarations,function(x)is.logical(x)&&length(x)==1&&!is.na(x),logical(1)))),
+      "Every numeric checkpoint field explicitly declares nullable true/false")
+    for (f in numeric) {
+      matches <- Filter(function(r)identical(r$checkpoint_id,p$id)&&identical(r$field,f),rules_out)
+      add(paste("output/checkpoint compatibility",p$id,f),length(matches)==1 && is.logical(matches[[1]]$nullable) && length(matches[[1]]$nullable)==1 && !is.na(matches[[1]]$nullable) && identical(matches[[1]]$nullable,declarations[[f]]),"Checkpoint nullability must match the authoritative output schema")
+    }
+    nullable <- if(is.list(declarations)) names(Filter(isTRUE,declarations)) else character()
+    add(paste("checkpoint missingness contract",p$id), setequal(names(rules),nullable) &&
+      all(vapply(rules,function(r)m_missing_rule(r,p),logical(1))),
+      "Nullable fields need an exact status flag and a nonnumeric missing token; finite-only fields cannot opt out")
+  }
+})
+# Source fidelity is mandatory for both SQL and file-only sources.
+m_source <- function(s3,s4,root) m_checks(function(add) {
+  kind <- s3$methodology$operational$source_contract$kind
+  add("SQL applicability", (identical(kind,"sql") && identical(s4$sql_source_gate,"PASS")) ||
+    (identical(kind,"file") && identical(s4$sql_source_gate,"NOT_APPLICABLE")), "N/A is restricted to a locked file-only source")
+  ref <- s4$evidence_receipts$source
+  r <- if(m_ref_ok(ref,root)) m_read(file.path(root,ref$path)) else NULL
+  add("source fidelity", identical(r$status,"PASS") && identical(r$source_kind,kind) &&
+    identical(r$sql_extraction_used,identical(kind,"sql")) && identical(r$fidelity_check$status,"PASS") &&
+    m_ref_ok(r$fidelity_check$report,root), "Non-SQL inputs still require actual source identity/fidelity evidence")
+})
+# Canonical references are platform-independent; unsafe traversal is never normalized away.
+m_relative_path <- function(path,root) {
+  path <- gsub("\\\\","/",path); root <- sub("/+$","",gsub("\\\\","/",root))
+  if(!startsWith(tolower(path),paste0(tolower(root),"/"))) stop("Path is outside project root")
+  relative <- substring(path,nchar(root)+2)
+  if(any(strsplit(relative,"/",fixed=TRUE)[[1]] %in% c("",".","..")))stop("Unsafe relative path")
+  relative
 }

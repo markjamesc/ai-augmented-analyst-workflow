@@ -1,6 +1,6 @@
 # Reusable mechanical helpers. Source contracts.R before this file.
 # These do not share project judged logic across R-A/R-B.
-m_file_ref <- function(path, root) list(path = path, sha256 = m_hash(file.path(root, path)))
+m_file_ref <- function(path, root) list(path = gsub("\\\\", "/", path), sha256 = m_hash(file.path(root, path)))
 m_save_attempt <- function(value, directory, prefix) {
   dir.create(directory, recursive = TRUE, showWarnings = FALSE)
   path <- tempfile(paste0(prefix, "-"), tmpdir = directory, fileext = ".json")
@@ -73,4 +73,28 @@ m_bound_test <- function(id, components, root, run, report_directory = "reports/
   jsonlite::write_json(report,path,auto_unbox=TRUE,pretty=TRUE)
   report$report <- m_file_ref(substring(path,nchar(root)+2),root)
   report
+}
+
+
+# D-20: freeze a candidate before dispatch; never overwrite an existing snapshot.
+m_freeze_file <- function(path, root, directory="artifacts/versions") {
+  stopifnot(m_text(path),m_text(directory))
+  ref<-m_file_ref(path,root)
+  if(!m_ref_ok(ref,root))stop("Unsafe or missing candidate")
+  target<-paste0(directory,"/",ref$sha256,"-",basename(path))
+  if(grepl("^(/|[A-Za-z]:)",target) || any(strsplit(target,"/",fixed=TRUE)[[1]] %in% c("",".","..")))stop("Unsafe snapshot directory")
+  dir.create(file.path(root,directory),recursive=TRUE,showWarnings=FALSE)
+  if(file.exists(file.path(root,target))) {
+    if(!identical(m_hash(file.path(root,target)),ref$sha256))stop("Conflicting immutable snapshot")
+  } else if(!file.copy(file.path(root,path),file.path(root,target),overwrite=FALSE))stop("Snapshot failed")
+  m_file_ref(target,root)
+}
+# D-27: set inherited environment explicitly; system2(env=) is not used.
+m_run_child <- function(script,args=character(),environment=character(),log) {
+  if(!file.exists(script) || file.exists(log))stop("Existing script and a new log path required")
+  if(length(environment) && (is.null(names(environment)) || any(!nzchar(names(environment))) || anyDuplicated(names(environment))))stop("Named environment required")
+  before<-setNames(Sys.getenv(names(environment),unset=NA_character_),names(environment))
+  on.exit({for(k in names(environment))if(is.na(before[[k]]))Sys.unsetenv(k) else do.call(Sys.setenv,setNames(list(before[[k]]),k))},add=TRUE)
+  if(length(environment)) do.call(Sys.setenv,as.list(environment))
+  system2(file.path(R.home("bin"),"Rscript"),c("--vanilla",shQuote(normalizePath(script,winslash="/")),vapply(args,shQuote,character(1))),stdout=log,stderr=log)
 }

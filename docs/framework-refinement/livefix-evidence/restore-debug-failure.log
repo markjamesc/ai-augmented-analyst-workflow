@@ -1,0 +1,19 @@
+
+ *** caught segfault ***
+address 0x55a312bdeba2, cause 'memory not mapped'
+
+Traceback:
+ 1: get(Info[i, 1], envir = env)
+ 2: registerS3methods(nsInfo$S3methods, package, env)
+ 3: loadNamespace(x)
+ 4: .instPkgFields(fields)
+ 5: installed.packages()
+ 6: as.data.frame(installed.packages()[, c("Package", "Version",     "LibPath"), drop = FALSE])
+ 7: is.data.frame(x)
+ 8: utils::write.table(as.data.frame(installed.packages()[, c("Package",     "Version", "LibPath"), drop = FALSE]), a[[3]], row.names = FALSE,     col.names = TRUE, sep = ",", dec = ".", qmethod = "double")
+ 9: eval(expr, p)
+10: eval(expr, p)
+11: eval.parent(Call)
+12: write.csv(as.data.frame(installed.packages()[, c("Package", "Version",     "LibPath"), drop = FALSE]), a[[3]], row.names = FALSE)
+An irrecoverable exception occurred. R is aborting now ...
+Segmentation fault

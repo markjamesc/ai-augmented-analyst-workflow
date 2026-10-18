@@ -759,6 +759,38 @@
           "rationale": {
             "type": "string",
             "minLength": 1
+          },
+          "field_nullability": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "numeric_missingness": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": [
+                "flag_field",
+                "missing_value",
+                "present_value",
+                "missing_token"
+              ],
+              "properties": {
+                "flag_field": {
+                  "type": "string"
+                },
+                "missing_value": {
+                  "type": "string"
+                },
+                "present_value": {
+                  "type": "string"
+                },
+                "missing_token": {
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       }
@@ -1059,7 +1091,9 @@
         "oracle_reviewer",
         "output_rules",
         "packet_requirements",
-        "validation_components"
+        "validation_components",
+        "source_contract",
+        "checkpoint_output_rules"
       ],
       "properties": {
         "version": {
@@ -1109,6 +1143,47 @@
             "configuration",
             "input"
           ]
+        },
+        "source_contract": {
+          "type": "object",
+          "required": [
+            "kind",
+            "rationale"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "sql",
+                "file"
+              ]
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "checkpoint_output_rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "checkpoint_id",
+              "field",
+              "nullable"
+            ],
+            "properties": {
+              "checkpoint_id": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "nullable": {
+                "type": "boolean"
+              }
+            }
+          }
         }
       }
     }
