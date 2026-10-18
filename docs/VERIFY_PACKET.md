@@ -55,3 +55,8 @@ Also locked: `docs/MASTER_PROMPT.md` (portable orchestration language for new pr
 ## Pass / revise / lock disposition
 
 **Locked** after revise: all five upgrades present with FORWARD markers, prior-pack exemption in general language, Mode A/B bright line intact, Master Prompt matches frameworks, and **generalize-no-case-branding** applied (no city / case / project-construct names in general method docs).
+
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.

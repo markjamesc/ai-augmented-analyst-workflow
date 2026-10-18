@@ -87,3 +87,8 @@ This is a procedural certification layer. It verifies observable artifacts, orde
 The initial enforcement is definitional rather than a security sandbox: work outside the gate may technically occur, but it cannot produce a valid protocol certificate.
 
 See [`../procedure-gate/README.md`](../procedure-gate/README.md) for commands and receipt details.
+
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.

@@ -218,7 +218,7 @@ framework_hashes <- function(procedure) {
     "docs/r-workflow-gate-enforcement.md",
     "workflow-gate/workflow_gate.R", "procedure-gate/procedure_gate.R",
     "methodology/contracts.R", "methodology/tools.R", "methodology/schema.json",
-    "docs/METHODOLOGY_HARDENING.md"
+    "docs/METHODOLOGY_HARDENING.md", "docs/SEND_QUEUE_PROTOCOL.md", "tools/acceptance.py", "methodology/operations.schema.json"
   ))
   values <- files %>% map(function(relative_path) {
     path <- file.path(procedure_repo_root(), relative_path)
@@ -486,6 +486,7 @@ procedure_begin <- function(project_root, step_id) {
   record <- save_checks(project_root, step_id, "begin", checks)
   if (!checks_pass(checks)) return(list(status = "BLOCKED", step = step_id, checks = checks))
   state$current_step <- step_id
+  state$current_authorization <- list(path = substring(record$path, nchar(normalizePath(project_root, winslash="/"))+2), sha256 = record$sha256)
   state$updated_at_utc <- timestamp_utc()
   save_state(state, project_root)
   list(status = "AUTHORIZED", step = step_id, framework = step$framework, check_report = record)
@@ -508,6 +509,7 @@ procedure_complete <- function(project_root, step_id) {
     check_result("Required receipt exists and parses", is.list(receipt), step$artifact)
   )
   checks <- c(checks, validate_stage_receipt(step_id, receipt, project_root))
+  checks <- c(checks, m_operations(project_root, state, step_id))
 
   workflow <- NULL
   if (identical(step_id, "execution") && checks_pass(checks)) {
@@ -528,7 +530,8 @@ procedure_complete <- function(project_root, step_id) {
   state$completed_steps[[step_id]] <- list(
     completed_at_utc = timestamp_utc(),
     artifact = artifact_record,
-    supporting_files = m_refs(receipt),
+    supporting_files = c(m_refs(receipt), list(list(path=paste0("artifacts/operations/",step_id,".json"),sha256=m_hash(file.path(project_root,"artifacts/operations",paste0(step_id,".json")))))),
+    authorization = state$current_authorization,
     check_report = list(path = record$path, sha256 = record$sha256)
   )
   if (identical(step_id, "execution")) {
@@ -688,6 +691,7 @@ procedure_status <- function(project_root) {
 ######### Certify the completed run ###############################################################
 
 procedure_finalize <- function(project_root) {
+  load_methodology()
   state <- read_state(project_root)
   procedure <- read_procedure()
   paths <- procedure_paths(project_root)
@@ -703,6 +707,9 @@ procedure_finalize <- function(project_root) {
     check_result("Stage 5 deliverables unchanged", verify_file_manifest(state$completed_steps$finish$deliverables, project_root), "deliverables must match their Finish completion hashes"),
     check_result("Controlling documents unchanged", verify_framework_hashes(state), "framework hashes must match run start")
   )
+  for (stage in required) checks <- c(checks, m_operations(project_root,state,stage,final=TRUE))
+  inventory <- tryCatch(m_inventory(c(m_refs(state$completed_steps), list(list(path="artifacts/workflow_gate_status.json",sha256=state$workflow_gate$report_sha256), list(path="artifacts/operations/revocations.json",sha256=m_hash(file.path(project_root,"artifacts/operations/revocations.json"))))), project_root),error=function(e) NULL)
+  checks <- c(checks,list(check_result("Evidence dependency closure",!is.null(inventory),"All referenced files must exist at authoritative root with matching hashes")))
   record <- save_checks(project_root, "final", "certification", checks)
   if (!checks_pass(checks)) {
     if (file.exists(paths$certificate)) {
@@ -742,7 +749,13 @@ procedure_finalize <- function(project_root) {
   if (length(amendment_history(state)) > 0L) certificate$amendment_history <- amendment_history(state)
   certificate$predecessor <- state$predecessor
   certificate$assurance <- read_artifact_safe(file.path(project_root, "artifacts/stage5_interpretation_status.json"))$assurance
-  certificate$assurance$procedure <- "complied"
+  inventory_path <- paste0("artifacts/procedure/",basename(record$path),"-inventory.json")
+  write_json_atomic(inventory,file.path(project_root,inventory_path))
+  certificate$evidence_inventory <- list(path=inventory_path,sha256=m_hash(file.path(project_root,inventory_path)))
+  certificate$assurance$procedure <- "recorded_checks_passed"
+  certificate$assurance$process_order <- "recorded_order_verified"
+  certificate$assurance$manual_send_prevention <- "not_demonstrated"
+  certificate$assurance$deviations <- "see_frozen_stage_operations"
   certificate$assurance_note <- "Recorded checks and attestations; not a proof of scientific truth, AI independence, or profitable action."
   certificate$framework_hashes <- state$framework_hashes
   certificate$certificate_sha256 <- digest::digest(certificate, algo = "sha256")

@@ -119,3 +119,8 @@ This repository is not open source and does not grant permission to copy, distri
 ## Prospective methodology-v3 release candidate
 
 [Methodology hardening design and migration](docs/METHODOLOGY_HARDENING.md) integrates the final ablation dispositions with research-backed contracts and R enforcement. This branch is a Step-2 implementation candidate, not evidence that the complete three-AI workflow improves accuracy. See [implementation map](docs/framework-refinement/HARDENING_IMPLEMENTATION.md).
+
+
+## Prospective acceptance remediation
+
+New runs must follow [docs/SEND_QUEUE_PROTOCOL.md](docs/SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.

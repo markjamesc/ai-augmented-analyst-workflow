@@ -1,2 +1,4 @@
 # Local three-AI verify dumps (may contain case branding); not part of portable method
 docs/forward-verify/
+
+__pycache__/

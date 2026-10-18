@@ -38,3 +38,8 @@ Historical case studies do not need to be retrofitted merely for conformity. The
 | Cross-review (revise→lock) | [CROSS_REVIEW.md](CROSS_REVIEW.md) |
 
 Additive FORWARD sections land in Stages 1–2 Framing, Stage 3 measurement design, and Stage 4 validation frameworks. They do **not** rewrite prior locked / frozen historical Stage 3/4 packs. Case-specific evidence lives in project repos only.
+
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.

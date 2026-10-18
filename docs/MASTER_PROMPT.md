@@ -307,3 +307,16 @@ The first two items record the published framework lock. The remaining items are
 - [x] Owner approve revise→lock→push (recorded in CROSS_REVIEW.md)
 - [ ] Copy upgraded clauses into the **new** project’s master orchestration prompt
 - [ ] Extend that project’s `stage2_framing.json` / `stage3_locked_design.json` with required `capacity_stance` / `ml_mode`
+
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.
+
+### Required escalation and pre-approval policy
+
+Generate `templates/preapproval_sheet.json` at Start. Each application records unique ID, run, stage, exact scope, owner verbatim file/hash, wording author, granted/expiry UTC, conditions and evidence, revocation rule, action time and application. Cover stage sign-offs, Validation Gate, structural review, human Finish, final certification, limitations, repair scope, publication, checkpoint replacement, cleanup and results delivery; mark inapplicable items with reasons. Coordinator-written approval wording must be disclosed. A grant is not evidence that its conditions held. A later revocation overrides a prior grant, including a prior 'tonight' grant. Record known revocations in `artifacts/operations/revocations.json` as `{run_id, events:[{approval_id,recorded_at_utc,owner_record:{path,sha256}}]}`. No fabricated human reading or stakeholder confirmation.
+
+Owner-only actions, unless already explicitly authorized for the exact scope: writes to live systems or the DB; push, merge, PR, email, publish or post; deletions; changing locked values or gate rules; loosening a check or accepting risk; sign-offs not pre-approved; anything that changes a result. Escalate missing/expired/failed conditional consent. Existing authorization persists within scope.
+
+Act and log within existing authority: repair packets and reruns, coordinator tooling fixes, and bounded PC-offline retries every five minutes, at most three, checking state before each retry. A serious item blocks its own branch and dependent work, not unrelated authorized work. Batch questions without delaying ready authorized sends. Never use silence as new consent. Stage 5 cannot run alongside unfinished validation of repaired code.

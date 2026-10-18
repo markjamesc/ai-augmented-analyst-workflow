@@ -1561,3 +1561,8 @@ Do not rewrite frozen historical Stage 3/4 evidence packs to force this schema. 
 This document is a canonical Stage 4 framework artifact. Proposed reusable changes to the execution, source-gate, fixture, reconciliation, independence, or review architecture should be evaluated through the [Three-Model Framework Ablation Protocol](framework-refinement/three-model-ablation-protocol.md), under the frozen [Ablation Constitution](framework-refinement/ablation-constitution.md).
 
 Only ablations returning `KEEP` may authorize a reusable Stage 4 framework change. Mechanical disagreement between Builder and Validator is a `HALT`, not a silent `REVERT`, so that disagreement retains its diagnostic value.
+
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.

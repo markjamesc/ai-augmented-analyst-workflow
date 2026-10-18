@@ -35,3 +35,8 @@ Run a case-brand audit over `docs/` and `templates/` (local `docs/forward-verify
 ## Lock confirmation
 
 Five FORWARD upgrades + Master Prompt standing process rules are locked on `main` for prospective projects. Prior locked packs are not retrofitted.
+
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.

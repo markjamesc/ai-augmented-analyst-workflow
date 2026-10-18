@@ -57,3 +57,20 @@ m_replay <- function(script, frozen_root, output_root, outputs, report_directory
     exit_status = status, inputs_unchanged = inputs_unchanged, script_sha256 = script_hash, outputs = pairs, console = log,
     limitation = "Exact deterministic-output replay; use canonical keyed output serialization. Hosted AI text is not regenerated."), report_directory, "replay")
 }
+
+# Execute a reviewed test closure against bound component bytes. Not an AI-response simulator.
+m_bound_test <- function(id, components, root, run, report_directory = "reports/versioned-tests") {
+  root <- normalizePath(root, winslash="/", mustWork=TRUE)
+  if(!m_text(id) || !is.function(run) || !m_refs_ok(components,root)) stop("Invalid test inputs")
+  before <- components
+  failure <- NULL
+  passed <- tryCatch(isTRUE(run()),error=function(e) {failure <<- conditionMessage(e); FALSE})
+  passed <- passed && m_refs_ok(before,root)
+  report <- list(id=id,result=if(passed) "PASS" else "FAIL",components=before,failure=failure,
+                 recorded_at_utc=format(Sys.time(),"%Y-%m-%dT%H:%M:%SZ",tz="UTC"))
+  dir.create(file.path(root,report_directory),recursive=TRUE,showWarnings=FALSE)
+  path <- tempfile("test-",tmpdir=file.path(root,report_directory),fileext=".json")
+  jsonlite::write_json(report,path,auto_unbox=TRUE,pretty=TRUE)
+  report$report <- m_file_ref(substring(path,nchar(root)+2),root)
+  report
+}

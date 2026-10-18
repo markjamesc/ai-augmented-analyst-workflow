@@ -24,6 +24,8 @@ stopifnot(identical(gate$`%not_in%`(c("start", "finish"), "start"), c(FALSE, TRU
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
 run_gate <- function(...) {
+  a <- list(...)
+  if (identical(a[[1]], "complete") && exists("t_operations")) t_operations(a[[2]],a[[3]])
   output <- system2(
     file.path(R.home("bin"), "Rscript"),
     c(shQuote(gate_script), vapply(list(...), shQuote, character(1))),

@@ -1,0 +1,170 @@
+{
+  "run_id": "NOT_SET__run",
+  "items": [
+    {
+      "id": "stage_signoff",
+      "stage": "NOT_SET__stage",
+      "scope": "stage_signoff",
+      "wording_author": "NOT_SET__author",
+      "owner_record": {
+        "path": "approvals/owner.txt",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "granted_at_utc": "NOT_SET__time",
+      "expires_at_utc": "NOT_SET__time",
+      "conditions": [],
+      "revocation_rule": "Any later owner revocation overrides this grant",
+      "applications": []
+    },
+    {
+      "id": "validation",
+      "stage": "NOT_SET__stage",
+      "scope": "validation",
+      "wording_author": "NOT_SET__author",
+      "owner_record": {
+        "path": "approvals/owner.txt",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "granted_at_utc": "NOT_SET__time",
+      "expires_at_utc": "NOT_SET__time",
+      "conditions": [],
+      "revocation_rule": "Any later owner revocation overrides this grant",
+      "applications": []
+    },
+    {
+      "id": "structural_review",
+      "stage": "NOT_SET__stage",
+      "scope": "structural_review",
+      "wording_author": "NOT_SET__author",
+      "owner_record": {
+        "path": "approvals/owner.txt",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "granted_at_utc": "NOT_SET__time",
+      "expires_at_utc": "NOT_SET__time",
+      "conditions": [],
+      "revocation_rule": "Any later owner revocation overrides this grant",
+      "applications": []
+    },
+    {
+      "id": "human_finish",
+      "stage": "NOT_SET__stage",
+      "scope": "human_finish",
+      "wording_author": "NOT_SET__author",
+      "owner_record": {
+        "path": "approvals/owner.txt",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "granted_at_utc": "NOT_SET__time",
+      "expires_at_utc": "NOT_SET__time",
+      "conditions": [],
+      "revocation_rule": "Any later owner revocation overrides this grant",
+      "applications": []
+    },
+    {
+      "id": "final_certification",
+      "stage": "NOT_SET__stage",
+      "scope": "final_certification",
+      "wording_author": "NOT_SET__author",
+      "owner_record": {
+        "path": "approvals/owner.txt",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "granted_at_utc": "NOT_SET__time",
+      "expires_at_utc": "NOT_SET__time",
+      "conditions": [],
+      "revocation_rule": "Any later owner revocation overrides this grant",
+      "applications": []
+    },
+    {
+      "id": "limitations",
+      "stage": "NOT_SET__stage",
+      "scope": "limitations",
+      "wording_author": "NOT_SET__author",
+      "owner_record": {
+        "path": "approvals/owner.txt",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "granted_at_utc": "NOT_SET__time",
+      "expires_at_utc": "NOT_SET__time",
+      "conditions": [],
+      "revocation_rule": "Any later owner revocation overrides this grant",
+      "applications": []
+    },
+    {
+      "id": "repairs",
+      "stage": "NOT_SET__stage",
+      "scope": "repairs",
+      "wording_author": "NOT_SET__author",
+      "owner_record": {
+        "path": "approvals/owner.txt",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "granted_at_utc": "NOT_SET__time",
+      "expires_at_utc": "NOT_SET__time",
+      "conditions": [],
+      "revocation_rule": "Any later owner revocation overrides this grant",
+      "applications": []
+    },
+    {
+      "id": "publish",
+      "stage": "NOT_SET__stage",
+      "scope": "publish",
+      "wording_author": "NOT_SET__author",
+      "owner_record": {
+        "path": "approvals/owner.txt",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "granted_at_utc": "NOT_SET__time",
+      "expires_at_utc": "NOT_SET__time",
+      "conditions": [],
+      "revocation_rule": "Any later owner revocation overrides this grant",
+      "applications": []
+    },
+    {
+      "id": "checkpoint_replacement",
+      "stage": "NOT_SET__stage",
+      "scope": "checkpoint_replacement",
+      "wording_author": "NOT_SET__author",
+      "owner_record": {
+        "path": "approvals/owner.txt",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "granted_at_utc": "NOT_SET__time",
+      "expires_at_utc": "NOT_SET__time",
+      "conditions": [],
+      "revocation_rule": "Any later owner revocation overrides this grant",
+      "applications": []
+    },
+    {
+      "id": "cleanup",
+      "stage": "NOT_SET__stage",
+      "scope": "cleanup",
+      "wording_author": "NOT_SET__author",
+      "owner_record": {
+        "path": "approvals/owner.txt",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "granted_at_utc": "NOT_SET__time",
+      "expires_at_utc": "NOT_SET__time",
+      "conditions": [],
+      "revocation_rule": "Any later owner revocation overrides this grant",
+      "applications": []
+    },
+    {
+      "id": "results_delivery",
+      "stage": "NOT_SET__stage",
+      "scope": "results_delivery",
+      "wording_author": "NOT_SET__author",
+      "owner_record": {
+        "path": "approvals/owner.txt",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "granted_at_utc": "NOT_SET__time",
+      "expires_at_utc": "NOT_SET__time",
+      "conditions": [],
+      "revocation_rule": "Any later owner revocation overrides this grant",
+      "applications": []
+    }
+  ]
+}

@@ -1658,3 +1658,8 @@ Prior locked Stage 3 measurement designs and Stage 4 packs remain historical. Re
 
 
 End of framework.
+
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.

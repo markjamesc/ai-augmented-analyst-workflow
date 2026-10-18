@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Acceptance recorded operations",
+  "type": "object",
+  "required": [
+    "version",
+    "run_id",
+    "stage",
+    "authorization",
+    "completed_at_utc",
+    "approvals",
+    "sends",
+    "all_sends_recorded",
+    "transcript_index",
+    "deviations"
+  ],
+  "properties": {
+    "version": {
+      "const": "acceptance-v1"
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "stage": {
+      "enum": [
+        "start",
+        "framing",
+        "design",
+        "execution",
+        "finish"
+      ]
+    },
+    "authorization": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ]
+    },
+    "completed_at_utc": {
+      "type": "string"
+    },
+    "approvals": {
+      "type": "array"
+    },
+    "all_sends_recorded": {
+      "type": "boolean"
+    },
+    "transcript_index": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ]
+    },
+    "deviations": {
+      "type": "array"
+    },
+    "sends": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "ai",
+          "nonce",
+          "packet",
+          "attachments",
+          "reply",
+          "capture",
+          "depends_on",
+          "approval_id",
+          "ready_at_utc",
+          "sent_at_utc",
+          "captured_at_utc",
+          "verified_at_utc"
+        ]
+      }
+    }
+  }
+}

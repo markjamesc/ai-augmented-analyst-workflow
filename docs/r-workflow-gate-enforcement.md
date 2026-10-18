@@ -238,3 +238,8 @@ The gate exists to eliminate a narrower failure mode: **the workflow silently cl
 ## FORWARD — Evidence receipts
 
 For new / forward publishable project packs, treat `artifacts/workflow_gate_status.json` as a **required** procedural receipt alongside lineage and scorecard artifacts (minimum schema: status, `stage5_allowed`, `design_version`, fixture freeze hash, source snapshot id, recon result, validation result, timestamp). See the Stage 4 FORWARD evidence-package schema and [VERIFY_PACKET.md](VERIFY_PACKET.md). Prospective only — do not retrofit prior locked / frozen historical packs merely for conformity.
+
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.

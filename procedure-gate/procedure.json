@@ -1,6 +1,6 @@
 {
   "procedure_id": "five-stage-ai-augmented-analyst-workflow",
-  "procedure_version": "2.0-methodology-v3",
+  "procedure_version": "2.1-acceptance-v1",
   "steps": [
     {
       "id": "start",

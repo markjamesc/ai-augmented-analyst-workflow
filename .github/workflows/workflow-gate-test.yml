@@ -9,6 +9,9 @@ on:
       - "templates/procedure-gate/**"
       - "docs/**"
       - "methodology/**"
+      - "tools/**"
+      - "templates/send_queue.json"
+      - "templates/preapproval_sheet.json"
       - "templates/methodology/**"
       - ".github/workflows/workflow-gate-test.yml"
   push:
@@ -18,6 +21,7 @@ on:
       - portfolio-refresh-20260920
       - "methodology-hardening-*"
       - "regression-acceptance-*"
+      - "acceptance-remediation-*"
     paths:
       - "workflow-gate/**"
       - "procedure-gate/**"
@@ -25,6 +29,9 @@ on:
       - "templates/procedure-gate/**"
       - "docs/**"
       - "methodology/**"
+      - "tools/**"
+      - "templates/send_queue.json"
+      - "templates/preapproval_sheet.json"
       - "templates/methodology/**"
       - ".github/workflows/workflow-gate-test.yml"
 
@@ -62,3 +69,8 @@ jobs:
           python3 -m venv "$RUNNER_TEMP/schema-venv"
           "$RUNNER_TEMP/schema-venv/bin/pip" install jsonschema==4.23.0
           "$RUNNER_TEMP/schema-venv/bin/python" methodology/tests/test_schema.py .
+
+      - name: Acceptance remediation regression
+        run: |
+          Rscript methodology/tests/test_remediation.R .
+          python3 -m unittest discover -s tools -p "test_acceptance.py"

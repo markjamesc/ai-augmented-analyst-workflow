@@ -121,3 +121,8 @@ The earlier review was a targeted critical review, not a registered systematic r
 11. TRIPOD+AI (2024), https://doi.org/10.1136/bmj-2023-078378; Hughes et al. (2019), https://doi.org/10.1093/ije/dyz032 — prediction reporting and context-dependent missingness methods.
 12. Morris et al. (2019), https://doi.org/10.1002/sim.8086 — prespecified simulation aims, generators, targets, methods and performance measures; synthetic truth is generator-specific.
 13. NIST AI 600-1 (2024), https://doi.org/10.6028/NIST.AI.600-1 — provenance and context-specific evaluation; no guarantee from model agreement.
+
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.

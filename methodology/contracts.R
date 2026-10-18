@@ -1,6 +1,6 @@
 # Prospective methodology-v3. Pure validators: never execute project commands.
 m_text <- function(x) is.character(x) && length(x) == 1L && !is.na(x) && nzchar(trimws(x)) &&
-  !grepl("^(TODO|TBD|REPLACE|PENDING|\\{\\{)", trimws(x), ignore.case = TRUE)
+  !grepl("^(TODO|TBD|REPLACE|PENDING|NOT_SET__|\\{\\{)", trimws(x), ignore.case = TRUE)
 m_strings <- function(x, empty = FALSE) {
   if (is.null(x) || !(is.list(x) || is.character(x))) return(FALSE)
   if (!length(x)) return(empty)
@@ -44,6 +44,7 @@ m_checks <- function(fun) {
   checks
 }
 m_design <- function(s3, s2 = NULL, s1 = NULL, root) m_checks(function(add) {
+  for (x in m_operational_design(s3, root)) add(x$check, x$result == "PASS", x$detail)
   m <- s3$methodology
   add("version", identical(m$version, "methodology-v3"), "New runs require methodology-v3; old packs use their pinned referee")
   t <- m$analytical_target
@@ -142,6 +143,7 @@ m_execution <- function(s3, s4, root) m_checks(function(add) {
   }
   ref <- s4$evidence_receipts$methodology
   r <- if (m_ref_ok(ref, root)) m_read(file.path(root, ref$path)) else NULL
+  for (x in m_validation(s3, r, root)) add(x$check, x$result == "PASS", x$detail)
   add("methodology evidence", is.list(r) && identical(r$status, "PASS") && identical(r$target_id, m$analytical_target$id), "Actual output identities and target must match")
   cps <- r$checkpoints
   add("checkpoint IDs", m_rows(cps) && m_equal_ids(lapply(cps, function(x) x$id), lapply(m$checkpoints, function(x) x$id)), "No missing or duplicate checkpoints")
@@ -199,8 +201,9 @@ m_finish <- function(s3, s4, s5, root) m_checks(function(add) {
       m_strings(c$premise_ids, TRUE) && all(unlist(c$premise_ids) %in% vapply(s3$methodology$premises, function(x) x$id, character(1))) &&
       identical(c$numerical_audit, "PASS") && identical(c$inference_review, "PASS") && identical(c$unresolved_objections, 0L) &&
       m_ref_ok(c$review_evidence, root) && m_ref_ok(c$deliverable, root) && c$deliverable$path %in% unlist(s5$deliverables), "Numbers and inferential warrants reviewed separately; gate does not establish truth")
-    if (identical(c$type, "recommendation")) add(paste("action values", c$id), m_text(c$owner_tradeoff) && m_text(c$action) && m_text(c$evidence_tag) && m_text(c$tag_assigned_by), "C37 tag assigned by coordinator from reviewed claims; action lexicon locked in Design")
+    if (identical(c$type, "recommendation") || m_words(c$wording, s3$methodology$operational$action_lexicon)) add(paste("action values", c$id), m_text(c$owner_tradeoff) && m_text(c$action) && m_text(c$evidence_tag) && m_text(c$tag_assigned_by), "C37 tag assigned by coordinator from reviewed claims; action lexicon locked in Design")
   }
+  if (any(vapply(claims, function(c) m_words(c$wording, s3$methodology$operational$finality_lexicon), logical(1)))) add("finality review", m_ref_ok(s5$monitoring_next_question_review, root), "Finality wording requires explicit monitoring/next-question interpretation")
   add("claim inventory audit", identical(s5$claim_coverage_review$status, "PASS") && m_ref_ok(s5$claim_coverage_review$report, root), "No automatic natural-language completeness claim")
   if (identical(s5$assurance$outcome_evaluation, "evaluated")) add("evaluated outcome evidence", m_ref_ok(s5$outcome_followup$evaluation_report, root), "Evaluated outcomes require a linked report, not a status alone")
   add("revision disposition", m_enum(s5$revision$status, c("UNCHANGED", "PASS")) && identical(s5$revision$unresolved_flags, 0L) && m_ref_ok(s5$revision$report, root), "C48/C50 one consolidated revision plus mechanical verification; unresolved FLAG blocks Finish")
@@ -231,3 +234,91 @@ m_change <- function(change) m_checks(function(add) {
   if (identical(change$change_class, "implementation_correction")) add("unchanged design", identical(change$target_effect, "unchanged") && m_text(change$locked_clause), "A correction implements the same locked clause")
   if (identical(change$change_class, "exploratory")) add("exploration separate", identical(change$confirmatory, FALSE), "Exploration cannot silently amend confirmatory evidence")
 })
+
+# acceptance-v1: prospective recorded-process checks; never a browser interlock.
+m_pass <- function(x) length(x) > 0 && all(vapply(x, function(z) identical(z$result, "PASS"), logical(1)))
+m_time <- function(x) {
+  if (!m_text(x) || !grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$", x)) return(NA_real_)
+  as.numeric(as.POSIXct(x, format = "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"))
+}
+m_words <- function(text, lexicon) {
+  words <- unlist(strsplit(tolower(gsub("_", " ", paste(text, collapse = " "))), "[^[:alnum:]]+"))
+  any(tolower(unlist(lexicon)) %in% words)
+}
+m_operational_design <- function(s3, root) m_checks(function(add) {
+  o <- s3$methodology$operational
+  add("operational version", identical(o$version, "acceptance-v1"), "Prospective contracts require acceptance-v1")
+  add("language rules", m_strings(o$action_lexicon) && m_strings(o$finality_lexicon) && m_text(o$negation_rule) && m_text(o$evidence_tag_rule), "Lock lexical triggers; contextual review remains human/AI work")
+  add("frozen fixture oracle", m_ref_ok(o$fixture_inputs, root) && m_ref_ok(o$fixture_expected, root) && m_text(o$oracle_basis) && m_text(o$oracle_reviewer), "Input and independently justified expected answers frozen in Design")
+  add("output rules", m_rows(o$output_rules) && m_equal_ids(lapply(o$output_rules, function(x) x$field), s3$required_outputs) && all(vapply(o$output_rules, function(x) m_enum(x$kind, c("literal", "enum", "computed")) && m_text(x$rule), logical(1))), "Every output defines literal, enum or computed semantics")
+  add("packet contract", m_strings(o$packet_requirements) && all(c("output_rules", "checkpoints", "receipt_dependencies", "accepted_code") %in% unlist(o$packet_requirements)), "Execution packets carry authoritative sections, not summaries")
+  v <- o$validation_components
+  add("test component coverage", is.list(v) && setequal(names(v), c("R-A", "R-B", "harness", "configuration", "input")) && all(vapply(v, m_strings, logical(1))) && all(vapply(unlist(v), function(p) !grepl("^(/|[A-Za-z]:)", p) && !any(strsplit(p, "/", fixed=TRUE)[[1]] %in% c("", ".", "..")), logical(1))), "Lock project-relative component paths, bind hashes at execution")
+  for (x in s3$methodology$metamorphic) if (isTRUE(x$applicable)) add(paste("MR discrimination", x$id), m_enum(x$coverage_type, c("nonconstant", "boundary", "negative_control")) && m_text(x$detectable_defect), "Do not certify effectiveness from an empty or constant output alone")
+})
+m_validation <- function(s3, receipt, root) m_checks(function(add) {
+  v <- receipt$test_versions; locked <- s3$methodology$operational$validation_components
+  add("validation component identities", is.list(v$components) && setequal(names(v$components), names(locked)) && all(vapply(names(locked), function(k) m_rows(v$components[[k]]) && m_refs_ok(v$components[[k]], root) && m_equal_ids(lapply(v$components[[k]], function(x) x$path), locked[[k]]), logical(1))), "Every test binds current R-A/R-B, harness, configuration and input bytes")
+  expected <- c("fixtures:R-A", "fixtures:R-B", "replay", "reconciliation", unlist(lapply(Filter(function(x) isTRUE(x$applicable), s3$methodology$metamorphic), function(x) paste("metamorphic", x$id, c("R-A", "R-B"), sep=":"))))
+  add("versioned test coverage", m_rows(v$tests) && m_equal_ids(lapply(v$tests, function(x) x$id), as.list(expected)), "No missing or duplicate versioned tests")
+  for (x in v$tests) {
+    r <- if (m_ref_ok(x$report, root)) m_read(file.path(root, x$report$path)) else NULL
+    add(paste("versioned result", x$id), identical(x$result, "PASS") && identical(x$components, v$components) && identical(r$id, x$id) && identical(r$result, "PASS") && identical(r$components, x$components) && identical(r$recorded_at_utc, x$recorded_at_utc) && is.finite(m_time(x$recorded_at_utc)) && m_time(x$recorded_at_utc) <= as.numeric(Sys.time())+2, "Actual report embeds tested versions; refreshing a receipt wrapper is insufficient")
+  }
+  add("triage register", m_rows(receipt$triage) && all(vapply(receipt$triage, function(x) m_text(x$id) && m_text(x$disposition) && (identical(x$status, "resolved") || (identical(x$status, "accepted_limitation") && !identical(x$severity, "blocking") && m_ref_ok(x$owner_approval, root))) && m_ref_ok(x$evidence, root), logical(1))), "Blocking findings must be repaired; limitation acceptance is owner-reserved")
+  e <- receipt$reproducibility; restore <- if(m_ref_ok(e$restore_report, root)) m_read(file.path(root,e$restore_report$path)) else NULL
+  add("environment restoration", m_ref_ok(e$environment_spec, root) && identical(restore$status,"PASS") && isTRUE(restore$fresh_environment) && identical(restore$environment_spec,e$environment_spec) && m_ref_ok(restore$console,root), "A package list alone is not an environment restoration test")
+})
+m_approval <- function(a, run, stage, scope, at, root, revocations) {
+  is.list(a) && m_text(a$id) && identical(a$run_id,run) && identical(a$stage,stage) && identical(a$scope,scope) && m_text(a$wording_author) && m_ref_ok(a$owner_record,root) &&
+    is.finite(m_time(a$granted_at_utc)) && is.finite(m_time(a$expires_at_utc)) && m_time(a$granted_at_utc)<=at && at<=m_time(a$expires_at_utc) &&
+    m_rows(a$conditions) && all(vapply(a$conditions,function(c) identical(c$status,"PASS") && m_text(c$condition) && m_ref_ok(c$evidence,root),logical(1))) &&
+    !any(vapply(revocations,function(r) identical(r$approval_id,a$id),logical(1)))
+}
+m_operations <- function(root,state,stage,final=FALSE) m_checks(function(add) {
+  o <- m_read(file.path(root,"artifacts/operations",paste0(stage,".json")))
+  auth <- if(identical(state$current_step,stage)) state$current_authorization else state$completed_steps[[stage]]$authorization
+  br <- if(m_ref_ok(auth,root)) m_read(file.path(root,auth$path)) else NULL
+  add("operations identity", identical(o$version,"acceptance-v1") && identical(o$run_id,state$run_id) && identical(o$stage,stage) && identical(o$authorization,auth) && identical(br$step,stage) && identical(br$phase,"begin") && identical(br$result,"PASS"), "Exact successful begin authorization is required")
+  rev <- m_read(file.path(root,"artifacts/operations/revocations.json"))
+  add("revocation ledger", identical(rev$run_id,state$run_id) && m_rows(rev$events) && all(vapply(rev$events,function(r) m_text(r$approval_id) && is.finite(m_time(r$recorded_at_utc)) && m_ref_ok(r$owner_record,root),logical(1))), "Known revocations override prior grants; unseen messages are outside code enforcement")
+  add("approval IDs", m_rows(o$approvals) && !anyDuplicated(vapply(o$approvals,function(x)x$id,character(1))), "Unique explicit applications; no blanket approval")
+  at <- m_time(o$completed_at_utc)
+  add("completion timestamp", is.finite(at) && at<=as.numeric(Sys.time())+2 && at>=m_time(br$checked_at_utc),"Machine-recorded UTC chronology")
+  scopes <- c("stage_signoff",if(final && stage=="finish") "final_certification")
+  for(scope in scopes) add(paste("approval",scope), any(vapply(o$approvals,function(a)m_approval(a,state$run_id,stage,scope,at,root,rev$events),logical(1))), "Check grant, expiry, scope, conditions and known revocation")
+  sends <- o$sends
+  add("send coverage", m_rows(sends) && length(sends)>0 && !anyDuplicated(vapply(sends,function(x)x$id,character(1))) && isTRUE(o$all_sends_recorded) && m_ref_ok(o$transcript_index,root), "Completeness attestation remains procedural")
+  for(s in sends) {
+    times <- vapply(c("ready_at_utc","sent_at_utc","captured_at_utc","verified_at_utc"),function(k)m_time(s[[k]]),numeric(1))
+    add(paste("send chronology",s$id), all(is.finite(times)) && all(diff(times)>=0) && times[1]>=m_time(br$checked_at_utc) && times[4]<=at, "No stage send before authorization; no future or reversed captures")
+    add(paste("send identity",s$id), m_text(s$id) && m_text(s$ai) && m_text(s$nonce) && m_ref_ok(s$packet,root) && m_refs_ok(s$attachments,root,FALSE) && m_ref_ok(s$reply,root) && m_ref_ok(s$capture,root), "Preserve exact packet, files, reply and capture record")
+    p <- if(m_ref_ok(s$packet,root)) m_read(file.path(root,s$packet$path)) else NULL
+    add(paste("packet binding",s$id), identical(p$run_id,state$run_id) && identical(p$stage,stage) && identical(p$authorization,auth) && identical(p$send_id,s$id) && identical(p$nonce,s$nonce) && identical(p$attachments,s$attachments),"No stale packet or substituted attachment")
+    if(stage=="execution") {
+      locked <- m_read(file.path(root,"artifacts/stage3_locked_design.json"))$methodology
+      add(paste("execution packet completeness",s$id), identical(p$output_rules,locked$operational$output_rules) && identical(p$checkpoints,locked$checkpoints) && identical(p$receipt_dependencies,locked$receipt_dependencies) && m_rows(p$accepted_code) && m_refs_ok(p$accepted_code,root,FALSE),"Full locked sections and explicit accepted code references; preflight does not authorize a send")
+    }
+    cap <- if(m_ref_ok(s$capture,root)) m_read(file.path(root,s$capture$path)) else NULL
+    reply <- if(m_ref_ok(s$reply,root)) paste(readLines(file.path(root,s$reply$path),warn=FALSE),collapse="\n") else ""
+    marker <- paste0("END_REPLY ",s$id," ",s$nonce)
+    add(paste("capture match",s$id), identical(cap$send_id,s$id) && identical(cap$nonce,s$nonce) && identical(cap$reply,s$reply) && identical(cap$packet,s$packet) && isTRUE(cap$screen_verified) && endsWith(trimws(reply),marker),"Nonce plus end marker and visual attestation; not cryptographic proof of model identity")
+    add(paste("send dependencies",s$id), m_strings(s$depends_on,TRUE) && all(vapply(s$depends_on,function(id) {d<-Filter(function(x)identical(x$id,id),sends); length(d)==1 && m_time(d[[1]]$verified_at_utc)<=times[2]},logical(1))),"Chain verified replies before dependent sends")
+    add(paste("watchdog",s$id), (times[2]-times[1]<=900) || m_ref_ok(s$overdue_report,root),"Strictly over 900 seconds requires retained escalation/disposition; polling is executor-side")
+    if(!identical(s$approval_id,"none")) add(paste("send approval",s$id), any(vapply(o$approvals,function(a) identical(a$id,s$approval_id) && m_approval(a,state$run_id,stage,s$scope,times[2],root,rev$events),logical(1))),"Conditional approval checked at dispatch")
+  }
+  add("deviation dispositions", m_rows(o$deviations) && all(vapply(o$deviations,function(x)m_text(x$id) && m_text(x$disposition) && m_ref_ok(x$evidence,root),logical(1))),"Recorded deviations do not override a failed check")
+})
+# Transitive JSON reference closure from the authoritative project root.
+m_inventory <- function(refs,root) {
+  seen<-list(); root<-normalizePath(root,winslash="/",mustWork=TRUE)
+  visit<-function(ref) {
+    if(startsWith(ref$path,paste0(root,"/"))) ref$path<-substring(ref$path,nchar(root)+2)
+    if(!m_ref_ok(ref,root)) stop("Missing, unsafe or stale inventory dependency: ",ref$path)
+    if(!is.null(seen[[ref$path]])) {if(!identical(seen[[ref$path]]$sha256,ref$sha256))stop("Conflicting inventory identity");return(invisible(NULL))}
+    seen[[ref$path]]<<-list(path=ref$path,sha256=ref$sha256,bytes=unname(file.info(file.path(root,ref$path))$size))
+    if(grepl("\\.json$",ref$path,ignore.case=TRUE)) for(child in m_refs(m_read(file.path(root,ref$path)))) visit(child)
+  }
+  for(ref in refs) visit(ref)
+  unname(seen[order(names(seen))])
+}

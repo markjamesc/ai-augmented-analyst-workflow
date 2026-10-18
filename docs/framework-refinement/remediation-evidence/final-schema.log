@@ -1,0 +1,19 @@
+PASS base example
+PASS active measurement
+PASS missing plan measurement
+PASS active causal
+PASS missing plan causal
+PASS active predictive
+PASS missing plan predictive
+PASS active missingness
+PASS missing plan missingness
+PASS active dependence
+PASS missing plan dependence
+PASS active multiplicity
+PASS missing plan multiplicity
+PASS active transportability
+PASS missing plan transportability
+PASS active decision_uncertainty
+PASS missing plan decision_uncertainty
+PASS malformed sensitivity
+Schema compatibility: 18/18 checks passed
