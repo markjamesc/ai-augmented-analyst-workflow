@@ -1,64 +1,27 @@
-name: R Gate Tests
-
+name: Lean R acceptance
 on:
-  pull_request:
-    paths:
-      - "workflow-gate/**"
-      - "procedure-gate/**"
-      - "templates/workflow-gate/**"
-      - "templates/procedure-gate/**"
-      - "docs/**"
-      - "methodology/**"
-      - "templates/methodology/**"
-      - ".github/workflows/workflow-gate-test.yml"
+  workflow_dispatch:
   push:
-    branches:
-      - workflow-gate-enforcement
-      - main
-      - portfolio-refresh-20260920
-      - "methodology-hardening-*"
-      - "regression-acceptance-*"
-    paths:
-      - "workflow-gate/**"
-      - "procedure-gate/**"
-      - "templates/workflow-gate/**"
-      - "templates/procedure-gate/**"
-      - "docs/**"
-      - "methodology/**"
-      - "templates/methodology/**"
-      - ".github/workflows/workflow-gate-test.yml"
-
+    branches: [main, 'acc003-*', 'acceptance-*']
+  pull_request:
 jobs:
-  test-workflow-gate:
-    runs-on: ubuntu-latest
-
+  r-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up R
-        uses: r-lib/actions/setup-r@v2
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
         with:
-          use-public-rspm: true
-          r-version: "4.4.3"
-
-      - name: Install gate dependencies
-        run: Rscript -e 'install.packages(c("jsonlite", "digest", "purrr", "magrittr"), repos="https://cloud.r-project.org")'
-
-      - name: Run workflow gate tests
-        run: Rscript workflow-gate/tests/test_workflow_gate.R .
-
-      - name: Run procedure gate tests
-        run: Rscript procedure-gate/tests/test_procedure_gate.R .
-
-      - name: Run methodology contract tests
-        run: Rscript methodology/tests/test_methodology.R .
-
-      - name: Run local acceptance tests
-        run: Rscript methodology/tests/test_acceptance.R .
-
-      - name: Check schema compatibility
-        run: |
-          python3 -m venv "$RUNNER_TEMP/schema-venv"
-          "$RUNNER_TEMP/schema-venv/bin/pip" install jsonschema==4.23.0
-          "$RUNNER_TEMP/schema-venv/bin/python" methodology/tests/test_schema.py .
+          r-version: '4.6.1'
+      - name: Install required packages
+        run: Rscript --vanilla -e 'install.packages(c("jsonlite","digest","DBI","RSQLite"), repos="https://cloud.r-project.org")'
+      - name: Five R suites
+        run: Rscript --vanilla tools/run_tests.R . test-evidence
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: evidence-${{ matrix.os }}
+          path: test-evidence

@@ -1,0 +1,4 @@
+24 R source files parsed successfully using Linux R 4.3.3.
+6 JSON files parsed successfully.
+Fresh live project preparation and byte-identical applicable pretest reuse succeeded.
+PowerShell was inspected but not executed. Windows R 4.6.1 has not been tested here.

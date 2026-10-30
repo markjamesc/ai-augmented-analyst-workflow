@@ -1,0 +1,9 @@
+id,amount,eligible,noise
+A,9,true,x
+B,10,true,y
+C,11,true,z
+D,20,false,w
+E,10,true,v
+F,0,true,u
+G,,true,t
+H,30,false,s

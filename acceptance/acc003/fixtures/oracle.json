@@ -1,0 +1,1580 @@
+{
+ "note": "Frozen fixture oracle for ACC-SMALL-REMEDIATION-002, serialized by the coordinator (GrokBot) from candidate-3 Part A A6 oracle table and sections 11, 15, 17, 22. Every value is derived from the written rules and cross-checked against the A6 table. The JSON layout is the coordinator's serialization; the design fixes values, not layout. Numeric cells are canonical text; arrays are JSON arrays (null for unknown). source_digest is the sha256 of the fixture file. Pending independent AI3 oracle review (separate review record).",
+ "oracle_basis_ref": "candidate-3 A6",
+ "fixtures": {
+  "F00": {
+   "build_state": "EVALUATED",
+   "K0": [
+    {
+     "id": "A",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "BELOW_THRESHOLD",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "9",
+     "amount_value": "9"
+    },
+    {
+     "id": "B",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "C",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "11",
+     "amount_value": "11"
+    },
+    {
+     "id": "D",
+     "eligible_state": "FALSE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "NOT_ELIGIBLE",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "20",
+     "amount_value": "20"
+    },
+    {
+     "id": "E",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "F",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "BELOW_THRESHOLD",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "0",
+     "amount_value": "0"
+    },
+    {
+     "id": "G",
+     "eligible_state": "TRUE",
+     "amount_state": "MISSING",
+     "qualification": "NO",
+     "reason_code": "AMOUNT_MISSING",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "",
+     "amount_value": "NA"
+    },
+    {
+     "id": "H",
+     "eligible_state": "FALSE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "NOT_ELIGIBLE",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "30",
+     "amount_value": "30"
+    }
+   ],
+   "K1": [
+    {
+     "reason_code": "AMOUNT_MISSING",
+     "row_n": "1"
+    },
+    {
+     "reason_code": "BELOW_THRESHOLD",
+     "row_n": "2"
+    },
+    {
+     "reason_code": "NOT_ELIGIBLE",
+     "row_n": "2"
+    },
+    {
+     "reason_code": "QUALIFIED",
+     "row_n": "3"
+    }
+   ],
+   "K2": [
+    {
+     "id": "B",
+     "place_state": "SELECTED",
+     "rank_n": "2",
+     "amount_value": "10"
+    },
+    {
+     "id": "C",
+     "place_state": "SELECTED",
+     "rank_n": "1",
+     "amount_value": "11"
+    },
+    {
+     "id": "E",
+     "place_state": "WAITLISTED",
+     "rank_n": "3",
+     "amount_value": "10"
+    }
+   ],
+   "K3": [
+    {
+     "case_key": "fixture",
+     "calculation_state": "EVALUATED",
+     "source_n": "8",
+     "eligible_true_n": "6",
+     "qualified_n": "3",
+     "selected_n": "2",
+     "selected_sum": "21"
+    }
+   ],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "EVALUATED",
+     "data_state": "PRESENT",
+     "qualified_ids": [
+      "B",
+      "C",
+      "E"
+     ],
+     "selected_ids": [
+      "C",
+      "B"
+     ],
+     "source_digest": "391ceac5ef2d8c6028f2653dc3eb1997b84465600867a303a11f70a3a432277d",
+     "qualified_n": "3",
+     "selected_n": "2",
+     "selected_sum": "21"
+    }
+   ]
+  },
+  "F01": {
+   "build_state": "EVALUATED",
+   "K0": [
+    {
+     "id": "A",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "BELOW_THRESHOLD",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "9",
+     "amount_value": "9"
+    },
+    {
+     "id": "B",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "C",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "11",
+     "amount_value": "11"
+    },
+    {
+     "id": "D",
+     "eligible_state": "FALSE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "NOT_ELIGIBLE",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "20",
+     "amount_value": "20"
+    },
+    {
+     "id": "E",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "F",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "BELOW_THRESHOLD",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "0",
+     "amount_value": "0"
+    },
+    {
+     "id": "G",
+     "eligible_state": "TRUE",
+     "amount_state": "MISSING",
+     "qualification": "NO",
+     "reason_code": "AMOUNT_MISSING",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "",
+     "amount_value": "NA"
+    },
+    {
+     "id": "H",
+     "eligible_state": "FALSE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "NOT_ELIGIBLE",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "30",
+     "amount_value": "30"
+    }
+   ],
+   "K1": [
+    {
+     "reason_code": "AMOUNT_MISSING",
+     "row_n": "1"
+    },
+    {
+     "reason_code": "BELOW_THRESHOLD",
+     "row_n": "2"
+    },
+    {
+     "reason_code": "NOT_ELIGIBLE",
+     "row_n": "2"
+    },
+    {
+     "reason_code": "QUALIFIED",
+     "row_n": "3"
+    }
+   ],
+   "K2": [
+    {
+     "id": "B",
+     "place_state": "SELECTED",
+     "rank_n": "2",
+     "amount_value": "10"
+    },
+    {
+     "id": "C",
+     "place_state": "SELECTED",
+     "rank_n": "1",
+     "amount_value": "11"
+    },
+    {
+     "id": "E",
+     "place_state": "WAITLISTED",
+     "rank_n": "3",
+     "amount_value": "10"
+    }
+   ],
+   "K3": [
+    {
+     "case_key": "fixture",
+     "calculation_state": "EVALUATED",
+     "source_n": "8",
+     "eligible_true_n": "6",
+     "qualified_n": "3",
+     "selected_n": "2",
+     "selected_sum": "21"
+    }
+   ],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "EVALUATED",
+     "data_state": "PRESENT",
+     "qualified_ids": [
+      "B",
+      "C",
+      "E"
+     ],
+     "selected_ids": [
+      "C",
+      "B"
+     ],
+     "source_digest": "d36ce693f8ede3fc5c2b8dbdc492945bfd2a8903fe848c6c07d21b6dd54459b3",
+     "qualified_n": "3",
+     "selected_n": "2",
+     "selected_sum": "21"
+    }
+   ]
+  },
+  "F02": {
+   "build_state": "EVALUATED",
+   "K0": [
+    {
+     "id": "L",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "BELOW_THRESHOLD",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "9.999999999999998",
+     "amount_value": "9.999999999999998"
+    },
+    {
+     "id": "T",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "U",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "10.000000000000002",
+     "amount_value": "10.000000000000002"
+    }
+   ],
+   "K1": [
+    {
+     "reason_code": "AMOUNT_MISSING",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "BELOW_THRESHOLD",
+     "row_n": "1"
+    },
+    {
+     "reason_code": "NOT_ELIGIBLE",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "QUALIFIED",
+     "row_n": "2"
+    }
+   ],
+   "K2": [
+    {
+     "id": "T",
+     "place_state": "SELECTED",
+     "rank_n": "2",
+     "amount_value": "10"
+    },
+    {
+     "id": "U",
+     "place_state": "SELECTED",
+     "rank_n": "1",
+     "amount_value": "10.000000000000002"
+    }
+   ],
+   "K3": [
+    {
+     "case_key": "fixture",
+     "calculation_state": "EVALUATED",
+     "source_n": "3",
+     "eligible_true_n": "3",
+     "qualified_n": "2",
+     "selected_n": "2",
+     "selected_sum": "20"
+    }
+   ],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "EVALUATED",
+     "data_state": "PRESENT",
+     "qualified_ids": [
+      "T",
+      "U"
+     ],
+     "selected_ids": [
+      "U",
+      "T"
+     ],
+     "source_digest": "712ceea49e70b3b1155ed956b9c818262975ecfecd75c1755b69e31d79bf9934",
+     "qualified_n": "2",
+     "selected_n": "2",
+     "selected_sum": "20"
+    }
+   ]
+  },
+  "F03": {
+   "build_state": "EVALUATED",
+   "K0": [
+    {
+     "id": "A",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "M",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "Z",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    }
+   ],
+   "K1": [
+    {
+     "reason_code": "AMOUNT_MISSING",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "BELOW_THRESHOLD",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "NOT_ELIGIBLE",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "QUALIFIED",
+     "row_n": "3"
+    }
+   ],
+   "K2": [
+    {
+     "id": "A",
+     "place_state": "SELECTED",
+     "rank_n": "1",
+     "amount_value": "10"
+    },
+    {
+     "id": "M",
+     "place_state": "SELECTED",
+     "rank_n": "2",
+     "amount_value": "10"
+    },
+    {
+     "id": "Z",
+     "place_state": "WAITLISTED",
+     "rank_n": "3",
+     "amount_value": "10"
+    }
+   ],
+   "K3": [
+    {
+     "case_key": "fixture",
+     "calculation_state": "EVALUATED",
+     "source_n": "3",
+     "eligible_true_n": "3",
+     "qualified_n": "3",
+     "selected_n": "2",
+     "selected_sum": "20"
+    }
+   ],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "EVALUATED",
+     "data_state": "PRESENT",
+     "qualified_ids": [
+      "A",
+      "M",
+      "Z"
+     ],
+     "selected_ids": [
+      "A",
+      "M"
+     ],
+     "source_digest": "9cddb0f280a6f6fd096259b101cc5b03acb280db321090ddfbf40176fc95e277",
+     "qualified_n": "3",
+     "selected_n": "2",
+     "selected_sum": "20"
+    }
+   ]
+  },
+  "F04": {
+   "build_state": "EVALUATED",
+   "K0": [
+    {
+     "id": "A",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "12",
+     "amount_value": "12"
+    },
+    {
+     "id": "B",
+     "eligible_state": "FALSE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "NOT_ELIGIBLE",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "20",
+     "amount_value": "20"
+    }
+   ],
+   "K1": [
+    {
+     "reason_code": "AMOUNT_MISSING",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "BELOW_THRESHOLD",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "NOT_ELIGIBLE",
+     "row_n": "1"
+    },
+    {
+     "reason_code": "QUALIFIED",
+     "row_n": "1"
+    }
+   ],
+   "K2": [
+    {
+     "id": "A",
+     "place_state": "SELECTED",
+     "rank_n": "1",
+     "amount_value": "12"
+    }
+   ],
+   "K3": [
+    {
+     "case_key": "fixture",
+     "calculation_state": "EVALUATED",
+     "source_n": "2",
+     "eligible_true_n": "1",
+     "qualified_n": "1",
+     "selected_n": "1",
+     "selected_sum": "12"
+    }
+   ],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "EVALUATED",
+     "data_state": "PRESENT",
+     "qualified_ids": [
+      "A"
+     ],
+     "selected_ids": [
+      "A"
+     ],
+     "source_digest": "dd373b4db46b9fef4658b1751a6d041df9c57c0f130c361c900a2cf7d2a5695f",
+     "qualified_n": "1",
+     "selected_n": "1",
+     "selected_sum": "12"
+    }
+   ]
+  },
+  "F05": {
+   "build_state": "EVALUATED",
+   "K0": [
+    {
+     "id": "A",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "BELOW_THRESHOLD",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "9",
+     "amount_value": "9"
+    },
+    {
+     "id": "B",
+     "eligible_state": "FALSE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "NOT_ELIGIBLE",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "20",
+     "amount_value": "20"
+    },
+    {
+     "id": "C",
+     "eligible_state": "TRUE",
+     "amount_state": "MISSING",
+     "qualification": "NO",
+     "reason_code": "AMOUNT_MISSING",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "",
+     "amount_value": "NA"
+    }
+   ],
+   "K1": [
+    {
+     "reason_code": "AMOUNT_MISSING",
+     "row_n": "1"
+    },
+    {
+     "reason_code": "BELOW_THRESHOLD",
+     "row_n": "1"
+    },
+    {
+     "reason_code": "NOT_ELIGIBLE",
+     "row_n": "1"
+    },
+    {
+     "reason_code": "QUALIFIED",
+     "row_n": "0"
+    }
+   ],
+   "K2": [],
+   "K3": [
+    {
+     "case_key": "fixture",
+     "calculation_state": "EVALUATED",
+     "source_n": "3",
+     "eligible_true_n": "2",
+     "qualified_n": "0",
+     "selected_n": "0",
+     "selected_sum": "0"
+    }
+   ],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "EVALUATED",
+     "data_state": "PRESENT",
+     "qualified_ids": [],
+     "selected_ids": [],
+     "source_digest": "aabbbb38cadd26da3348c7fb049534a4e37b117a5d12c4029d08aa99f672fe2f",
+     "qualified_n": "0",
+     "selected_n": "0",
+     "selected_sum": "0"
+    }
+   ]
+  },
+  "F06": {
+   "build_state": "INVALID_INPUT",
+   "K0": [],
+   "K1": [],
+   "K2": [],
+   "K3": [],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "INVALID_INPUT",
+     "data_state": "UNKNOWN",
+     "qualified_ids": null,
+     "selected_ids": null,
+     "source_digest": "8f5fef219cdb8d6e47befbcc3428022d8442eb4832517ad4e516537a6f7dcf07",
+     "qualified_n": "NA",
+     "selected_n": "NA",
+     "selected_sum": "NA"
+    }
+   ]
+  },
+  "F07": {
+   "build_state": "INVALID_INPUT",
+   "K0": [],
+   "K1": [],
+   "K2": [],
+   "K3": [],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "INVALID_INPUT",
+     "data_state": "UNKNOWN",
+     "qualified_ids": null,
+     "selected_ids": null,
+     "source_digest": "28e6e965f22e1750de51fe841c870a00e250c7dcbbcaffc30e5c0410c8a464dc",
+     "qualified_n": "NA",
+     "selected_n": "NA",
+     "selected_sum": "NA"
+    }
+   ]
+  },
+  "F08": {
+   "build_state": "EVALUATED",
+   "K0": [
+    {
+     "id": "A",
+     "eligible_state": "TRUE",
+     "amount_state": "MISSING",
+     "qualification": "NO",
+     "reason_code": "AMOUNT_MISSING",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "",
+     "amount_value": "NA"
+    },
+    {
+     "id": "B",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "BELOW_THRESHOLD",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "0",
+     "amount_value": "0"
+    },
+    {
+     "id": "C",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    }
+   ],
+   "K1": [
+    {
+     "reason_code": "AMOUNT_MISSING",
+     "row_n": "1"
+    },
+    {
+     "reason_code": "BELOW_THRESHOLD",
+     "row_n": "1"
+    },
+    {
+     "reason_code": "NOT_ELIGIBLE",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "QUALIFIED",
+     "row_n": "1"
+    }
+   ],
+   "K2": [
+    {
+     "id": "C",
+     "place_state": "SELECTED",
+     "rank_n": "1",
+     "amount_value": "10"
+    }
+   ],
+   "K3": [
+    {
+     "case_key": "fixture",
+     "calculation_state": "EVALUATED",
+     "source_n": "3",
+     "eligible_true_n": "3",
+     "qualified_n": "1",
+     "selected_n": "1",
+     "selected_sum": "10"
+    }
+   ],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "EVALUATED",
+     "data_state": "PRESENT",
+     "qualified_ids": [
+      "C"
+     ],
+     "selected_ids": [
+      "C"
+     ],
+     "source_digest": "80f72df6ea6b02263e7421d823849ee4f08355b351f0409adebb0eb071aa52a2",
+     "qualified_n": "1",
+     "selected_n": "1",
+     "selected_sum": "10"
+    }
+   ]
+  },
+  "F09": {
+   "build_state": "EVALUATED",
+   "K0": [
+    {
+     "id": "A",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "BELOW_THRESHOLD",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "9",
+     "amount_value": "9"
+    },
+    {
+     "id": "B",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "C",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "11",
+     "amount_value": "11"
+    },
+    {
+     "id": "D",
+     "eligible_state": "FALSE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "NOT_ELIGIBLE",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "20",
+     "amount_value": "20"
+    },
+    {
+     "id": "E",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "F",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "BELOW_THRESHOLD",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "0",
+     "amount_value": "0"
+    },
+    {
+     "id": "G",
+     "eligible_state": "TRUE",
+     "amount_state": "MISSING",
+     "qualification": "NO",
+     "reason_code": "AMOUNT_MISSING",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "",
+     "amount_value": "NA"
+    },
+    {
+     "id": "H",
+     "eligible_state": "FALSE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "NOT_ELIGIBLE",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "30",
+     "amount_value": "30"
+    }
+   ],
+   "K1": [
+    {
+     "reason_code": "AMOUNT_MISSING",
+     "row_n": "1"
+    },
+    {
+     "reason_code": "BELOW_THRESHOLD",
+     "row_n": "2"
+    },
+    {
+     "reason_code": "NOT_ELIGIBLE",
+     "row_n": "2"
+    },
+    {
+     "reason_code": "QUALIFIED",
+     "row_n": "3"
+    }
+   ],
+   "K2": [
+    {
+     "id": "B",
+     "place_state": "SELECTED",
+     "rank_n": "2",
+     "amount_value": "10"
+    },
+    {
+     "id": "C",
+     "place_state": "SELECTED",
+     "rank_n": "1",
+     "amount_value": "11"
+    },
+    {
+     "id": "E",
+     "place_state": "WAITLISTED",
+     "rank_n": "3",
+     "amount_value": "10"
+    }
+   ],
+   "K3": [
+    {
+     "case_key": "fixture",
+     "calculation_state": "EVALUATED",
+     "source_n": "8",
+     "eligible_true_n": "6",
+     "qualified_n": "3",
+     "selected_n": "2",
+     "selected_sum": "21"
+    }
+   ],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "EVALUATED",
+     "data_state": "PRESENT",
+     "qualified_ids": [
+      "B",
+      "C",
+      "E"
+     ],
+     "selected_ids": [
+      "C",
+      "B"
+     ],
+     "source_digest": "063f3c605e90d009e8d75fa8900cd57efeba418353895e9c96d9fd8f310f37b3",
+     "qualified_n": "3",
+     "selected_n": "2",
+     "selected_sum": "21"
+    }
+   ]
+  },
+  "F10": {
+   "build_state": "EVALUATED",
+   "K0": [
+    {
+     "id": "A",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "BELOW_THRESHOLD",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "9",
+     "amount_value": "9"
+    },
+    {
+     "id": "B",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "C",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "11",
+     "amount_value": "11"
+    },
+    {
+     "id": "D",
+     "eligible_state": "FALSE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "NOT_ELIGIBLE",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "20",
+     "amount_value": "20"
+    },
+    {
+     "id": "E",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "F",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "BELOW_THRESHOLD",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "0",
+     "amount_value": "0"
+    },
+    {
+     "id": "G",
+     "eligible_state": "TRUE",
+     "amount_state": "MISSING",
+     "qualification": "NO",
+     "reason_code": "AMOUNT_MISSING",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "",
+     "amount_value": "NA"
+    },
+    {
+     "id": "H",
+     "eligible_state": "FALSE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "NOT_ELIGIBLE",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "30",
+     "amount_value": "30"
+    },
+    {
+     "id": "I",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "40",
+     "amount_value": "40"
+    }
+   ],
+   "K1": [
+    {
+     "reason_code": "AMOUNT_MISSING",
+     "row_n": "1"
+    },
+    {
+     "reason_code": "BELOW_THRESHOLD",
+     "row_n": "2"
+    },
+    {
+     "reason_code": "NOT_ELIGIBLE",
+     "row_n": "2"
+    },
+    {
+     "reason_code": "QUALIFIED",
+     "row_n": "4"
+    }
+   ],
+   "K2": [
+    {
+     "id": "B",
+     "place_state": "WAITLISTED",
+     "rank_n": "3",
+     "amount_value": "10"
+    },
+    {
+     "id": "C",
+     "place_state": "SELECTED",
+     "rank_n": "2",
+     "amount_value": "11"
+    },
+    {
+     "id": "E",
+     "place_state": "WAITLISTED",
+     "rank_n": "4",
+     "amount_value": "10"
+    },
+    {
+     "id": "I",
+     "place_state": "SELECTED",
+     "rank_n": "1",
+     "amount_value": "40"
+    }
+   ],
+   "K3": [
+    {
+     "case_key": "fixture",
+     "calculation_state": "EVALUATED",
+     "source_n": "9",
+     "eligible_true_n": "7",
+     "qualified_n": "4",
+     "selected_n": "2",
+     "selected_sum": "51"
+    }
+   ],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "EVALUATED",
+     "data_state": "PRESENT",
+     "qualified_ids": [
+      "B",
+      "C",
+      "E",
+      "I"
+     ],
+     "selected_ids": [
+      "I",
+      "C"
+     ],
+     "source_digest": "3aa6c47b86972f6496efe09e449f5c843a6ac04ce9b72fbcd95e26f2b75b9cc5",
+     "qualified_n": "4",
+     "selected_n": "2",
+     "selected_sum": "51"
+    }
+   ]
+  },
+  "F11": {
+   "build_state": "EVALUATED",
+   "K0": [
+    {
+     "id": "A",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "BELOW_THRESHOLD",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "9",
+     "amount_value": "9"
+    },
+    {
+     "id": "B",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "C",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "11",
+     "amount_value": "11"
+    },
+    {
+     "id": "D",
+     "eligible_state": "FALSE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "NOT_ELIGIBLE",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "50",
+     "amount_value": "50"
+    },
+    {
+     "id": "E",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "F",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "BELOW_THRESHOLD",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "0",
+     "amount_value": "0"
+    },
+    {
+     "id": "G",
+     "eligible_state": "TRUE",
+     "amount_state": "MISSING",
+     "qualification": "NO",
+     "reason_code": "AMOUNT_MISSING",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "",
+     "amount_value": "NA"
+    },
+    {
+     "id": "H",
+     "eligible_state": "FALSE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "NOT_ELIGIBLE",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "30",
+     "amount_value": "30"
+    }
+   ],
+   "K1": [
+    {
+     "reason_code": "AMOUNT_MISSING",
+     "row_n": "1"
+    },
+    {
+     "reason_code": "BELOW_THRESHOLD",
+     "row_n": "2"
+    },
+    {
+     "reason_code": "NOT_ELIGIBLE",
+     "row_n": "2"
+    },
+    {
+     "reason_code": "QUALIFIED",
+     "row_n": "3"
+    }
+   ],
+   "K2": [
+    {
+     "id": "B",
+     "place_state": "SELECTED",
+     "rank_n": "2",
+     "amount_value": "10"
+    },
+    {
+     "id": "C",
+     "place_state": "SELECTED",
+     "rank_n": "1",
+     "amount_value": "11"
+    },
+    {
+     "id": "E",
+     "place_state": "WAITLISTED",
+     "rank_n": "3",
+     "amount_value": "10"
+    }
+   ],
+   "K3": [
+    {
+     "case_key": "fixture",
+     "calculation_state": "EVALUATED",
+     "source_n": "8",
+     "eligible_true_n": "6",
+     "qualified_n": "3",
+     "selected_n": "2",
+     "selected_sum": "21"
+    }
+   ],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "EVALUATED",
+     "data_state": "PRESENT",
+     "qualified_ids": [
+      "B",
+      "C",
+      "E"
+     ],
+     "selected_ids": [
+      "C",
+      "B"
+     ],
+     "source_digest": "e644ff72db222c2ed1764c5e781f24854d3e89dc1b104f57dce9af4df66bfa99",
+     "qualified_n": "3",
+     "selected_n": "2",
+     "selected_sum": "21"
+    }
+   ]
+  },
+  "F12": {
+   "build_state": "EVALUATED",
+   "K0": [
+    {
+     "id": "L",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "T",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "U",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "10.000000000000002",
+     "amount_value": "10.000000000000002"
+    }
+   ],
+   "K1": [
+    {
+     "reason_code": "AMOUNT_MISSING",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "BELOW_THRESHOLD",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "NOT_ELIGIBLE",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "QUALIFIED",
+     "row_n": "3"
+    }
+   ],
+   "K2": [
+    {
+     "id": "L",
+     "place_state": "SELECTED",
+     "rank_n": "2",
+     "amount_value": "10"
+    },
+    {
+     "id": "T",
+     "place_state": "WAITLISTED",
+     "rank_n": "3",
+     "amount_value": "10"
+    },
+    {
+     "id": "U",
+     "place_state": "SELECTED",
+     "rank_n": "1",
+     "amount_value": "10.000000000000002"
+    }
+   ],
+   "K3": [
+    {
+     "case_key": "fixture",
+     "calculation_state": "EVALUATED",
+     "source_n": "3",
+     "eligible_true_n": "3",
+     "qualified_n": "3",
+     "selected_n": "2",
+     "selected_sum": "20"
+    }
+   ],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "EVALUATED",
+     "data_state": "PRESENT",
+     "qualified_ids": [
+      "L",
+      "T",
+      "U"
+     ],
+     "selected_ids": [
+      "U",
+      "L"
+     ],
+     "source_digest": "4cfa759ac037760c6744c698111c0ee0bb02a43977b623753e589c68cfd30523",
+     "qualified_n": "3",
+     "selected_n": "2",
+     "selected_sum": "20"
+    }
+   ]
+  },
+  "F13": {
+   "build_state": "EVALUATED",
+   "K0": [
+    {
+     "id": "A",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "BELOW_THRESHOLD",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "0",
+     "amount_value": "0"
+    },
+    {
+     "id": "B",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "NO",
+     "reason_code": "BELOW_THRESHOLD",
+     "selection_state": "NOT_SELECTED",
+     "raw_amount": "0",
+     "amount_value": "0"
+    },
+    {
+     "id": "C",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    }
+   ],
+   "K1": [
+    {
+     "reason_code": "AMOUNT_MISSING",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "BELOW_THRESHOLD",
+     "row_n": "2"
+    },
+    {
+     "reason_code": "NOT_ELIGIBLE",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "QUALIFIED",
+     "row_n": "1"
+    }
+   ],
+   "K2": [
+    {
+     "id": "C",
+     "place_state": "SELECTED",
+     "rank_n": "1",
+     "amount_value": "10"
+    }
+   ],
+   "K3": [
+    {
+     "case_key": "fixture",
+     "calculation_state": "EVALUATED",
+     "source_n": "3",
+     "eligible_true_n": "3",
+     "qualified_n": "1",
+     "selected_n": "1",
+     "selected_sum": "10"
+    }
+   ],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "EVALUATED",
+     "data_state": "PRESENT",
+     "qualified_ids": [
+      "C"
+     ],
+     "selected_ids": [
+      "C"
+     ],
+     "source_digest": "5ee65139abb262a9eab754ab04a3ee77d66aa7f9a01658429144c7c6f2e53191",
+     "qualified_n": "1",
+     "selected_n": "1",
+     "selected_sum": "10"
+    }
+   ]
+  },
+  "F14": {
+   "build_state": "EVALUATED",
+   "K0": [
+    {
+     "id": "A",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "10",
+     "amount_value": "10"
+    },
+    {
+     "id": "B",
+     "eligible_state": "TRUE",
+     "amount_state": "PRESENT",
+     "qualification": "YES",
+     "reason_code": "QUALIFIED",
+     "selection_state": "SELECTED",
+     "raw_amount": "11",
+     "amount_value": "11"
+    }
+   ],
+   "K1": [
+    {
+     "reason_code": "AMOUNT_MISSING",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "BELOW_THRESHOLD",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "NOT_ELIGIBLE",
+     "row_n": "0"
+    },
+    {
+     "reason_code": "QUALIFIED",
+     "row_n": "2"
+    }
+   ],
+   "K2": [
+    {
+     "id": "A",
+     "place_state": "SELECTED",
+     "rank_n": "2",
+     "amount_value": "10"
+    },
+    {
+     "id": "B",
+     "place_state": "SELECTED",
+     "rank_n": "1",
+     "amount_value": "11"
+    }
+   ],
+   "K3": [
+    {
+     "case_key": "fixture",
+     "calculation_state": "EVALUATED",
+     "source_n": "2",
+     "eligible_true_n": "2",
+     "qualified_n": "2",
+     "selected_n": "2",
+     "selected_sum": "21"
+    }
+   ],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "EVALUATED",
+     "data_state": "PRESENT",
+     "qualified_ids": [
+      "A",
+      "B"
+     ],
+     "selected_ids": [
+      "B",
+      "A"
+     ],
+     "source_digest": "628a3da331bd3b73a2d5c74341ae577ac5ea27c7c1c0c4c0671158efa7c1bf1c",
+     "qualified_n": "2",
+     "selected_n": "2",
+     "selected_sum": "21"
+    }
+   ]
+  },
+  "F15": {
+   "build_state": "UNVERIFIABLE",
+   "K0": [],
+   "K1": [],
+   "K2": [],
+   "K3": [],
+   "K4": [
+    {
+     "case_key": "fixture",
+     "build_state": "UNVERIFIABLE",
+     "data_state": "UNKNOWN",
+     "qualified_ids": null,
+     "selected_ids": null,
+     "source_digest": "4f4acef20d1ca6205e61208cbbe929aa71a4a8c674bc859df69c0dcb2db36c2d",
+     "qualified_n": "NA",
+     "selected_n": "NA",
+     "selected_sum": "NA"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,237 @@
+{
+  "version": "3.0-lean",
+  "run_id": "ACC003",
+  "question": "Does the independent SQL/R validation workflow reproduce the frozen selection rule and reject planted defects?",
+  "decision": "Accept the mechanical workflow test or remediate; no business action.",
+  "population": "All rows of the frozen synthetic source; invalid input is not silently filtered.",
+  "grain": "One unique ASCII ID per row.",
+  "metrics": "Qualified count; selected count; selected amount sum; row-level exclusions and rank.",
+  "filters": "Eligible is exactly true; finite valid binary64 amount >=10; blank amount excluded, never zero.",
+  "decision_rule": "Rank qualified by amount descending then ASCII id ascending; capacity 2; sum in rank order; valid empty selection yields zero.",
+  "claim_ceiling": "Mechanical procedural acceptance only, not real-data accuracy or profitable action.",
+  "allowed_claim_types": [
+    "descriptive",
+    "recommendation"
+  ],
+  "source": {
+    "kind": "file",
+    "path": "data/fixture_8row.csv",
+    "sha256": "391ceac5ef2d8c6028f2653dc3eb1997b84465600867a303a11f70a3a432277d",
+    "sql_applicability": "NOT_APPLICABLE"
+  },
+  "fixtures": {
+    "manifest": "fixtures/manifest.json",
+    "manifest_sha256": "71f9190a51a3554e33c0231ef7010632359cfcfd4787723a2386807de53bc52b",
+    "oracle": "fixtures/oracle.json",
+    "oracle_sha256": "8c99cd768b0746bcb9940c7bd4bb6a0aacb0fffc00d9675d3b558dd905ccc02f"
+  },
+  "checkpoints": [
+    {
+      "id": "K0",
+      "keys": [
+        "id"
+      ],
+      "exact_fields": [
+        "eligible_state",
+        "amount_state",
+        "qualification",
+        "reason_code",
+        "selection_state",
+        "raw_amount"
+      ],
+      "numeric_fields": [
+        "amount_value"
+      ],
+      "absolute_tolerance": 0,
+      "relative_tolerance": 0,
+      "rationale": "Per-ID eligibility, exclusion and numeric missingness.",
+      "numeric_missingness": {
+        "amount_value": {
+          "flag_field": "amount_state",
+          "present_value": "PRESENT",
+          "missing_token": "NA",
+          "missing_values": [
+            "MISSING"
+          ]
+        }
+      },
+      "file": "audit_rows.csv"
+    },
+    {
+      "id": "K1",
+      "keys": [
+        "reason_code"
+      ],
+      "exact_fields": [],
+      "numeric_fields": [
+        "row_n"
+      ],
+      "absolute_tolerance": 0,
+      "relative_tolerance": 0,
+      "rationale": "Four exhaustive reason categories and count reconciliation.",
+      "numeric_missingness": {},
+      "file": "reason_totals.csv"
+    },
+    {
+      "id": "K2",
+      "keys": [
+        "id"
+      ],
+      "exact_fields": [
+        "place_state"
+      ],
+      "numeric_fields": [
+        "rank_n",
+        "amount_value"
+      ],
+      "absolute_tolerance": 0,
+      "relative_tolerance": 0,
+      "rationale": "Explicit qualifying ranks and capacity selections.",
+      "numeric_missingness": {},
+      "file": "rank_rows.csv"
+    },
+    {
+      "id": "K3",
+      "keys": [
+        "case_key"
+      ],
+      "exact_fields": [
+        "calculation_state"
+      ],
+      "numeric_fields": [
+        "source_n",
+        "eligible_true_n",
+        "qualified_n",
+        "selected_n",
+        "selected_sum"
+      ],
+      "absolute_tolerance": 0,
+      "relative_tolerance": 0,
+      "rationale": "Population, components, counts and sum.",
+      "numeric_missingness": {},
+      "file": "totals.csv"
+    },
+    {
+      "id": "K4",
+      "keys": [
+        "case_key"
+      ],
+      "exact_fields": [
+        "build_state",
+        "data_state",
+        "qualified_ids",
+        "selected_ids",
+        "source_digest"
+      ],
+      "numeric_fields": [
+        "qualified_n",
+        "selected_n",
+        "selected_sum"
+      ],
+      "absolute_tolerance": 0,
+      "relative_tolerance": 0,
+      "rationale": "Typed builder outputs distinguish zero from unknown.",
+      "numeric_missingness": {
+        "qualified_n": {
+          "flag_field": "data_state",
+          "present_value": "PRESENT",
+          "missing_token": "NA",
+          "missing_values": [
+            "UNKNOWN"
+          ]
+        },
+        "selected_n": {
+          "flag_field": "data_state",
+          "present_value": "PRESENT",
+          "missing_token": "NA",
+          "missing_values": [
+            "UNKNOWN"
+          ]
+        },
+        "selected_sum": {
+          "flag_field": "data_state",
+          "present_value": "PRESENT",
+          "missing_token": "NA",
+          "missing_values": [
+            "UNKNOWN"
+          ]
+        }
+      },
+      "file": "build_report.csv"
+    }
+  ],
+  "model": {
+    "present": false,
+    "predictions_affect_decision": false
+  },
+  "invariance": {
+    "adapter": "acc003-csv",
+    "relations": [
+      "row shuffle preserves keyed semantics",
+      "one trailing unused field with any distinct nonempty name preserves semantics; source digest changes"
+    ]
+  },
+  "safeguards": [
+    {
+      "id": "confounding",
+      "applies": false,
+      "why": "Static known-answer synthetic mechanical test; no population inference, model or business outcome claim."
+    },
+    {
+      "id": "uncertainty",
+      "applies": false,
+      "why": "Static known-answer synthetic mechanical test; no population inference, model or business outcome claim."
+    },
+    {
+      "id": "multiplicity",
+      "applies": false,
+      "why": "Static known-answer synthetic mechanical test; no population inference, model or business outcome claim."
+    },
+    {
+      "id": "segments",
+      "applies": false,
+      "why": "Static known-answer synthetic mechanical test; no population inference, model or business outcome claim."
+    },
+    {
+      "id": "small_denominator",
+      "applies": false,
+      "why": "Static known-answer synthetic mechanical test; no population inference, model or business outcome claim."
+    },
+    {
+      "id": "sensitivity",
+      "applies": false,
+      "why": "Static known-answer synthetic mechanical test; no population inference, model or business outcome claim."
+    },
+    {
+      "id": "research_return",
+      "applies": false,
+      "why": "Static known-answer synthetic mechanical test; no population inference, model or business outcome claim."
+    },
+    {
+      "id": "monitoring",
+      "applies": false,
+      "why": "Static known-answer synthetic mechanical test; no population inference, model or business outcome claim."
+    },
+    {
+      "id": "leakage",
+      "applies": false,
+      "why": "Static known-answer synthetic mechanical test; no population inference, model or business outcome claim."
+    }
+  ],
+  "prior_exposure": "This is a previously used synthetic acceptance fixture. No claim of an unseen analytical benchmark.",
+  "expected_primary": {
+    "qualified": [
+      "B",
+      "C",
+      "E"
+    ],
+    "selected": [
+      "C",
+      "B"
+    ],
+    "qualified_n": 3,
+    "selected_n": 2,
+    "selected_sum": 21
+  },
+  "implementation_rules": "# ACC003 builder specification — normative input/output semantics\n\nImplement one independent R script invoked as `Rscript --vanilla main.R INPUT_CSV OUTPUT_DIR`. Use base R and digest; do not import any peer code, harness or oracle. Create all five output CSVs, including on invalid input. Do not hardcode expected IDs/results. Errors in the runtime itself may exit nonzero; invalid data is a typed result, not a runtime crash.\n\nInput is UTF-8 without BOM, LF terminated, no CR/NUL/embedded newline, standard CSV quotes/doubled quotes. Header is `id,amount,eligible`, optionally followed by ONE distinct nonempty unused column with ANY name. Ignore that column's values after parsing. Required columns remain first and in that order. Reject wrong field counts, malformed quotes, duplicate IDs, unknown eligible tokens or invalid amounts. IDs match `[A-Za-z0-9_-]+` and are case sensitive. Eligible tokens are exactly `true` and `false`. Amount is blank (missing) or a full-token decimal matching `[+-]?(?:[0-9]+(?:\\.[0-9]+)?|\\.[0-9]+)(?:[eE][+-]?[0-9]+)?`, parsed as finite binary64. Reject whitespace, NaN, Inf and overflow. Do not trim/coerce invalid tokens. Underflow follows R's binary64 parser.\n\nQualify if eligible true and nonmissing amount >=10, without epsilon. Exclusion precedence: NOT_ELIGIBLE, then AMOUNT_MISSING, then BELOW_THRESHOLD; otherwise QUALIFIED. Rank qualifiers by amount descending then ASCII ID ascending, select first two. Sum selected amounts sequentially in rank order, starting at zero. Empty valid selection has zero counts/sum. Numeric output is round-trip binary64 text (e.g. 17 significant digits); missing numeric is literal `NA`, not zero or an empty string. Input bytes' SHA256 is lowercase hex. Use `case_key=fixture` in aggregate outputs for every input.\n\nThe supplied builder_contract.json lists exact headers, keys, exact/numeric fields and missingness. Output CSV column order below is fixed; quote as needed; textual JSON arrays are CSV-escaped. Output LF terminated without BOM.\n\n1. `audit_rows.csv`: id,eligible_state,amount_state,qualification,reason_code,selection_state,raw_amount,amount_value. One row per input ID, ID ascending. eligible_state TRUE/FALSE; amount_state PRESENT/MISSING; qualification YES/NO; selection_state SELECTED/NOT_SELECTED; raw_amount preserves its decoded source token; amount_value is parsed value or NA.\n2. `reason_totals.csv`: reason_code,row_n. Four rows in ASCII reason order: AMOUNT_MISSING, BELOW_THRESHOLD, NOT_ELIGIBLE, QUALIFIED, including zero counts.\n3. `rank_rows.csv`: id,place_state,rank_n,amount_value. Qualifiers only, ID ascending; place_state SELECTED or WAITLISTED; rank_n is the amount/ID rank starting at one.\n4. `totals.csv`: case_key,calculation_state,source_n,eligible_true_n,qualified_n,selected_n,selected_sum. One row; calculation_state EVALUATED. Eligible count includes eligible rows with missing amount.\n5. `build_report.csv`: case_key,build_state,data_state,qualified_ids,selected_ids,source_digest,qualified_n,selected_n,selected_sum. One row. Valid input: EVALUATED/PRESENT, qualified_ids compact JSON string array in ASCII ID order, selected_ids compact JSON string array in ranking order, empty arrays `[]`.\n\nInvalid input: files 1–4 contain headers only; file 5 has build_state INVALID_INPUT, data_state UNKNOWN, qualified_ids and selected_ids literal `null`, numeric fields literal NA, source_digest the actual bytes' SHA256. An unreadable input is UNVERIFIABLE/UNKNOWN with the same unknown fields and source_digest literal `null`.\n\nA readable, otherwise valid input can still fail the selected-sum calculation if sequential binary64 addition of individually finite selected amounts produces a non-finite result (Inf, -Inf, or NaN). On any such non-finite accumulated sum, classify the entire calculation as UNVERIFIABLE/UNKNOWN, not INVALID_INPUT or EVALUATED. Files 1–4 contain headers only. File 5 has case_key fixture, build_state UNVERIFIABLE, data_state UNKNOWN, qualified_ids and selected_ids literal `null`, qualified_n, selected_n and selected_sum literal NA, and source_digest the actual input bytes' SHA256 (not `null`). This is distinct from an unreadable input, for which the source_digest remains literal `null`. Do not output an infinite sum or substitute zero.\n\nOnly your own failed input and output may be sent back for repairs. Do not seek the peer implementation or its results. Return the complete script in one R code block and a brief declaration of tools/model used and whether any peer solution was seen. Odd surrounding formatting is not an analytical failure; missing or truncated code must be recaptured.\n"
+}

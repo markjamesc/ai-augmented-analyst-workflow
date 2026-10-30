@@ -1,0 +1,3 @@
+You are acting in the live ACC003 mechanical acceptance run. This is a frozen eight-row synthetic test, not a real-world accuracy or profit study. Use only the listed attachments. Do not add procedural requirements, change the locked decision, claim a tool ran when it did not, or treat synthetic stakeholder answers as independent real-world evidence. Return plain Markdown; no special end-marker or FILE-line position is required.
+
+Continue the same Design-review chat. Attach the revised candidate, its SHA256 and the finding-to-change list. Verify only resolution of your previously raised substantive issues and directly affected content, not another full audit. Return ACCEPT with exact current SHA256 or identify the unresolved issue. No extra reviewer round.

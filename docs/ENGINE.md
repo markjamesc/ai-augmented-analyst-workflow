@@ -203,7 +203,7 @@ Owner does not specify every `summarize`. You write the named list of metric fun
 
 ### Expand (optional)
 
-**Mode note.** Expand is a **Mode B** helper (post-validation / diagnostic `.pred` binding). Mode A judged predictive contracts are Stage 3/4 dual-path work for R-A and R-B; do **not** paste one shared Expand implementation as both judged model paths. See the Stage 3/4 ML mode sections in the measurement-design and validation frameworks.
+**Model rule.** Expand may add exploratory predictions after wrangling is confirmed. If predictions determine the answer, independently fit the second model from the locked specification and reconcile predictions; never reuse one shared model implementation as both independent paths. Insight-only predictions cannot change the decision or headline. See the current Design/Execution frameworks.
 
 If `CONFIG$expand` is `FALSE`, return `measured` unchanged.
 

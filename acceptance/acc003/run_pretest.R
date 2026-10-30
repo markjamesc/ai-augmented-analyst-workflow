@@ -1,0 +1,6 @@
+a<-commandArgs(TRUE);if(length(a)!=2)stop('Usage: run_pretest.R REPO PROJECT')
+repo<-normalizePath(a[1],winslash='/');root<-normalizePath(a[2],winslash='/')
+source(file.path(repo,'methodology/contracts.R'));source(file.path(repo,'methodology/tools.R'));source(file.path(repo,'acceptance/acc003/sql_test.R'));source(file.path(repo,'acceptance/acc003/pretest.R'))
+d<-wf_read(file.path(root,'design.json'));dir<-tempfile('pretest-',tmpdir=file.path(root,'pretests'))
+p<-wf_pretest(repo,d,dir);cfg<-wf_read(file.path(root,'builders.json'));cfg$pretest<-wf_ref(root,paste0('pretests/',basename(dir),'/pretest.json'));wf_write(cfg,file.path(root,'builders.json'))
+cat('PRETEST',p$status,length(p$passed_cases),'/',length(wf_pretest_case_ids()),'\n');quit(status=if(p$status=='PASS')0L else 2L)

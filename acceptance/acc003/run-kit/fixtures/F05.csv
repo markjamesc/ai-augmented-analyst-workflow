@@ -1,0 +1,4 @@
+id,amount,eligible
+A,9,true
+B,20,false
+C,,true

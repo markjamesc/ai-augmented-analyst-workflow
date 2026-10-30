@@ -1,0 +1,14 @@
+You are acting in the live ACC003 mechanical acceptance run. This is a frozen eight-row synthetic test, not a real-world accuracy or profit study. Use only the listed attachments. Do not add procedural requirements, change the locked decision, claim a tool ran when it did not, or treat synthetic stakeholder answers as independent real-world evidence. Return plain Markdown; no special end-marker or FILE-line position is required.
+
+Role: Finish synthesis, fresh chat. Attach design.json, start.md, framing.md, run_manifest.json, actual current validation.json and all referenced production tables, plus the actual exception summary. All required checks must already PASS. Produce finish.json containing answer, limitations, claims (array of text/type/evidence_paths/interpretation), exploratory_changes_decision:false and safeguard_disposition. Cite exact PROJECT-RELATIVE paths present in the validation manifest, not guessed filenames. Do not include review acceptance fields; those are recorded after actual reviewers respond. Claim only mechanical acceptance on this known synthetic fixture. No real-world accuracy, causality, profit, unobserved independence or live SQL claims. Return complete JSON plus a short readable answer.
+
+Required finish.json interface (match the existing Procedure Gate; do not invent another representation):
+- Top level: one JSON object.
+- answer: one non-empty string.
+- limitations: one non-empty string. Combine separate limitations within that string; do not return an array.
+- claims: a non-empty array of objects. Each has text (non-empty string), type (one string from design.json allowed_claim_types), evidence_paths (non-empty array of non-empty project-relative strings present in the current validation manifest), and interpretation (non-empty string).
+- exploratory_changes_decision: JSON boolean false, not a quoted string.
+- safeguard_disposition: one non-empty string. State the applicability/disposition and necessary substantive reasoning in that string; do not return an object or array. Do not infer a waiver for other analyses.
+- Omit numerical_review and inference_review during synthesis. The existing recorder adds each only after an actual accepting review: accepted:true, simulated:false, content_sha256 (current substantive Finish hash), evidence:{path,sha256}. Never fabricate those fields.
+
+Before sending Finish to reviewers, the coordinator checks these field types on the actual saved JSON. This is a read-only interface check, not an acceptance receipt and not a new gate. inspect.R finish prints the content hash; it does not itself validate the complete Finish interface. All substantive gate requirements and evidence-to-claim review remain unchanged. Return the complete JSON in one json code block as well as any downloadable file, so a failed download does not require re-authoring.

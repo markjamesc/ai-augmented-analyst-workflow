@@ -1,0 +1,84 @@
+{
+  "fixtures": [
+    {
+      "id": "F00",
+      "path": "fixtures/F00.csv",
+      "sha256": "391ceac5ef2d8c6028f2653dc3eb1997b84465600867a303a11f70a3a432277d"
+    },
+    {
+      "id": "F01",
+      "path": "fixtures/F01.csv",
+      "sha256": "d36ce693f8ede3fc5c2b8dbdc492945bfd2a8903fe848c6c07d21b6dd54459b3"
+    },
+    {
+      "id": "F02",
+      "path": "fixtures/F02.csv",
+      "sha256": "712ceea49e70b3b1155ed956b9c818262975ecfecd75c1755b69e31d79bf9934"
+    },
+    {
+      "id": "F03",
+      "path": "fixtures/F03.csv",
+      "sha256": "9cddb0f280a6f6fd096259b101cc5b03acb280db321090ddfbf40176fc95e277"
+    },
+    {
+      "id": "F04",
+      "path": "fixtures/F04.csv",
+      "sha256": "dd373b4db46b9fef4658b1751a6d041df9c57c0f130c361c900a2cf7d2a5695f"
+    },
+    {
+      "id": "F05",
+      "path": "fixtures/F05.csv",
+      "sha256": "aabbbb38cadd26da3348c7fb049534a4e37b117a5d12c4029d08aa99f672fe2f"
+    },
+    {
+      "id": "F06",
+      "path": "fixtures/F06.csv",
+      "sha256": "8f5fef219cdb8d6e47befbcc3428022d8442eb4832517ad4e516537a6f7dcf07"
+    },
+    {
+      "id": "F07",
+      "path": "fixtures/F07.csv",
+      "sha256": "28e6e965f22e1750de51fe841c870a00e250c7dcbbcaffc30e5c0410c8a464dc"
+    },
+    {
+      "id": "F08",
+      "path": "fixtures/F08.csv",
+      "sha256": "80f72df6ea6b02263e7421d823849ee4f08355b351f0409adebb0eb071aa52a2"
+    },
+    {
+      "id": "F09",
+      "path": "fixtures/F09.csv",
+      "sha256": "063f3c605e90d009e8d75fa8900cd57efeba418353895e9c96d9fd8f310f37b3"
+    },
+    {
+      "id": "F10",
+      "path": "fixtures/F10.csv",
+      "sha256": "3aa6c47b86972f6496efe09e449f5c843a6ac04ce9b72fbcd95e26f2b75b9cc5"
+    },
+    {
+      "id": "F11",
+      "path": "fixtures/F11.csv",
+      "sha256": "e644ff72db222c2ed1764c5e781f24854d3e89dc1b104f57dce9af4df66bfa99"
+    },
+    {
+      "id": "F12",
+      "path": "fixtures/F12.csv",
+      "sha256": "4cfa759ac037760c6744c698111c0ee0bb02a43977b623753e589c68cfd30523"
+    },
+    {
+      "id": "F13",
+      "path": "fixtures/F13.csv",
+      "sha256": "5ee65139abb262a9eab754ab04a3ee77d66aa7f9a01658429144c7c6f2e53191"
+    },
+    {
+      "id": "F14",
+      "path": "fixtures/F14.csv",
+      "sha256": "628a3da331bd3b73a2d5c74341ae577ac5ea27c7c1c0c4c0671158efa7c1bf1c"
+    },
+    {
+      "id": "F15",
+      "path": "fixtures/F15.csv",
+      "sha256": "4f4acef20d1ca6205e61208cbbe929aa71a4a8c674bc859df69c0dcb2db36c2d"
+    }
+  ]
+}
