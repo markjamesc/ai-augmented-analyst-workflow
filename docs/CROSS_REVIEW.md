@@ -1,3 +1,40 @@
-# Current lean workflow pointer
+# CROSS_REVIEW — REVISE_THEN_LOCK (generalize / no case branding)
 
-Use [MASTER_PROMPT](MASTER_PROMPT.md) and the current stage frameworks. This file no longer adds a second packet/review/authorization requirement. The prior version is retained in Git history for older pinned runs. One contract and one manifest are authoritative; no send deadline, exact FILE-line placement, nonce or mandatory similarity-review tier can fail an analysis.
+> **ACC003 lean workflow (certified 2026-10-30):** Where this text describes CLI commands, receipts, status JSONs or review tiers that the certified code does not run, those are not enforced in the certified ACC003 lean code (2026-10-30). See docs/r-procedure-gate-enforcement.md for the certified interface. The mandatory similarity review is not enforced in the certified ACC003 lean code (2026-10-30).
+
+
+**Date:** 2026-09-19 (US Central)  
+**Repo:** `markjamesc/ai-augmented-analyst-workflow`  
+**Disposition:** Owner approved **revise → lock → push**, plus hard constraint: general workflow must stay portable for **any** future project — **zero case branding**.
+
+## Three-AI verify outcome
+
+| Model | Role | Verdict |
+|---|---|---|
+| ChatGPT | Builder / consolidator | REVISE_THEN_LOCK |
+| Grok | Independent critic | REVISE_THEN_LOCK |
+| DeepSeek | Claim-to-text auditor | REVISE_THEN_LOCK |
+
+Edits applied from the critic/auditor minimum set: fail-closed `capacity_stance` / `ml_mode` (required enums; blank = Fail), deferred-N still freezes ranking key/tie-break/no-pad, inverse census-ranking check, Mode use-test + Expand ban as Mode A input, shared judged helpers as a class, dumb comparator, repair-cites-Stage-3+fixtures, Mode B ≠ dual judged-path, failability ladder with no verbal waiver / owner change-control + new freeze + rerun, Workflow Gate consumes lower receipts, evidence schema with contents/hashes for new/forward publishable packs only.
+
+## Generalize-no-case-branding constraint (applied)
+
+In frameworks FORWARD sections, Master Prompt, VERIFY packet, PACKET, r-workflow-gate FORWARD text, templates, and ablation-program-catalog / batch summary docs:
+
+- **Do not** name cities, municipal service programs, project-repo brands, or project-specific construct IDs used on a past project.
+- **Do** use portable language: prior locked project packs; historical Mode None/rules posture on a past project; prospective new projects; project evidence repos hold case trees.
+- Case-specific ablation trees stay in the project evidence repo; this repo keeps control IDs + terminals only.
+
+Local three-AI verify reply dumps under `docs/forward-verify/` (if present on a worktree) are **not** pushed to `main` — they may retain case names as a private audit trail and must not brand the portable method docs. Listed in `.gitignore`.
+
+## Illustrative fragments (generalized)
+
+Older framework illustrative fragments that once named demo projects were rewritten as generic marketplace-ops / prior-locked-pack language (or removed). Method docs must not brand the portable workflow with real project proper nouns.
+
+## Pre-push check
+
+Run a case-brand audit over `docs/` and `templates/` (local `docs/forward-verify/` dumps stay gitignored and should be absent from a clean worktree). Expected: **no matches** for city names, municipal-program brands, or past-project construct IDs.
+
+## Lock confirmation
+
+Five FORWARD upgrades + Master Prompt standing process rules are locked on `main` for prospective projects. Prior locked packs are not retrofitted.

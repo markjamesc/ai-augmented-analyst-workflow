@@ -1,0 +1,21 @@
+{
+  "role": "R-A",
+  "provider": "REPLACE",
+  "model": "REPLACE",
+  "session": "REPLACE",
+  "settings": "REPLACE or unavailable with reason",
+  "seeds": "REPLACE or unavailable with reason",
+  "context_disclosure": "REPLACE",
+  "first_pass_frozen_at": "REPLACE",
+  "peer_access": "none_before_freeze",
+  "contamination": "REPLACE with known risks or none observed",
+  "coordinator_draft_seen": false,
+  "input": {
+    "path": "REPLACE",
+    "sha256": "REPLACE"
+  },
+  "output": {
+    "path": "REPLACE",
+    "sha256": "REPLACE"
+  }
+}

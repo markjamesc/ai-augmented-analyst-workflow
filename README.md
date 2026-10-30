@@ -1,8 +1,120 @@
-# AI-Augmented Analyst Workflow — 3.0 lean candidate
+# Becoming an AI-Augmented Analyst
+
+Step 3 review: [local acceptance results and remaining live checks](docs/framework-refinement/STEP3_LOCAL_ACCEPTANCE.md).
+
+This portfolio artifact presents my five-stage analytical workflow for turning technical reporting into decision support:
+
+1. **Start** — identify the business decision behind the metric request.
+2. **Framing** — turn vague stakeholder language into one precise decision question.
+3. **Design** — define the hypothesis, KPI, analytical grain, segments, confounders, and measurement risks before writing SQL.
+4. **Execution** — produce and validate evidence with SQL, modular R/Tidyverse workflows, interpretable modeling, Excel outputs, and dashboards.
+5. **Finish** — distinguish what the evidence supports from what it does not support and recommend a proportionate next action.
+
+The objective is not merely faster reporting. It is better decisions grounded in transparent evidence. AI assists with structure, analytical design, independent review, and quality control; human judgment remains responsible for the evidence, interpretation, and recommendation.
+
+```mermaid
+flowchart LR
+    A["Start and frame"] --> B["Design measurement"]
+    B --> C["Execute and validate"]
+    C --> G["R workflow gate"]
+    G -->|"PASS"| D["Interpret evidence"]
+    G -->|"FAIL"| C
+    D --> E["Recommend action"]
+    E --> P["R procedure certificate"]
+```
+
+## Deterministic procedural enforcement
+
+The five-stage method has two composed deterministic controls:
+
+- the **R Workflow Gate**, which controls the Stage 4→5 release; and
+- the **R Procedure Gate**, which referees the complete Start→Finish sequence and certifies the run.
+
+This is distinct from Stage 4 analytical validation:
+
+- **Stage 4 R-A / R-B reconciliation** asks whether the independent analytical implementations agree exactly on the locked judged logic.
+- **The R Workflow Gate** asks whether the project completed the required stage locks, used the correct Stage 3 design version, passed fixtures and validation, and has zero unresolved validation failures.
+
+The gate does not redesign the analysis or repair failed outputs. It reads machine-readable stage receipts and returns `PASS` or `FAIL`. Stage 5 is blocked unless the gate passes.
+
+See [R Workflow Gate — Cross-Stage Procedural Enforcement](docs/r-workflow-gate-enforcement.md) and the executable script at [workflow-gate/workflow_gate.R](workflow-gate/workflow_gate.R).
+
+The outer Procedure Gate does not change the five stages. It records which stage is active, verifies each stage receipt, calls the existing Workflow Gate to complete Execution, and writes `artifacts/final_certificate.json` only after the full procedure passes. See [R Procedure Gate — Whole-Run Procedural Referee](docs/r-procedure-gate-enforcement.md) and [procedure-gate/procedure_gate.R](procedure-gate/procedure_gate.R).
+
+## Current implementation status
+
+- **Ablation batch A01–A08:** adjudicated; 0 KEEP, 7 REVERT, 1 HALT. No framework changes were authorized by that batch.
+- **Numbered ablation program:** 14 KEEP verdicts adopted into the stage documents; REVERT and HALT rules unchanged. See [CHANGES_FROM_ABLATIONS.md](docs/framework-refinement/CHANGES_FROM_ABLATIONS.md). The executable gates and receipt templates have not been changed for these adoptions (open items are listed there).
+- **Prospective upgrades:** approved separately, recorded in [Master Prompt](docs/MASTER_PROMPT.md) and [cross-review](docs/CROSS_REVIEW.md).
+- **Executable gate v2:** enforces explicit capacity/ML-mode declarations and content-addressed receipts, including fixture/reconciliation scorecards. See [contract and limitations](workflow-gate/CONTRACT_V2.md).
+- **Whole-run referee:** tracks and certifies the existing five-stage sequence without changing its analytical method.
+- **Orchestration:** documented model roles and owner gates; this repository does not claim an unattended end-to-end ablation runner or technical restriction of all agent capabilities.
+
+## Packet index (stages 1–5)
+
+| Stage | Document |
+|---|---|
+| Master Prompt template | [MASTER_PROMPT.md](docs/MASTER_PROMPT.md) — standing orchestration rules before Start |
+| 1–2 Start and Framing | [three-ai-start-and-framing-dialogue-framework.md](docs/three-ai-start-and-framing-dialogue-framework.md) |
+| 3 Measurement Design | [three-ai-measurement-design-framework.md](docs/three-ai-measurement-design-framework.md) |
+| 4 Execution, Validation, and Deeper Analysis | [three-ai-validation-and-analysis-framework.md](docs/three-ai-validation-and-analysis-framework.md) |
+| 4 R execution prompt (optional) | [ENGINE.md](docs/ENGINE.md) — one-file tidyverse R Workflow Engine under Stage 4 |
+| Whole-run R procedure referee | [r-procedure-gate-enforcement.md](docs/r-procedure-gate-enforcement.md) |
+| Stage 4→5 release enforcement | [r-workflow-gate-enforcement.md](docs/r-workflow-gate-enforcement.md) |
+| 5 Interpretation and Recommendation | [three-ai-interpretation-and-recommendation-framework.md](docs/three-ai-interpretation-and-recommendation-framework.md) |
+
+One-pager: [docs/PACKET.md](docs/PACKET.md).
+
+Together, these documents specify the complete path from an initial stakeholder request to a validated, evidence-traceable decision, with deterministic checks that required procedural controls were not skipped or bypassed.
+
+## Framework refinement
+
+The five-stage workflow is the production analytical method. Proposed reusable changes to Stage 3 or Stage 4 are tested separately through a **three-model separation-of-duties ablation protocol** using ChatGPT, DeepSeek, and Grok in rotating Builder, Validator, and Adjudicator roles.
+
+The refinement layer uses a frozen constitution, blind first-pass Builder/Validator outputs, deterministic artifact hashing, and three terminal states: `KEEP`, `REVERT`, and `HALT`.
+
+See:
+
+- [Framework Refinement Overview](docs/framework-refinement/README.md)
+- [Three-Model Ablation Protocol](docs/framework-refinement/three-model-ablation-protocol.md)
+- [Ablation Constitution](docs/framework-refinement/ablation-constitution.md)
+- [Role Rotation](docs/framework-refinement/role-rotation.md)
+- [Framework Ablation Experiments](experiments/framework-ablation/README.md)
+
+A retained ablation may update the canonical Stage 3 and/or Stage 4 framework. Individual projects do not run the ablation layer as a sixth stage; they use the current canonical workflow version.
+
+## Worked case studies
+
+Case-specific evidence lives in separate project repositories. This workflow repository explains the portable method only and does not brand the method with named project packs.
+
+| Project | Decision supported | Evidence |
+|---|---|---|
+| [Bitcoin Proxy Analysis](https://github.com/markjamesc/ai-augmented-bitcoin-proxy-analysis) | Which public Bitcoin proxies, if any, are preferable to owning Bitcoin directly? | scenario model, executed notebook, internal QA checks, report and presentation |
+| [PricePoint](https://github.com/markjamesc/pricepoint) (PRICEPOINT-001) | For each reviewed product at the California pilot store, recommend a pilot price raise, a pilot price cut, no change, or “hold — not enough evidence” for the next four-week cycle (at most about 25 price changes) | full five-stage run certified by the Procedure Gate (simulation / non-live); outcome: 0 changes, all items held for insufficient evidence. Workflow versions used: [governance-history audit](docs/governance-history/PRICEPOINT-001_GOVERNANCE_HISTORY_AUDIT.md) |
+
+The R Workflow Gate is intended for prospective use on new projects rather than retrofitting prior locked packs merely for conformity.
+
+## Portfolio files
+
+- [Presentation (PDF)](Becoming_an_AI-Augmented_Analyst.pdf)
+- [Editable PowerPoint](Becoming_an_AI-Augmented_Analyst.pptx)
+
+## Technical foundation
+
+SQL, R, Tidyverse, interpretable statistical modeling, Excel reporting and automation, dashboards, AI-assisted analytical validation, and deterministic R-based workflow enforcement.
+
+## Related profiles
+
+- [LinkedIn](https://www.linkedin.com/in/mark-ciganovic/)
+- [GitHub](https://github.com/markjamesc/)
+
+## ACC003 lean workflow (certified 2026-10-30)
+
+> Merged from 9bc13eb. This adds the certified lean mechanics and the ACC003 acceptance record to the full packet above; it does not replace it. Builders in ACC003 use no web, repository or connector access (run-kit prompts 07/08). The run-approved F15 contract clarification is recorded in [ACC003 acceptance](docs/framework-refinement/ACC003_ACCEPTANCE.md).
 
 Start → Framing → Design → Execution → Finish. Purpose: prevent false analysis without unnecessary process. This candidate starts from `51b6b0f4741cf97720349c180313353300f5078b`; it does not retroactively change any earlier certification or failed attempt.
 
-## Entry points
+### Entry points
 
 - Read [MASTER_PROMPT](docs/MASTER_PROMPT.md) to run a project with the three AI services.
 - Read [Start/Framing](docs/three-ai-start-and-framing-dialogue-framework.md), [Design](docs/three-ai-measurement-design-framework.md), [Execution](docs/three-ai-validation-and-analysis-framework.md) and [Finish](docs/three-ai-interpretation-and-recommendation-framework.md).
@@ -11,7 +123,7 @@ Start → Framing → Design → Execution → Finish. Purpose: prevent false an
 
 Supported release target: **R 4.6.1**, Windows or Linux; PowerShell instructions provided for the owner's Windows PC. Dependencies: jsonlite, digest; DBI and RSQLite for the isolated synthetic SQL pretest. No required Python runtime. The build report states the actual tested R version; support target is not a claim that unrun platform tests passed.
 
-## Minimal controls
+### Minimal controls
 
 One design contract; one independent Design review; owner lock; one consolidated run manifest. Confirm the source. Build R-A/R-B independently and reconcile exact keyed semantics. Use frozen known-answer fixtures and relevant invariance checks. Pretest the checker with good and deliberately bad cases. Check claims against validated evidence at Finish.
 
@@ -19,12 +131,22 @@ Checks return PASS, ANALYSIS_DEFECT or TOOL_ERROR. A crash means repair and reru
 
 No live database is accessed by ACC003. The synthetic SQLite setup is the owner's explicit exception: create a new disposable test database, close it, reopen read-only and compare good/wrong extracts. Never repoint it at a live database.
 
-## Scope and history
+### Scope and history
 
 The executable harness supports the supplied CSV/checkpoint interface. Other projects supply and pretest their source/builder/invariance adapters before use; the ACC003 fixture does not prove arbitrary-project correctness. Decision-model fits require the locked independent paths and prediction checkpoints; ACC003 itself has no model and does not establish live ML acceptance.
 
 Files in docs/framework-refinement, docs/governance-history, experiments, and the original PDF/PPTX are historical/reference material, not current operating requirements. Original historical evidence remains unchanged. Baseline gate APIs are intentionally superseded; old runs use their pinned version, never this candidate's checker.
 
-## ACC003 acceptance
+### ACC003 acceptance
 
 ACC003 completed LIVE_PROCEDURAL_ACCEPTANCE on Windows 11, PowerShell 5.1 and R 4.6.1. The returned evidence was reviewed with checksum and recorded-output rechecks; Step 3 is accepted for this defined synthetic mechanical scope, with disclosed procedural/transport deviations. See [acceptance and publication scope](docs/framework-refinement/ACC003_ACCEPTANCE.md). This publication candidate includes the run-approved F15 contract clarification and later Finish/capture prompt clarifications; it is not byte-identical to the certified workflow archive. No claim of general analytical accuracy, profitable action, production SQL or unseen-input correctness follows.
+
+## Copyright and use
+
+Copyright © 2026 Mark Ciganovic. All rights reserved.
+
+This repository is not open source and does not grant permission to copy, distribute, modify, or incorporate its protected materials without prior written permission, except as permitted by applicable law and GitHub's Terms of Service. See [COPYRIGHT.md](COPYRIGHT.md) for the full notice.
+
+## Prospective methodology-v3 release candidate
+
+[Methodology hardening design and migration](docs/METHODOLOGY_HARDENING.md) integrates the final ablation dispositions with research-backed contracts and R enforcement. This branch is a Step-2 implementation candidate, not evidence that the complete three-AI workflow improves accuracy. See [implementation map](docs/framework-refinement/HARDENING_IMPLEMENTATION.md).
