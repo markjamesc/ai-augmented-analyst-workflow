@@ -90,3 +90,5 @@ jobs:
 
       - name: Successor project compatibility regression
         run: Rscript methodology/tests/test_successor.R
+      - name: Targeted gate changes C1-C5
+        run: Rscript methodology/tests/test_targeted_gates.R
