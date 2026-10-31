@@ -314,36 +314,59 @@ m_operations <- function(root,state,stage,final=FALSE) m_checks(function(add) {
   for(s in sends) {
     times <- vapply(c("ready_at_utc","sent_at_utc","captured_at_utc","verified_at_utc"),function(k)m_time(s[[k]]),numeric(1))
     uncertainty <- s$timestamp_uncertainty_seconds
-    add(paste("dispatch timing provenance",s$id), m_enum(s$timestamp_basis,c("machine_observed","dispatcher_reported")) && m_number(uncertainty) && uncertainty>=0 && (!identical(s$timestamp_basis,"machine_observed") || uncertainty==0) && m_ref_ok(s$dispatch_evidence,root), "Keep observation basis and uncertainty; no reconstructed precision")
-    add(paste("send chronology",s$id), all(is.finite(times)) && m_number(uncertainty) && all(diff(times)>=0) && times[1]>=m_time(br$checked_at_utc) && times[2]-uncertainty>=m_time(br$checked_at_utc) && times[2]+uncertainty<=times[3] && times[4]<=at, "No stage send before authorization; no future or reversed captures")
+    cap <- if(m_ref_ok(s$capture,root)) m_read(file.path(root,s$capture$path)) else NULL
+    reply <- if(m_ref_ok(s$reply,root)) paste(readLines(file.path(root,s$reply$path),warn=FALSE),collapse="\n") else ""
+    marker <- paste0("END_REPLY ",s$id," ",s$nonce)
+    # C1 (2026-10-31): a byte-exact Copy-button capture is accepted when its sha256 equals the reply bytes and a binding record ties it to the send.
+    bind <- if(identical(cap$capture_method,"browser_copy_button") && m_ref_ok(cap$capture_evidence,root)) m_read(file.path(root,cap$capture_evidence$path)) else NULL
+    hash_bound <- identical(cap$capture_method,"browser_copy_button") && m_ref_ok(s$reply,root) && m_text(cap$capture_sha256) && identical(tolower(cap$capture_sha256),tolower(s$reply$sha256)) &&
+      is.list(bind) && identical(bind$send_id,s$id) && identical(bind$nonce,s$nonce) && identical(bind$reply,s$reply) && m_text(bind$capture_sha256) && identical(tolower(bind$capture_sha256),tolower(s$reply$sha256))
+    method_ok <- if(identical(cap$capture_method,"browser_copy_button")) hash_bound && is.finite(m_time(bind$captured_at_utc)) && m_time(bind$captured_at_utc)>=times[2]-uncertainty && m_time(bind$captured_at_utc)<=times[4] else
+      isTRUE(cap$screen_verified) && m_enum(cap$capture_method,c("screenshot","screen_recording","browser_export")) && m_ref_ok(cap$capture_evidence,root)
+    # C6 (2026-10-31, owner ruling t1616s6752 R1): for a hash-bound reply, ready_at_utc and dispatch_evidence may be absent; any timing that is recorded must still be consistent.
+    ready_opt <- hash_bound && is.null(s$ready_at_utc)
+    disp_opt <- hash_bound && is.null(s$dispatch_evidence)
+    tt <- if(ready_opt) times[2:4] else times
+    add(paste("dispatch timing provenance",s$id), m_enum(s$timestamp_basis,c("machine_observed","dispatcher_reported")) && m_number(uncertainty) && uncertainty>=0 && (!identical(s$timestamp_basis,"machine_observed") || uncertainty==0) && (disp_opt || m_ref_ok(s$dispatch_evidence,root)), "Keep observation basis and uncertainty; no reconstructed precision; dispatch evidence optional only for a hash-bound reply")
+    add(paste("send chronology",s$id), all(is.finite(tt)) && m_number(uncertainty) && all(diff(tt)>=0) && (ready_opt || times[1]>=m_time(br$checked_at_utc)) && times[2]-uncertainty>=m_time(br$checked_at_utc) && times[2]+uncertainty<=times[3] && times[4]<=at, "No stage send before authorization; no future or reversed captures; ready time optional only for a hash-bound reply")
     add(paste("send identity",s$id), m_text(s$id) && m_text(s$ai) && m_text(s$nonce) && m_ref_ok(s$packet,root) && m_refs_ok(s$attachments,root,FALSE) && m_ref_ok(s$reply,root) && m_ref_ok(s$capture,root), "Preserve exact packet, files, reply and capture record")
     p <- if(m_ref_ok(s$packet,root)) m_read(file.path(root,s$packet$path)) else NULL
+    # C8 (2026-10-31, ruling t1616s6752 R2; pending approval): a write-once supplement may add or correct only authorization and accepted_code of the sent packet, which stays the bound packet.
+    if(!is.null(s$packet_supplement)) {
+      sup <- if(m_ref_ok(s$packet_supplement,root)) m_read(file.path(root,s$packet_supplement$path)) else NULL
+      sup_ok <- is.list(sup) && identical(sup$kind,"packet_supplement") && identical(sup$supplements,s$packet) && identical(sup$send_id,s$id) && identical(sup$nonce,s$nonce) &&
+        all(names(sup) %in% c("kind","supplements","send_id","nonce","authorization","accepted_code","reason","owner_ruling","recorded_at_utc")) && m_text(sup$reason) && m_text(sup$owner_ruling)
+      add(paste("packet supplement",s$id), sup_ok, "Supplement names the exact sent packet by sha256 and only adds authorization/accepted_code")
+      if(sup_ok) {if(!is.null(sup$authorization)) p$authorization <- sup$authorization; if(!is.null(sup$accepted_code)) p$accepted_code <- sup$accepted_code}
+    }
     add(paste("packet binding",s$id), identical(p$run_id,state$run_id) && identical(p$stage,stage) && identical(p$authorization,auth) && identical(p$send_id,s$id) && identical(p$nonce,s$nonce) && identical(p$attachments,s$attachments),"No stale packet or substituted attachment")
     if(stage=="execution") {
       locked <- m_read(file.path(root,"artifacts/stage3_locked_design.json"))$methodology
       complete <- function(p) identical(p$output_rules,locked$operational$output_rules) && identical(p$checkpoint_output_rules,locked$operational$checkpoint_output_rules) && identical(p$checkpoints,locked$checkpoints) && identical(p$receipt_dependencies,locked$receipt_dependencies)
       # C2 (2026-10-31): locked builder sections are required for builder sends only; review/tool_repair sends carry hash-checked inputs and no accepted code.
       # C5 (2026-10-31): a builder repair may cite its original builder packet (builder_base) instead of repeating the locked sections.
+      # C7 (2026-10-31, ruling t1616s6752 R3): the base may sit in an earlier attempt's ledger (builder_base_ledger, hash-checked); chronology is checked inside that ledger.
       kind_ok <- m_enum(s$send_kind,c("builder","review","tool_repair"))
-      base <- if(is.list(s$builder_base) && m_ref_ok(s$builder_base,root)) Filter(function(x) identical(x$packet,s$builder_base),sends) else list()
-      base_ok <- length(base)==1 && !identical(base[[1]]$id,s$id) && identical(base[[1]]$send_kind,"builder") && m_text(s$builder_role) && identical(base[[1]]$builder_role,s$builder_role) &&
-        is.null(base[[1]]$builder_base) && complete(m_read(file.path(root,s$builder_base$path))) && m_time(base[[1]]$verified_at_utc)<=times[2]
+      base_pkt_ok <- is.list(s$builder_base) && m_ref_ok(s$builder_base,root)
+      base_ok <- if(!base_pkt_ok || !m_text(s$builder_role)) FALSE else if(is.null(s$builder_base_ledger)) {
+        base <- Filter(function(x) identical(x$packet,s$builder_base),sends)
+        length(base)==1 && !identical(base[[1]]$id,s$id) && identical(base[[1]]$send_kind,"builder") && identical(base[[1]]$builder_role,s$builder_role) &&
+          is.null(base[[1]]$builder_base) && complete(m_read(file.path(root,s$builder_base$path))) && m_time(base[[1]]$verified_at_utc)<=times[2]
+      } else {
+        L <- if(m_ref_ok(s$builder_base_ledger,root)) m_read(file.path(root,s$builder_base_ledger$path)) else NULL
+        base <- Filter(function(x) identical(x$packet,s$builder_base),L$sends); bp <- m_read(file.path(root,s$builder_base$path))
+        bt <- if(length(base)==1) vapply(c("ready_at_utc","sent_at_utc","verified_at_utc"),function(k)m_time(base[[1]][[k]]),numeric(1)) else NA
+        length(base)==1 && !identical(s$builder_base_ledger,s$capture) && identical(bp$run_id,state$run_id) && identical(bp$stage,stage) && identical(bp$send_id,base[[1]]$id) && identical(bp$nonce,base[[1]]$nonce) &&
+          is.null(base[[1]]$builder_base) && (is.null(base[[1]]$send_kind) || identical(base[[1]]$send_kind,"builder")) && (if(!is.null(base[[1]]$builder_role)) identical(base[[1]]$builder_role,s$builder_role) else m_words(bp$role,list(tolower(s$builder_role)))) &&
+          complete(bp) && all(is.finite(bt)) && all(diff(bt)>=0) && bt[3]<=times[2]
+      }
       ok <- kind_ok && if(identical(s$send_kind,"builder")) (complete(p) || base_ok) && m_rows(p$accepted_code) && m_refs_ok(p$accepted_code,root,FALSE) else
         is.null(p$accepted_code) && is.null(s$builder_base) && m_rows(s$attachments) && length(s$attachments)>0
-      add(paste("execution packet completeness",s$id), ok,"Builder: full locked sections (or a verified builder_base packet of the same role) and explicit accepted code references; review/tool_repair: declared kind, attached inputs, no accepted code")
+      add(paste("execution packet completeness",s$id), ok,"Builder: full locked sections (or a verified builder_base packet of the same role, this or an earlier attempt's ledger) and explicit accepted code references; review/tool_repair: declared kind, attached inputs, no accepted code")
     }
-    cap <- if(m_ref_ok(s$capture,root)) m_read(file.path(root,s$capture$path)) else NULL
-    reply <- if(m_ref_ok(s$reply,root)) paste(readLines(file.path(root,s$reply$path),warn=FALSE),collapse="\n") else ""
-    marker <- paste0("END_REPLY ",s$id," ",s$nonce)
-    # C1 (2026-10-31): a byte-exact Copy-button capture is accepted when its sha256 equals the reply bytes and a binding record ties it to the send.
-    bind <- if(identical(cap$capture_method,"browser_copy_button") && m_ref_ok(cap$capture_evidence,root)) m_read(file.path(root,cap$capture_evidence$path)) else NULL
-    method_ok <- if(identical(cap$capture_method,"browser_copy_button")) m_ref_ok(s$reply,root) && m_text(cap$capture_sha256) && identical(tolower(cap$capture_sha256),tolower(s$reply$sha256)) &&
-      is.list(bind) && identical(bind$send_id,s$id) && identical(bind$nonce,s$nonce) && identical(bind$reply,s$reply) && m_text(bind$capture_sha256) && identical(tolower(bind$capture_sha256),tolower(s$reply$sha256)) &&
-      is.finite(m_time(bind$captured_at_utc)) && m_time(bind$captured_at_utc)>=times[2]-uncertainty && m_time(bind$captured_at_utc)<=times[4] else
-      isTRUE(cap$screen_verified) && m_enum(cap$capture_method,c("screenshot","screen_recording","browser_export")) && m_ref_ok(cap$capture_evidence,root)
     add(paste("capture match",s$id), identical(cap$send_id,s$id) && identical(cap$nonce,s$nonce) && identical(cap$reply,s$reply) && identical(cap$packet,s$packet) && method_ok && endsWith(trimws(reply),marker),"Nonce plus end marker and visual attestation, or byte-exact copy bound by sha256; not cryptographic proof of model identity")
     add(paste("send dependencies",s$id), m_strings(s$depends_on,TRUE) && all(vapply(s$depends_on,function(id) {d<-Filter(function(x)identical(x$id,id),sends); length(d)==1 && m_time(d[[1]]$verified_at_utc)<=times[2]-uncertainty},logical(1))),"Chain verified replies before dependent sends")
-    add(paste("watchdog",s$id), (times[2]-times[1]+uncertainty<=900) || m_ref_ok(s$overdue_report,root),"Strictly over 900 seconds requires retained escalation/disposition; polling is executor-side")
+    add(paste("watchdog",s$id), ready_opt || (times[2]-times[1]+uncertainty<=900) || m_ref_ok(s$overdue_report,root),"Strictly over 900 seconds requires retained escalation/disposition; not measurable (and not required) when ready time is absent for a hash-bound reply")
     if(!identical(s$approval_id,"none")) add(paste("send approval",s$id), any(vapply(o$approvals,function(a) identical(a$id,s$approval_id) && m_approval(a,state$run_id,stage,s$scope,times[2],root,rev$events,o$attempt),logical(1))),"Conditional approval checked at dispatch")
   }
   closure <- tryCatch(m_inventory(m_refs(o),root),error=function(e) NULL)
