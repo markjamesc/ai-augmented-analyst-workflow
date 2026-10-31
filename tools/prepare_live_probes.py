@@ -50,6 +50,6 @@ for name in ['control','changed-rb','dropped-review','stale-reply','stale-captur
     else:
         s=load(op)['sends'][0];packet=load(root/s['packet']['path']);packet['nonce']='FRESH_NEGATIVE_TEST_NONCE'
         save(root/'probe-packet.json',packet)
-        save(root/'probe-capture.json',dict(send_id=s['id'],nonce=packet['nonce'],packet=ref(root,'probe-packet.json'),reply=s['reply'],screen_verified=True,capture_method=load(root/s['capture']['path'])['capture_method'],capture_evidence=load(root/s['capture']['path'])['capture_evidence']))
+        save(root/'probe-capture.json',dict(send_id=s['id'],nonce=packet['nonce'],packet=ref(root,'probe-packet.json'),reply=s['reply'],capture_sha256=s['reply']['sha256']))  # acceptance-v2 capture record shape
 save(dest/'watchdog.json',dict(now_utc='2026-01-01T00:15:01Z',tasks=[dict(id='SYNTHETIC-overdue',status='ready',ready_at_utc='2026-01-01T00:00:00Z')]))
 print('Prepared five labeled copies (control, changed-rb, dropped-review, stale-reply, stale-capture) and synthetic overdue queue at',dest)
