@@ -118,14 +118,18 @@ t_operations <- function(root,stage) {
   roles<-c(m_stage_ai_roles[[stage]],if(identical(receipt$cross_review,"PASS"))"cross_review",
     if(identical(stage,"execution") && identical(m_read(file.path(root,"artifacts/stage3_locked_design.json"))$methodology$structural_review$policy,"required"))"structural reviewer")
   if(!length(roles))roles<-"reviewer"
+  # F5b: a synthetic receipt that records no reviewed artifact gets one (docs/<stage>/review_subject.md) so reviews have a real subject.
+  if(!length(Filter(function(z)m_ref_ok(z,root)&&!grepl("^(transcripts|captures|packets|approvals)/",z$path)&&!identical(z$path,rp),m_refs(receipt)))){
+    receipt$review_subject<-t_file(root,paste0("docs/",stage,"/review_subject.md"),paste("Synthetic",stage,"artifact under review"));t_write(root,rp,receipt)}
   sends<-lapply(seq_along(roles),function(i){id<-paste0(stage,"-synthetic-",i);nonce<-paste0("TEST-",stage,"-",i)
     p<-list(run_id=state$run_id,stage=stage,send_id=id,nonce=nonce,role=roles[[i]],attachments=list())
     t_write(root,paste0("packets/",stage,"/",id,".json"),p);packet<-m_file_ref(paste0("packets/",stage,"/",id,".json"),root)
     px<-Filter(function(x)identical(x$role,roles[[i]]),if(is.list(receipt$ai_provenance))receipt$ai_provenance else list())
     reply<-if(length(px)) px[[1]]$output else t_file(root,paste0("transcripts/",stage,"/",id,"_reply.txt"),paste("Synthetic reply",roles[[i]],"\nEND_REPLY",id,nonce))
     t_write(root,paste0("captures/",stage,"/",id,".json"),list(send_id=id,nonce=nonce,packet=packet,reply=reply,capture_sha256=reply$sha256))
-    rr<-if(is.list(receipt))Filter(function(z)m_ref_ok(z,root)&&!grepl("^(transcripts|captures)/",z$path),m_refs(receipt)) else list()
-    att<-if(length(rr))unname(rr[1]) else if(file.exists(file.path(root,rp)))list(m_file_ref(rp,root)) else list()  # F5: the review saw a current artifact the receipt reaches  # F5: the review saw the current stage receipt
+    sj<-m_review_subjects(stage,receipt,rp);sj<-sj[!is.na(sj)&file.exists(file.path(root,sj))]
+    rr<-Filter(function(z)m_ref_ok(z,root)&&!grepl("^(transcripts|captures|packets)/",z$path)&&!identical(z$path,rp),m_refs(receipt))
+    att<-unname(lapply(unique(c(sj,if(length(rr))rr[[1]]$path)),m_file_ref,root=root))  # F5b: attach every reviewed subject at its current hash (never the receipt itself)
     list(id=id,ai="synthetic",role=roles[[i]],send_kind="review",nonce=nonce,packet=packet,attachments=att,reply=reply,capture=m_file_ref(paste0("captures/",stage,"/",id,".json"),root))})
   t_write(root,paste0("artifacts/operations/",stage,".json"),list(version="acceptance-v2",run_id=state$run_id,stage=stage,sends=sends))
 }

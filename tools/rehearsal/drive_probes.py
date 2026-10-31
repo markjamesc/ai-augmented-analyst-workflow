@@ -44,13 +44,25 @@ def f5(d): _sends(d, 'finish', lambda S: [dict(x, attachments=[]) if x['id'] == 
 def f6(d):
     t = 'transcripts/finish/late_reply.txt.bak'; open(f'{d}/{t}', 'w').write('Late\n'); rp = f'{d}/artifacts/stage5_interpretation_status.json'
     r = _jl(rp); r['late_review'] = {'path': t, 'sha256': _sha(f'{d}/{t}')}; _jw(rp, r)
+# F5b (RV-D2/RV-C2, card t1665s6948): each required send must attach every reviewed subject at its current hash; receipt never counts.
+def _ref(d, q): return {'path': q, 'sha256': _sha(f'{d}/{q}')}
+def f5b_receipt(d): _sends(d, 'finish', lambda S: [dict(x, attachments=[_ref(d, 'artifacts/stage5_interpretation_status.json')]) if x['id'] == 'S5-n1' else x for x in S])
+def f5b_ancillary(d): _sends(d, 'finish', lambda S: [dict(x, attachments=[_ref(d, 'outputs/r_a/totals.csv')]) if x['id'] == 'S5-n1' else x for x in S])
+def f5b_omit(d): _sends(d, 'finish', lambda S: [dict(x, attachments=[a for a in x['attachments'] if a['path'] != 'docs/stage5/interpretation.md']) if x['id'] == 'S5-n1' else x for x in S])
+def f5b_stale(d): _sends(d, 'finish', lambda S: [dict(x, attachments=[dict(a, sha256='0'*64) if a['path'] == 'docs/stage5/interpretation.md' else a for a in x['attachments']]) if x['id'] == 'S5-n1' else x for x in S])
+def f5b_builders(d): _sends(d, 'execution', lambda S: [dict(x, attachments=[a for a in x['attachments'] if not a['path'].startswith('builds/')]) if x.get('role') == 'structural reviewer' else x for x in S])
 OPSS = lambda c, st: [RS, '--vanilla', 'tools/check_remediation.R', 'operations', f'{P}/{c}', st]
 for n, fn, st, chk in [('f1-start-role-dropped', f1, 'start', 'review coverage start role red_team'),
                        ('f2-capture-sha-missing', f2, 'finish', 'review coverage finish capture S5-i1'),
                        ('f3-duplicate-nonce', f3, 'finish', 'review coverage finish unique send ids'),
                        ('f4-roles-swapped', f4, 'finish', 'review coverage finish role interpreter'),
                        ('f5-no-attachments', f5, 'finish', 'review coverage finish role numerical_auditor'),
-                       ('f6-odd-reply-name', f6, 'finish', 'review coverage finish reply transcripts/finish/late_reply.txt.bak')]:
+                       ('f6-odd-reply-name', f6, 'finish', 'review coverage finish reply transcripts/finish/late_reply.txt.bak'),
+                       ('f5b-receipt-only', f5b_receipt, 'finish', 'review coverage finish role numerical_auditor'),
+                       ('f5b-ancillary-only', f5b_ancillary, 'finish', 'review coverage finish role numerical_auditor'),
+                       ('f5b-subject-omitted', f5b_omit, 'finish', 'review coverage finish role numerical_auditor'),
+                       ('f5b-subject-stale', f5b_stale, 'finish', 'review coverage finish role numerical_auditor'),
+                       ('f5b-builders-omitted', f5b_builders, 'execution', 'review coverage execution role structural reviewer')]:
     fn(_fcopy(n)); cases.append((n, OPSS(n, st), 1, chk))
 def failed(txt):
     try: return [c['check'] for c in json.loads(txt[txt.index('['):]) if c.get('result') != 'PASS']

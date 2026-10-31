@@ -164,8 +164,8 @@ write_stage5 <- function(root) {
 }
 
 source(file.path(repo_root, "methodology/tests/fixtures.R"))
-old_s1 <- write_stage1; write_stage1 <- function(root) {old_s1(root); p <- "artifacts/stage1_decision.json"; v <- m_read(file.path(root,p)); v$decision_id <- "decision-1"; t_write(root,p,v)}
-old_s2 <- write_stage2; write_stage2 <- function(root) {old_s2(root); p <- "artifacts/stage2_framing.json"; v <- m_read(file.path(root,p)); v$question_id <- "question-1"; v$question_type <- "descriptive"; t_write(root,p,v)}
+old_s1 <- write_stage1; write_stage1 <- function(root) {old_s1(root); p <- "artifacts/stage1_decision.json"; v <- m_read(file.path(root,p)); v$decision_id <- "decision-1"; v$review_subject <- t_file(root,"docs/start/review_subject.md","Synthetic start record under review"); t_write(root,p,v)}
+old_s2 <- write_stage2; write_stage2 <- function(root) {old_s2(root); p <- "artifacts/stage2_framing.json"; v <- m_read(file.path(root,p)); v$question_id <- "question-1"; v$question_type <- "descriptive"; v$review_subject <- t_file(root,"docs/framing/review_subject.md","Synthetic framing record under review"); t_write(root,p,v)}
 old_s3 <- write_stage3; write_stage3 <- function(root) {old_s3(root); t_design(root)}
 old_s4 <- write_stage4; write_stage4 <- function(root) {old_s4(root); t_execution(root)}
 old_s5 <- write_stage5; write_stage5 <- function(root) {old_s5(root); t_finish(root)}
