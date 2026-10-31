@@ -145,3 +145,38 @@ Items 1, 2, 4, 5 and 7 (the #30 gate, #16 meaning, #37 tag, #48/#50 FLAG handlin
 
 ## C11: procedure evidence closure applies the C9 supersession resolutions (owner approval t1636s6840)
 Before C11, `m_operations` applied an operations ledger's `supersession_resolutions` (C9) but the procedure gate's Stage evidence closure (`complete` ~line 516, `amend`, finalize inventory) called `m_inventory` without them, so the two gates disagreed on the same ledger. `step_closure()`/`closure_resolutions()` now pass the ledger's resolutions to `m_inventory`. The resolutions are filtered exactly as in m_operations: any resolution naming a packet that the ledger sent is dropped, and `m_inventory` still requires the hash match and never-sent status. Record-only; no analysis check is relaxed. Tests: T11 (7 checks: baseline fails; resolved passes and agrees with m_operations; wrong hash fails; sent-status fails; another stale ref still fails; a resolution naming a sent packet is not applied; static wiring of complete/amend/finalize). Targeted suite 68/68.
+
+## Round 2 cuts (2026-10-31, owner t1652u / card t1651s6906, t1660u, t1663u)
+Commits on gates-targeted-2026-10-31 (local only): 6bf2bd5 (gate: P01-P13 cut, R1 added), 45a263c (runkit/drivers/docs),
+404500b and 1a5db96 (pure tooling bugs found by the rehearsal), plus this doc commit.
+Evidence: /workspace/ablation_plan/ROUND2_RESULTS_2026-10-31.md and res_*.json (P01-P13); /workspace/abl/res_new_*.json
+(gate at 6bf2bd5 on the pre-cut root), /workspace/abl/res3_*.json (joint: new runkit root), /workspace/abl/alone/res_*.json (per-group alone).
+
+### Gate rules cut (P01-P13)
+P01 capture match fields, P02 dispatch timing provenance, P03 send chronology, P04 watchdog in the gate, P05 send dependencies
+(incl. the C10 out-of-order deviation path), P06 packet binding, P07 execution packet completeness, P08 send coverage flag,
+P09 revocation ledger, P10 approvals (sign-off conditions, IDs, send approval), P11 operations identity, P12 completion
+timestamp, P13 deviation dispositions. Reason for each: audit-only; no planted analysis defect escaped alone or jointly.
+P05 was the only incidental guard against a dropped review; it is replaced by R1.
+Kept: P14 send identity, P15-P20 integrity/closure, every analysis check, C3 and C9-C11.
+
+### Added: R1 review coverage
+Per stage, derived generically from the locked design and stage roles: every required role has a captured send, its reply
+file exists with the recorded hash, the capture names that reply, and replies are distinct. Catches a dropped final review
+(R16), a dropped start send (R17), a dropped auditor (R13/R14) and stale-reply swaps (A7, A7c), with integrity on and off.
+
+### Run-record cuts (runkit and drivers), each ablated alone and jointly (t1663u)
+F1 dispatch/chronology (`sent` step, dispatch file, ready/sent/verified times, basis, uncertainty); F2 binding file and
+capture_evidence; F3 packet/ledger authorization and approval_id; F4 capture_method; F5 ledger approvals, deviations,
+revocations.json, transcript index, all_sends_recorded, completed_at, attempt; driver chronology sleeps (timing only, no record).
+Method: for each group, a scratch commit (branches abl-alone-*) with the pre-cut runkit minus that group only; a full
+5-stage rehearsal; then 15 cases (baseline, A1-A7, A6c, A7c, R13-R17) x integrity on/off on that root. V0 = nothing cut.
+Result: V0, F1, F2, F3, F4, F5 and the joint cut (real runkit at 1a5db96) give the identical pattern: every A-defect and
+every missing-review case caught, except A2 with integrity off (also escapes with nothing cut; only integrity hashes catch
+it) and R15 (per-send duplicate file deleted while the ledger keeps the send; review not missing; harmless, as before).
+All six alone rehearsals and the joint rehearsal were 0 failures, 0 waivers.
+
+### Kept because unsure (not cut)
+acceptance.py watchdog (tool, not a gate rule); owner records under approvals/ and the preapproval sheet (owner authority);
+locked sections in builder packets (P07 gate check cut, practice kept); "Controlling documents unchanged" (integrity).
+Probe changes (a) retired, (d) replaced by dropped-review and stale-reply: need ChatGPT's agreement before live use.
