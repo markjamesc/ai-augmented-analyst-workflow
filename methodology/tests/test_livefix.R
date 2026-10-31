@@ -33,6 +33,7 @@ check("D20 snapshot is idempotent",identical(m_freeze_file(frozen$path,root),m_f
 now<-format(Sys.time(),"%Y-%m-%dT%H:%M:%SZ",tz="UTC")
 t_write(root,"artifacts/procedure/checks/start-begin.json",list(step="start",phase="begin",result="PASS",checked_at_utc=now))
 state<-list(run_id="SYNTHETIC-LIVEFIX",current_step="start",current_authorization=m_file_ref("artifacts/procedure/checks/start-begin.json",root))
+if(!file.exists(file.path(root,"artifacts/stage1_decision.json")))t_write(root,"artifacts/stage1_decision.json",list(stage=1,status="LOCKED",note="synthetic receipt for review coverage"))
 t_write(root,"artifacts/procedure/run_state.json",state);t_operations(root,"start")
 opath<-"artifacts/operations/start.json";o<-m_read(file.path(root,opath));packetpath<-o$sends[[1]]$packet$path
 packet<-m_read(file.path(root,packetpath));packet$design_candidate<-m_file_ref("candidate.json",root);t_write(root,packetpath,packet)
@@ -43,8 +44,7 @@ t_file(root,"candidate.json",'{"version":"rewritten-after-send"}')
 check("D20 rewritten nested reference refused at completion",!m_pass(m_operations(root,state,"start")))
 packet$design_candidate<-frozen;t_write(root,packetpath,packet);o$sends[[1]]$packet<-m_file_ref(packetpath,root);cap$packet<-o$sends[[1]]$packet;t_write(root,capath,cap);o$sends[[1]]$capture<-m_file_ref(capath,root);t_write(root,opath,o)
 check("D20 immutable candidate references accepted",m_pass(m_operations(root,state,"start")))
-cap$capture_evidence<-NULL;t_write(root,capath,cap);o$sends[[1]]$capture<-m_file_ref(capath,root);t_write(root,opath,o)
-check("D07 bare screen attestation rejected",!m_pass(m_operations(root,state,"start")))
+# D07 (capture method attestation) removed with capture match, P01 cut 2026-10-31; stale/foreign captures are caught by review coverage.
 check("D03 Windows path canonicalized",identical(m_relative_path("C:\\run\\artifacts\\begin.json","C:/run"),"artifacts/begin.json"))
 check("D03 traversal rejected",inherits(try(m_relative_path("C:/run/../outside","C:/run"),silent=TRUE),"try-error"))
 check("D03 outside prefix rejected",inherits(try(m_relative_path("C:/runner/file","C:/run"),silent=TRUE),"try-error"))

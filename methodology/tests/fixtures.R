@@ -111,18 +111,18 @@ t_execution <- function(root) {
   t_write(root,p,r);s4$evidence_receipts$methodology<-m_file_ref(p,root);t_write(root,"artifacts/stage4_validation_status.json",s4)
 }
 t_operations <- function(root,stage) {
+  # 2026-10-31 (option B): lean ledger. One captured, hash-bound review per required role; the receipt is left untouched.
   state<-m_read(file.path(root,"artifacts/procedure/run_state.json"))
   if(!identical(state$current_step,stage))return(invisible(NULL))
-  auth<-state$current_authorization;now<-format(Sys.time(),"%Y-%m-%dT%H:%M:%SZ",tz="UTC");id<-paste0(stage,"-synthetic");nonce<-paste0("TEST-",stage)
-  p<-list(run_id=state$run_id,stage=stage,authorization=auth,send_id=id,nonce=nonce,attachments=list())
-  if(stage=="execution") {m<-m_read(file.path(root,"artifacts/stage3_locked_design.json"))$methodology;p$output_rules<-m$operational$output_rules;p$checkpoint_output_rules<-m$operational$checkpoint_output_rules;p$checkpoints<-m$checkpoints;p$receipt_dependencies<-m$receipt_dependencies;p$accepted_code<-list()}
-  t_write(root,paste0("packets/",stage,".json"),p);packet<-m_file_ref(paste0("packets/",stage,".json"),root)
-  reply<-t_file(root,paste0("replies/",stage,".txt"),paste("Synthetic reply\nEND_REPLY",id,nonce))
-  capture_evidence<-t_file(root,paste0("captures/",stage,"-browser.txt"),"SYNTHETIC visible browser export for testing only")
-  cap<-list(send_id=id,nonce=nonce,packet=packet,reply=reply,screen_verified=TRUE,capture_method="browser_export",capture_evidence=capture_evidence)
-  t_write(root,paste0("captures/",stage,".json"),cap)
-  owner<-t_file(root,paste0("approvals/",stage,".txt"),"Synthetic authorization, never live owner consent")
-  approvals<-lapply(c("stage_signoff",if(stage=="finish")"final_certification"),function(scope)list(id=paste(stage,scope),run_id=state$run_id,stage=stage,scope=scope,wording_author="synthetic",owner_record=owner,granted_at_utc="2020-01-01T00:00:00Z",expires_at_utc="2099-01-01T00:00:00Z",conditions=list()))
-  rev<-"artifacts/operations/revocations.json";if(!file.exists(file.path(root,rev)))t_write(root,rev,list(run_id=state$run_id,events=list()))
-  t_write(root,paste0("artifacts/operations/",stage,".json"),list(version="acceptance-v1",run_id=state$run_id,stage=stage,authorization=auth,completed_at_utc=now,approvals=approvals,sends=list(list(id=id,ai="synthetic",send_kind="builder",nonce=nonce,packet=packet,attachments=list(),reply=reply,capture=m_file_ref(paste0("captures/",stage,".json"),root),depends_on=list(),approval_id="none",timestamp_basis="machine_observed",timestamp_uncertainty_seconds=0,dispatch_evidence=capture_evidence,ready_at_utc=now,sent_at_utc=now,captured_at_utc=now,verified_at_utc=now)),all_sends_recorded=TRUE,transcript_index=t_file(root,paste0("transcripts/",stage,".txt"),"Synthetic complete transcript"),deviations=list()))
+  rp<-unname(m_stage_receipts[stage]);receipt<-m_read(file.path(root,rp))
+  roles<-c(m_stage_ai_roles[[stage]],if(identical(receipt$cross_review,"PASS"))"cross_review",
+    if(identical(stage,"execution") && identical(m_read(file.path(root,"artifacts/stage3_locked_design.json"))$methodology$structural_review$policy,"required"))"structural reviewer")
+  if(!length(roles))roles<-"reviewer"
+  sends<-lapply(seq_along(roles),function(i){id<-paste0(stage,"-synthetic-",i);nonce<-paste0("TEST-",stage,"-",i)
+    p<-list(run_id=state$run_id,stage=stage,send_id=id,nonce=nonce,role=roles[[i]],attachments=list())
+    t_write(root,paste0("packets/",stage,"/",id,".json"),p);packet<-m_file_ref(paste0("packets/",stage,"/",id,".json"),root)
+    reply<-t_file(root,paste0("transcripts/",stage,"/",id,"_reply.txt"),paste("Synthetic reply",roles[[i]],"\nEND_REPLY",id,nonce))
+    t_write(root,paste0("captures/",stage,"/",id,".json"),list(send_id=id,nonce=nonce,packet=packet,reply=reply))
+    list(id=id,ai="synthetic",role=roles[[i]],send_kind="review",nonce=nonce,packet=packet,attachments=list(),reply=reply,capture=m_file_ref(paste0("captures/",stage,"/",id,".json"),root))})
+  t_write(root,paste0("artifacts/operations/",stage,".json"),list(version="acceptance-v2",run_id=state$run_id,stage=stage,sends=sends))
 }

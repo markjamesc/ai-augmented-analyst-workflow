@@ -416,11 +416,11 @@ validate_stage_receipt <- function(step_id, receipt, project_root) {
   if (step_id == "design") checks <- c(checks, m_design(receipt,
     m_read(file.path(project_root, "artifacts/stage2_framing.json")),
     m_read(file.path(project_root, "artifacts/stage1_decision.json")), project_root),
-    m_ai(receipt$ai_provenance, c("designer_a", "designer_b", "risk_reviewer"), project_root, "design"))
+    m_ai(receipt$ai_provenance, m_stage_ai_roles$design, project_root, "design"))
   if (step_id == "finish") checks <- c(checks,
     m_finish(m_read(file.path(project_root, "artifacts/stage3_locked_design.json")),
       m_read(file.path(project_root, "artifacts/stage4_validation_status.json")), receipt, project_root),
-    m_ai(receipt$ai_provenance, c("interpreter", "inference_reviewer", "numerical_auditor"), project_root, "finish"))
+    m_ai(receipt$ai_provenance, m_stage_ai_roles$finish, project_root, "finish"))
   add("Referenced evidence current", m_refs_ok(receipt, project_root, required = FALSE), "Every declared file reference must match its hash")
   checks
 }
@@ -528,7 +528,7 @@ procedure_complete <- function(project_root, step_id) {
     check_result("Required receipt exists and parses", is.list(receipt), step$artifact)
   )
   checks <- c(checks, validate_stage_receipt(step_id, receipt, project_root))
-  checks <- c(checks, m_operations(project_root, state, step_id))
+  checks <- c(checks, m_operations(project_root, state, step_id, receipt = step$artifact))
   closure <- step_closure(project_root, step_id, receipt)
   checks <- c(checks,list(check_result("Stage evidence closure",!is.null(closure),"All receipt and packet references must remain valid before completion")))
 
@@ -735,8 +735,8 @@ procedure_finalize <- function(project_root) {
     check_result("Stage 5 deliverables unchanged", verify_file_manifest(state$completed_steps$finish$deliverables, project_root), "deliverables must match their Finish completion hashes"),
     check_result("Controlling documents unchanged", verify_framework_hashes(state), "framework hashes must match run start")
   )
-  for (stage in required) checks <- c(checks, m_operations(project_root,state,stage,final=TRUE))
-  inventory <- tryCatch(m_inventory(c(m_refs(state$completed_steps), list(list(path="artifacts/workflow_gate_status.json",sha256=state$workflow_gate$report_sha256), list(path="artifacts/operations/revocations.json",sha256=m_hash(file.path(project_root,"artifacts/operations/revocations.json"))))), project_root, closure_resolutions(project_root,required)),error=function(e) NULL)
+  for (st in procedure$steps) checks <- c(checks, m_operations(project_root,state,st$id,final=TRUE,receipt=st$artifact))
+  inventory <- tryCatch(m_inventory(c(m_refs(state$completed_steps), list(list(path="artifacts/workflow_gate_status.json",sha256=state$workflow_gate$report_sha256))), project_root, closure_resolutions(project_root,required)),error=function(e) NULL)
   checks <- c(checks,list(check_result("Evidence dependency closure",!is.null(inventory),"All referenced files must exist at authoritative root with matching hashes")))
   record <- save_checks(project_root, "final", "certification", checks)
   if (!checks_pass(checks)) {

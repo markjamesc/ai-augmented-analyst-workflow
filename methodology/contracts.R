@@ -286,109 +286,67 @@ m_validation <- function(s3, receipt, root) m_checks(function(add) {
   e <- receipt$reproducibility; restore <- if(m_ref_ok(e$restore_report, root)) m_read(file.path(root,e$restore_report$path)) else NULL
   add("environment restoration", m_ref_ok(e$environment_spec, root) && identical(restore$status,"PASS") && isTRUE(restore$fresh_environment) && identical(restore$environment_spec,e$environment_spec) && m_ref_ok(restore$console,root), "A package list alone is not an environment restoration test")
 })
-m_approval <- function(a, run, stage, scope, at, root, revocations, attempt = NULL) {
-  # C4 (2026-10-31): scope_bound approvals hold for one run attempt; an owner-set expires_at_utc stays a hard limit.
-  bound <- is.list(a$scope_bound)
-  window <- if (bound) identical(a$scope_bound$run_id,run) && m_text(a$scope_bound$attempt) && identical(a$scope_bound$attempt,attempt) &&
-    (is.null(a$expires_at_utc) || (is.finite(m_time(a$expires_at_utc)) && at<=m_time(a$expires_at_utc))) else
-    is.finite(m_time(a$expires_at_utc)) && at<=m_time(a$expires_at_utc)
-  is.list(a) && m_text(a$id) && identical(a$run_id,run) && identical(a$stage,stage) && identical(a$scope,scope) && m_text(a$wording_author) && m_ref_ok(a$owner_record,root) &&
-    is.finite(m_time(a$granted_at_utc)) && m_time(a$granted_at_utc)<=at && window &&
-    m_rows(a$conditions) && all(vapply(a$conditions,function(c) identical(c$status,"PASS") && m_text(c$condition) && m_ref_ok(c$evidence,root),logical(1))) &&
-    !any(vapply(revocations,function(r) identical(r$approval_id,a$id),logical(1)))
+# Stage review roles the gate requires (one source for m_ai in procedure_gate and for review coverage).
+m_stage_ai_roles <- list(design=c("designer_a","designer_b","risk_reviewer"), finish=c("interpreter","inference_reviewer","numerical_auditor"))
+m_stage_receipts <- c(start="artifacts/stage1_decision.json", framing="artifacts/stage2_framing.json", design="artifacts/stage3_locked_design.json",
+  execution="artifacts/stage4_validation_status.json", finish="artifacts/stage5_interpretation_status.json")
+# Paths reachable from a JSON file through hash references (current refs only; the operations ledger itself is not a source).
+m_reachable <- function(start, root) {
+  seen <- character(0); todo <- list(start)
+  while (length(todo)) { ref <- todo[[1]]; todo <- todo[-1]
+    if (!m_ref_ok(ref, root) || ref$path %in% seen || startsWith(ref$path, "artifacts/operations/")) next
+    seen <- c(seen, ref$path)
+    if (grepl("\\.json$", ref$path, ignore.case = TRUE)) todo <- c(todo, m_refs(m_read(file.path(root, ref$path)))) }
+  seen
 }
-m_operations <- function(root,state,stage,final=FALSE) m_checks(function(add) {
-  o <- m_read(file.path(root,"artifacts/operations",paste0(stage,".json")))
-  auth <- if(identical(state$current_step,stage)) state$current_authorization else state$completed_steps[[stage]]$authorization
-  br <- if(m_ref_ok(auth,root)) m_read(file.path(root,auth$path)) else NULL
-  add("operations identity", identical(o$version,"acceptance-v1") && identical(o$run_id,state$run_id) && identical(o$stage,stage) && identical(o$authorization,auth) && identical(br$step,stage) && identical(br$phase,"begin") && identical(br$result,"PASS"), "Exact successful begin authorization is required")
-  rev <- m_read(file.path(root,"artifacts/operations/revocations.json"))
-  add("revocation ledger", identical(rev$run_id,state$run_id) && m_rows(rev$events) && all(vapply(rev$events,function(r) m_text(r$approval_id) && is.finite(m_time(r$recorded_at_utc)) && m_ref_ok(r$owner_record,root),logical(1))), "Known revocations override prior grants; unseen messages are outside code enforcement")
-  add("approval IDs", m_rows(o$approvals) && !anyDuplicated(vapply(o$approvals,function(x)x$id,character(1))), "Unique explicit applications; no blanket approval")
-  at <- m_time(o$completed_at_utc)
-  add("completion timestamp", is.finite(at) && at<=as.numeric(Sys.time())+2 && at>=m_time(br$checked_at_utc),"Machine-recorded UTC chronology")
-  scopes <- c("stage_signoff",if(final && stage=="finish") "final_certification")
-  for(scope in scopes) add(paste("approval",scope), any(vapply(o$approvals,function(a)m_approval(a,state$run_id,stage,scope,at,root,rev$events,o$attempt),logical(1))), "Check grant, expiry, scope, conditions and known revocation")
-  sends <- o$sends
-  add("send coverage", m_rows(sends) && length(sends)>0 && !anyDuplicated(vapply(sends,function(x)x$id,character(1))) && isTRUE(o$all_sends_recorded) && m_ref_ok(o$transcript_index,root), "Completeness attestation remains procedural")
-  for(s in sends) {
-    times <- vapply(c("ready_at_utc","sent_at_utc","captured_at_utc","verified_at_utc"),function(k)m_time(s[[k]]),numeric(1))
-    uncertainty <- s$timestamp_uncertainty_seconds
-    cap <- if(m_ref_ok(s$capture,root)) m_read(file.path(root,s$capture$path)) else NULL
-    reply <- if(m_ref_ok(s$reply,root)) paste(readLines(file.path(root,s$reply$path),warn=FALSE),collapse="\n") else ""
-    marker <- paste0("END_REPLY ",s$id," ",s$nonce)
-    # C1 (2026-10-31): a byte-exact Copy-button capture is accepted when its sha256 equals the reply bytes and a binding record ties it to the send.
-    bind <- if(identical(cap$capture_method,"browser_copy_button") && m_ref_ok(cap$capture_evidence,root)) m_read(file.path(root,cap$capture_evidence$path)) else NULL
-    hash_bound <- identical(cap$capture_method,"browser_copy_button") && m_ref_ok(s$reply,root) && m_text(cap$capture_sha256) && identical(tolower(cap$capture_sha256),tolower(s$reply$sha256)) &&
-      is.list(bind) && identical(bind$send_id,s$id) && identical(bind$nonce,s$nonce) && identical(bind$reply,s$reply) && m_text(bind$capture_sha256) && identical(tolower(bind$capture_sha256),tolower(s$reply$sha256))
-    method_ok <- if(identical(cap$capture_method,"browser_copy_button")) hash_bound && is.finite(m_time(bind$captured_at_utc)) && m_time(bind$captured_at_utc)>=times[2]-uncertainty && m_time(bind$captured_at_utc)<=times[4] else
-      isTRUE(cap$screen_verified) && m_enum(cap$capture_method,c("screenshot","screen_recording","browser_export")) && m_ref_ok(cap$capture_evidence,root)
-    # C6 (2026-10-31, owner ruling t1616s6752 R1): for a hash-bound reply, ready_at_utc and dispatch_evidence may be absent; any timing that is recorded must still be consistent.
-    ready_opt <- hash_bound && is.null(s$ready_at_utc)
-    disp_opt <- hash_bound && is.null(s$dispatch_evidence)
-    tt <- if(ready_opt) times[2:4] else times
-    add(paste("dispatch timing provenance",s$id), m_enum(s$timestamp_basis,c("machine_observed","dispatcher_reported")) && m_number(uncertainty) && uncertainty>=0 && (!identical(s$timestamp_basis,"machine_observed") || uncertainty==0) && (disp_opt || m_ref_ok(s$dispatch_evidence,root)), "Keep observation basis and uncertainty; no reconstructed precision; dispatch evidence optional only for a hash-bound reply")
-    add(paste("send chronology",s$id), all(is.finite(tt)) && m_number(uncertainty) && all(diff(tt)>=0) && (ready_opt || times[1]>=m_time(br$checked_at_utc)) && times[2]-uncertainty>=m_time(br$checked_at_utc) && times[2]+uncertainty<=times[3] && times[4]<=at, "No stage send before authorization; no future or reversed captures; ready time optional only for a hash-bound reply")
-    add(paste("send identity",s$id), m_text(s$id) && m_text(s$ai) && m_text(s$nonce) && m_ref_ok(s$packet,root) && m_refs_ok(s$attachments,root,FALSE) && m_ref_ok(s$reply,root) && m_ref_ok(s$capture,root), "Preserve exact packet, files, reply and capture record")
-    p <- if(m_ref_ok(s$packet,root)) m_read(file.path(root,s$packet$path)) else NULL
-    # C8 (2026-10-31, ruling t1616s6752 R2; pending approval): a write-once supplement may add or correct only authorization and accepted_code of the sent packet, which stays the bound packet.
-    if(!is.null(s$packet_supplement)) {
-      sup <- if(m_ref_ok(s$packet_supplement,root)) m_read(file.path(root,s$packet_supplement$path)) else NULL
-      sup_ok <- is.list(sup) && identical(sup$kind,"packet_supplement") && identical(sup$supplements,s$packet) && identical(sup$send_id,s$id) && identical(sup$nonce,s$nonce) &&
-        all(names(sup) %in% c("kind","supplements","send_id","nonce","authorization","accepted_code","reason","owner_ruling","recorded_at_utc")) && m_text(sup$reason) && m_text(sup$owner_ruling)
-      add(paste("packet supplement",s$id), sup_ok, "Supplement names the exact sent packet by sha256 and only adds authorization/accepted_code")
-      if(sup_ok) {if(!is.null(sup$authorization)) p$authorization <- sup$authorization; if(!is.null(sup$accepted_code)) p$accepted_code <- sup$accepted_code}
-    }
-    add(paste("packet binding",s$id), identical(p$run_id,state$run_id) && identical(p$stage,stage) && identical(p$authorization,auth) && identical(p$send_id,s$id) && identical(p$nonce,s$nonce) && identical(p$attachments,s$attachments),"No stale packet or substituted attachment")
-    if(stage=="execution") {
-      locked <- m_read(file.path(root,"artifacts/stage3_locked_design.json"))$methodology
-      complete <- function(p) identical(p$output_rules,locked$operational$output_rules) && identical(p$checkpoint_output_rules,locked$operational$checkpoint_output_rules) && identical(p$checkpoints,locked$checkpoints) && identical(p$receipt_dependencies,locked$receipt_dependencies)
-      # C2 (2026-10-31): locked builder sections are required for builder sends only; review/tool_repair sends carry hash-checked inputs and no accepted code.
-      # C5 (2026-10-31): a builder repair may cite its original builder packet (builder_base) instead of repeating the locked sections.
-      # C7 (2026-10-31, ruling t1616s6752 R3): the base may sit in an earlier attempt's ledger (builder_base_ledger, hash-checked); chronology is checked inside that ledger.
-      kind_ok <- m_enum(s$send_kind,c("builder","review","tool_repair"))
-      base_pkt_ok <- is.list(s$builder_base) && m_ref_ok(s$builder_base,root)
-      base_ok <- if(!base_pkt_ok || !m_text(s$builder_role)) FALSE else if(is.null(s$builder_base_ledger)) {
-        base <- Filter(function(x) identical(x$packet,s$builder_base),sends)
-        length(base)==1 && !identical(base[[1]]$id,s$id) && identical(base[[1]]$send_kind,"builder") && identical(base[[1]]$builder_role,s$builder_role) &&
-          is.null(base[[1]]$builder_base) && complete(m_read(file.path(root,s$builder_base$path))) && m_time(base[[1]]$verified_at_utc)<=times[2]
-      } else {
-        L <- if(m_ref_ok(s$builder_base_ledger,root)) m_read(file.path(root,s$builder_base_ledger$path)) else NULL
-        base <- Filter(function(x) identical(x$packet,s$builder_base),L$sends); bp <- m_read(file.path(root,s$builder_base$path))
-        bt <- if(length(base)==1) vapply(c("ready_at_utc","sent_at_utc","verified_at_utc"),function(k)m_time(base[[1]][[k]]),numeric(1)) else NA
-        length(base)==1 && !identical(s$builder_base_ledger,s$capture) && identical(bp$run_id,state$run_id) && identical(bp$stage,stage) && identical(bp$send_id,base[[1]]$id) && identical(bp$nonce,base[[1]]$nonce) &&
-          is.null(base[[1]]$builder_base) && (is.null(base[[1]]$send_kind) || identical(base[[1]]$send_kind,"builder")) && (if(!is.null(base[[1]]$builder_role)) identical(base[[1]]$builder_role,s$builder_role) else m_words(bp$role,list(tolower(s$builder_role)))) &&
-          complete(bp) && all(is.finite(bt)) && all(diff(bt)>=0) && bt[3]<=times[2]
-      }
-      ok <- kind_ok && if(identical(s$send_kind,"builder")) (complete(p) || base_ok) && m_rows(p$accepted_code) && m_refs_ok(p$accepted_code,root,FALSE) else
-        is.null(p$accepted_code) && is.null(s$builder_base) && m_rows(s$attachments) && length(s$attachments)>0
-      add(paste("execution packet completeness",s$id), ok,"Builder: full locked sections (or a verified builder_base packet of the same role, this or an earlier attempt's ledger) and explicit accepted code references; review/tool_repair: declared kind, attached inputs, no accepted code")
-    }
-    add(paste("capture match",s$id), identical(cap$send_id,s$id) && identical(cap$nonce,s$nonce) && identical(cap$reply,s$reply) && identical(cap$packet,s$packet) && method_ok && endsWith(trimws(reply),marker),"Nonce plus end marker and visual attestation, or byte-exact copy bound by sha256; not cryptographic proof of model identity")
-    dep_in_order <- function(x) {ux<-if(m_number(x$timestamp_uncertainty_seconds)) x$timestamp_uncertainty_seconds else Inf
-      m_strings(x$depends_on,TRUE) && all(vapply(x$depends_on,function(id) {d<-Filter(function(y)identical(y$id,id),sends); length(d)==1 && m_time(d[[1]]$verified_at_utc)<=m_time(x$sent_at_utc)-ux},logical(1)))}
-    # C10 (2026-10-31, owner card t1619s6776): an out-of-order send passes only if (1) a hash-checked deviation record discloses this exact send,
-    # (2) a later redo chain repeats the step in order (each redo send sent after it, verified, dependencies in order), and (3) nothing outside
-    # the declared superseded chain cites its reply (by path or sha256), and no accepted_code cites it.
-    c10 <- function() { oo<-s$out_of_order; if(!is.list(oo) || !is.list(oo$deviation_record) || !m_ref_ok(oo$deviation_record,root)) return(FALSE)
-      dv<-m_read(file.path(root,oo$deviation_record$path)); if(!is.list(dv) || !identical(dv$send_id,s$id) || !identical(dv$nonce,s$nonce) || !m_strings(oo$redo_send_ids,TRUE) || length(oo$redo_send_ids)==0L) return(FALSE)
-      redo<-lapply(unlist(oo$redo_send_ids),function(id) Filter(function(y)identical(y$id,id),sends))
-      if(any(lengths(redo)!=1)) return(FALSE); redo<-lapply(redo,`[[`,1)
-      redo_ok<-all(vapply(redo,function(r) isTRUE(is.finite(m_time(r$sent_at_utc)) && m_time(r$sent_at_utc)>times[2] && is.finite(m_time(r$verified_at_utc)) && dep_in_order(r) && is.null(r$out_of_order)),logical(1)))
-      chain<-c(s$id,unlist(oo$superseded_chain)); rh<-tolower(s$reply$sha256); rp<-s$reply$path
-      cites<-function(x) any(vapply(m_refs(x),function(r) identical(tolower(r$sha256),rh) || identical(r$path,rp),logical(1)))
-      unused<-!any(vapply(Filter(function(y)!(y$id %in% chain),sends),function(y) cites(y[setdiff(names(y),"out_of_order")]),logical(1))) &&
-        !any(vapply(sends,function(y) cites(y$packet_supplement) || {p<-if(m_ref_ok(y$packet,root)) m_read(file.path(root,y$packet$path)) else NULL; is.list(p) && cites(p$accepted_code)},logical(1)))
-      redo_ok && unused }
-    add(paste("send dependencies",s$id), (m_strings(s$depends_on,TRUE) && all(vapply(s$depends_on,function(id) {d<-Filter(function(x)identical(x$id,id),sends); length(d)==1 && m_time(d[[1]]$verified_at_utc)<=times[2]-uncertainty},logical(1)))) || isTRUE(c10()),"Chain verified replies before dependent sends; C10: a disclosed out-of-order send with a passing in-order redo and unused outputs")
-    add(paste("watchdog",s$id), ready_opt || (times[2]-times[1]+uncertainty<=900) || m_ref_ok(s$overdue_report,root),"Strictly over 900 seconds requires retained escalation/disposition; not measurable (and not required) when ready time is absent for a hash-bound reply")
-    if(!identical(s$approval_id,"none")) add(paste("send approval",s$id), any(vapply(o$approvals,function(a) identical(a$id,s$approval_id) && m_approval(a,state$run_id,stage,s$scope,times[2],root,rev$events,o$attempt),logical(1))),"Conditional approval checked at dispatch")
+# R1 (2026-10-31, owner card t1651s6906 option B): review coverage. Every review the stage requires has exactly one ledger send with a
+# captured reply that is hash-bound to it and ends with its own END_REPLY marker. Required = every transcripts/<stage>/*_reply the stage
+# receipt reaches, plus the gate's role list for the stage, cross_review when the receipt claims it, and a structural reviewer when the
+# locked plan requires structural review. Replaces the paperwork rules cut on the same date (see docs/CHANGES_FROM_ABLATIONS.md).
+m_review_coverage <- function(add, root, stage, sends, receipt_path) {
+  rp <- if (m_text(receipt_path)) receipt_path else unname(m_stage_receipts[stage])
+  rpath <- file.path(root, rp); receipt <- if (length(rp) == 1 && !is.na(rp) && file.exists(rpath)) m_read(rpath) else NULL
+  add(paste("review coverage", stage, "receipt"), is.list(receipt), "The stage receipt defines which reviews are required")
+  if (!is.list(receipt)) return(invisible(NULL))
+  reached <- m_reachable(list(path = rp, sha256 = m_hash(rpath)), root)
+  need_replies <- unique(reached[startsWith(reached, paste0("transcripts/", stage, "/")) & grepl("_reply\\.[A-Za-z0-9]+$", reached)])
+  need_roles <- c(m_stage_ai_roles[[stage]], if (identical(receipt$cross_review, "PASS")) "cross_review")
+  if (identical(stage, "execution")) {
+    sr <- m_read(file.path(root, "artifacts/stage3_locked_design.json"))$methodology$structural_review$policy
+    if (identical(sr, "required")) need_roles <- c(need_roles, "structural reviewer")
   }
+  rows <- if (m_rows(sends)) sends else list()
+  bound <- function(s) {
+    cap <- if (m_ref_ok(s$capture, root)) m_read(file.path(root, s$capture$path)) else NULL
+    txt <- if (m_ref_ok(s$reply, root)) paste(readLines(file.path(root, s$reply$path), warn = FALSE), collapse = "\n") else ""
+    m_text(s$id) && m_text(s$nonce) && m_ref_ok(s$reply, root) && is.list(cap) && identical(cap$send_id, s$id) && identical(cap$reply, s$reply) &&
+      (is.null(cap$capture_sha256) || identical(tolower(cap$capture_sha256), tolower(s$reply$sha256))) &&
+      endsWith(trimws(txt), paste0("END_REPLY ", s$id, " ", s$nonce))
+  }
+  for (p in need_replies) {
+    hit <- Filter(function(s) is.list(s$reply) && identical(s$reply$path, p), rows)
+    add(paste("review coverage", stage, "reply", p), length(hit) == 1 && bound(hit[[1]]), "Exactly one send captured this required reply, bound by hash, with its own end marker")
+  }
+  for (r in unique(need_roles)) {
+    hit <- Filter(function(s) identical(s$role, r) && bound(s), rows)
+    add(paste("review coverage", stage, "role", r), length(hit) >= 1, "Each required review role has a captured, hash-bound reply")
+  }
+  for (s in rows) add(paste("review coverage", stage, "capture", s$id), bound(s), "Every sent review reply is its own: capture names this send and reply, hash matches, own END_REPLY marker")
+  h <- unlist(lapply(rows, function(s) if (is.list(s$reply) && m_text(s$reply$sha256)) tolower(s$reply$sha256)))
+  add(paste("review coverage", stage, "distinct replies"), length(h) == length(rows) && !anyDuplicated(h), "No reply is reused for another send")
+}
+m_operations <- function(root,state,stage,final=FALSE,receipt=NULL) m_checks(function(add) {
+  # 2026-10-31 (owner card t1651s6906, option B): paperwork rules P01-P13 cut on ablation evidence (round 2); kept send identity,
+  # supersession resolutions and evidence closure; added review coverage. `final` is retained for callers and no longer changes checks.
+  o <- m_read(file.path(root,"artifacts/operations",paste0(stage,".json")))
+  sends <- o$sends
+  add(paste("operations ledger",stage), is.list(o) && m_rows(sends) && length(sends) > 0, "The stage ledger exists and lists its sends")
+  for(s in sends) add(paste("send identity",s$id), m_text(s$id) && m_text(s$ai) && m_text(s$nonce) && m_ref_ok(s$packet,root) && m_refs_ok(s$attachments,root,FALSE) && m_ref_ok(s$reply,root) && m_ref_ok(s$capture,root), "Preserve exact packet, files, reply and capture record")
+  m_review_coverage(add,root,stage,sends,receipt)
   res <- Filter(function(r) is.list(r) && !any(vapply(sends,function(x) identical(x$packet$path,r$path),logical(1))), if(is.list(o$supersession_resolutions)) o$supersession_resolutions else list())
   if(length(o$supersession_resolutions)) add("supersession resolutions", length(res)==length(o$supersession_resolutions), "A resolved supersedes target must not be a sent packet in this ledger")
   closure <- tryCatch(m_inventory(m_refs(o),root,res),error=function(e) NULL)
   add("operations evidence closure", !is.null(closure), "At stage completion, reject stale nested packet references, including pre-lock candidates")
-  add("deviation dispositions", m_rows(o$deviations) && all(vapply(o$deviations,function(x)m_text(x$id) && m_text(x$disposition) && m_ref_ok(x$evidence,root),logical(1))),"Recorded deviations do not override a failed check")
 })
 # Transitive JSON reference closure from the authoritative project root.
 m_inventory <- function(refs,root,resolutions=list()) {

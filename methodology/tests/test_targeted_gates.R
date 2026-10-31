@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# Targeted gate changes C1-C5 (2026-10-31). Each change: old false failure now passes AND the real defect still fails. Synthetic only.
+# Targeted gate changes (2026-10-31). T1,T2,T4-T8,T10 removed with their rules (P01-P13 cut, owner card t1651s6906); R1 review coverage added. Each change: old false failure now passes AND the real defect still fails. Synthetic only.
 repo_root<-normalizePath(if(length(commandArgs(TRUE)))commandArgs(TRUE)[[1]] else ".")
 source(file.path(repo_root,"methodology/tests/fixtures.R"))
 env<-new.env(parent=globalenv());lines<-readLines(file.path(repo_root,"workflow-gate/tests/test_workflow_gate.R"));eval(parse(text=lines[seq_len(grep('^pass_root <-',lines)[[1]]-1L)]),env)
@@ -27,80 +27,6 @@ t_write(root,"artifacts/procedure/run_state.json",state);t_operations(root,"exec
 op<-"artifacts/operations/execution.json";o<-m_read(file.path(root,op));s<-o$sends[[1]]
 run<-function(x){t_write(root,op,x);r<-m_operations(root,state,"execution");t_write(root,op,o);r}
 check("baseline execution ledger passes",m_pass(run(o)))
-# T1 / C1: byte-exact copy-button capture.
-cap<-m_read(file.path(root,s$capture$path))
-bind<-t_write_ref<-function(path,x){t_write(root,path,x);m_file_ref(path,root)}
-b<-bind("captures/execution-binding.json",list(send_id=s$id,nonce=s$nonce,reply=s$reply,capture_sha256=s$reply$sha256,captured_at_utc=now))
-copycap<-function(c2){x<-o;x$sends[[1]]$capture<-bind("captures/execution-copy.json",c2);x}
-c2<-cap;c2$capture_method<-"browser_copy_button";c2$capture_sha256<-s$reply$sha256;c2$capture_evidence<-b;c2$screen_verified<-NULL
-check("T1 copy-button capture bound by sha256 now passes",m_pass(run(copycap(c2))))
-c3<-c2;c3$capture_sha256<-paste(rep("0",64),collapse="");check("T1 capture hash != reply bytes fails",fails(run(copycap(c3)),"capture match"))
-c3<-c2;c3$capture_evidence<-bind("captures/execution-binding2.json",list(send_id="other",nonce=s$nonce,reply=s$reply,capture_sha256=s$reply$sha256,captured_at_utc=now))
-check("T1 binding record for another send fails",fails(run(copycap(c3)),"capture match"))
-c3<-c2;c3$capture_evidence<-bind("captures/execution-binding3.json",list(send_id=s$id,nonce=s$nonce,reply=s$reply,capture_sha256=s$reply$sha256,captured_at_utc="2020-01-01T00:00:00Z"))
-check("T1 binding captured before send fails",fails(run(copycap(c3)),"capture match"))
-c3<-c2;c3$capture_evidence<-"parent-attested plain string";check("T1 unbound string evidence fails",fails(run(copycap(c3)),"capture match"))
-c3<-cap;c3$capture_method<-"clipboard_guess";check("T1 unknown method still fails",fails(run(copycap(c3)),"capture match"))
-# T2 / C2: review and tool_repair sends without locked builder sections.
-p<-m_read(file.path(root,s$packet$path));att<-t_file(root,"inputs/reviewed.R","x <- 1")
-mk<-function(kind,pp,a=list(att)){pp$attachments<-a;t_write(root,"packets/execution-k.json",pp);x<-o;x$sends[[1]]$packet<-m_file_ref("packets/execution-k.json",root);x$sends[[1]]$attachments<-a;x$sends[[1]]$send_kind<-kind
-  c4<-cap;c4$packet<-x$sends[[1]]$packet;x$sends[[1]]$capture<-bind("captures/execution-k.json",c4);x}
-lean<-p[setdiff(names(p),c("output_rules","checkpoint_output_rules","checkpoints","receipt_dependencies","accepted_code"))]
-check("T2 review send without locked sections now passes",m_pass(run(mk("review",lean))))
-check("T2 tool_repair send without locked sections now passes",m_pass(run(mk("tool_repair",lean))))
-check("T2 builder send without locked sections still fails",fails(run(mk("builder",lean)),"execution packet completeness"))
-check("T2 missing send_kind fails",fails(run(mk(NULL,lean)),"execution packet completeness"))
-check("T2 review with no attached inputs fails",fails(run(mk("review",lean,list())),"execution packet completeness"))
-pa<-lean;pa$accepted_code<-list(att);check("T2 review carrying accepted_code fails",fails(run(mk("review",pa)),"execution packet completeness"))
-# T5 / C5: builder repair citing its base builder packet.
-rep_send<-function(base_ref,role2="R-A",base_role="R-A",base_kind="builder",pp=lean,noacc=FALSE){pp$accepted_code<-if(noacc) NULL else list();x<-mk("builder",pp,list());x$sends[[1]]$builder_base<-base_ref;x$sends[[1]]$builder_role<-role2
-  b0<-o$sends[[1]];b0$id<-"execution-base";b0$builder_role<-base_role;b0$send_kind<-base_kind;b0$verified_at_utc<-"2020-01-01T00:00:00Z";b0$ready_at_utc<-NULL
-  x$sends<-c(list(b0),x$sends);x}
-r5<-run(rep_send(s$packet));base_rows<-Filter(function(z)grepl("execution-base",z$check,fixed=TRUE),r5)
-check("T5 repair citing verified base of same role passes completeness",!fails(r5,paste("execution packet completeness",s$id)))
-check("T5 wrong role fails",fails(run(rep_send(s$packet,role2="R-B")),paste("execution packet completeness",s$id)))
-check("T5 base that is not a builder fails",fails(run(rep_send(s$packet,base_kind="review")),paste("execution packet completeness",s$id)))
-fake<-m_file_ref(s$packet$path,root);fake$sha256<-paste(rep("0",64),collapse="")
-check("T5 hash mismatch fails",fails(run(rep_send(fake)),paste("execution packet completeness",s$id)))
-check("T5 base packet not in ledger fails",fails(run(rep_send(att)),paste("execution packet completeness",s$id)))
-# T4 / C4: run-attempt-scoped approvals.
-sc<-function(a){x<-o;x$attempt<-"3";x$approvals[[1]]$expires_at_utc<-NULL;x$approvals[[1]]$scope_bound<-a;x}
-check("T4 approval scoped to this run attempt passes without fixed expiry",m_pass(run(sc(list(run_id=state$run_id,attempt="3")))))
-check("T4 approval for another attempt fails",fails(run(sc(list(run_id=state$run_id,attempt="2"))),"approval stage_signoff"))
-check("T4 approval for another run fails",fails(run(sc(list(run_id="OTHER",attempt="3"))),"approval stage_signoff"))
-x<-sc(list(run_id=state$run_id,attempt="3"));x$approvals[[1]]$expires_at_utc<-"2020-01-01T00:00:00Z";check("T4 owner expiry stays a hard limit",fails(run(x),"approval stage_signoff"))
-x<-o;x$approvals[[1]]$expires_at_utc<-NULL;check("T4 unscoped approval without expiry still fails",fails(run(x),"approval stage_signoff"))
-# T6 / C6: timing optional only for a hash-bound reply.
-nt<-function(x){x$sends[[1]]$ready_at_utc<-NULL;x$sends[[1]]$dispatch_evidence<-NULL;x}
-check("T6 hash-bound reply without ready/dispatch now passes",m_pass(run(nt(copycap(c2)))))
-check("T6 unbound (browser_export) reply without timing fails",fails(run(nt(o)),"send chronology") && fails(run(nt(o)),"dispatch timing provenance"))
-c3<-c2;c3$capture_sha256<-paste(rep("0",64),collapse="");r6<-run(nt(copycap(c3)))
-check("T6 mismatched reply hash without timing fails",fails(r6,"send chronology") && fails(r6,"capture match"))
-x<-copycap(c2);x$sends[[1]]$dispatch_evidence<-NULL;x$sends[[1]]$ready_at_utc<-"2099-01-01T00:00:00Z";check("T6 recorded ready time after send still fails",fails(run(x),"send chronology"))
-x<-nt(copycap(c2));x$sends[[1]]$dispatch_evidence<-list(path="missing.txt",sha256=paste(rep("0",64),collapse=""));check("T6 recorded but broken dispatch evidence still fails",fails(run(x),"dispatch timing provenance"))
-x<-nt(copycap(c2));x$sends[[1]]$sent_at_utc<-NULL;check("T6 missing send time still fails",fails(run(x),"send chronology"))
-# T7 / C7: base builder packet from an earlier attempt's ledger.
-early<-function(e){b0<-o$sends[[1]];b0$builder_role<-"R-A";b0$ready_at_utc<-"2020-01-01T00:00:00Z";b0$sent_at_utc<-"2020-01-01T00:01:00Z";b0$verified_at_utc<-"2020-01-01T00:02:00Z";b0<-e(b0)
-  t_write(root,"earlier/execution_attempt1.json",list(run_id=state$run_id,stage="execution",attempt="1",sends=list(b0)));m_file_ref("earlier/execution_attempt1.json",root)}
-r7<-function(e=identity,role2="R-A"){x<-mk("builder",within(lean,accepted_code<-list()),list());x$sends[[1]]$builder_base<-s$packet;x$sends[[1]]$builder_role<-role2;x$sends[[1]]$builder_base_ledger<-early(e);x}
-check("T7 base in earlier attempt ledger now passes",m_pass(run(r7())))
-check("T7 base verified after repair send fails",fails(run(r7(function(b){b$verified_at_utc<-"2099-01-01T00:00:00Z";b})),"execution packet completeness"))
-check("T7 reversed chronology inside earlier ledger fails",fails(run(r7(function(b){b$sent_at_utc<-"2019-01-01T00:00:00Z";b})),"execution packet completeness"))
-check("T7 wrong role fails",fails(run(r7(role2="R-B")),"execution packet completeness"))
-check("T7 role not provable from earlier ledger or base packet fails",fails(run(r7(function(b){b$builder_role<-NULL;b})),"execution packet completeness"))
-x<-r7();x$sends[[1]]$builder_base_ledger$sha256<-paste(rep("0",64),collapse="");check("T7 earlier ledger hash mismatch fails",fails(run(x),"execution packet completeness"))
-# T8 / C8: write-once packet supplement adds only authorization / accepted_code.
-sx<-function(fields,noacc=TRUE,noauth=FALSE){pp<-lean;if(noauth)pp$authorization<-NULL;x<-rep_send(s$packet,pp=pp,noacc=noacc);k<-length(x$sends)
-  sup<-c(list(kind="packet_supplement",supplements=x$sends[[k]]$packet,send_id=x$sends[[k]]$id,nonce=x$sends[[k]]$nonce,reason="record fix",owner_ruling="synthetic"),fields)
-  t_write(root,"packets/execution-k.sup.json",sup);x$sends[[k]]$packet_supplement<-m_file_ref("packets/execution-k.sup.json",root);x}
-cid<-paste("execution packet completeness",s$id)
-x<-rep_send(s$packet,noacc=TRUE);check("T8 builder repair without accepted_code and no supplement fails",fails(run(x),cid))
-check("T8 supplement adding accepted_code now passes",!fails(run(sx(list(accepted_code=list(att)))),cid) && !fails(run(sx(list(accepted_code=list(att)))),"packet supplement"))
-check("T8 supplement adding authorization fixes packet binding",!fails(run(sx(list(authorization=state$current_authorization,accepted_code=list(att)),noauth=TRUE)),paste("packet binding",s$id)))
-check("T8 missing authorization without supplement fails",fails(run(sx(list(accepted_code=list(att)),noauth=TRUE)),paste("packet binding",s$id)))
-x<-sx(list(accepted_code=list(att)));sp<-m_read(file.path(root,"packets/execution-k.sup.json"));sp$supplements$sha256<-paste(rep("0",64),collapse="");t_write(root,"packets/execution-k.sup.json",sp);x$sends[[length(x$sends)]]$packet_supplement<-m_file_ref("packets/execution-k.sup.json",root)
-check("T8 supplement naming another packet fails",fails(run(x),"packet supplement") && fails(run(x),cid))
-check("T8 supplement changing other fields fails",fails(run(sx(list(accepted_code=list(att),attachments=list(att)))),"packet supplement"))
 # T9 / C9: supersedes ref to a never-sent packet with an abbreviated hash, resolved via a deviation record holding the full hash.
 t_write(root,"packets/old/packet.json",list(send_id="OLD",note="never sent"));oh<-m_file_ref("packets/old/packet.json",root)$sha256
 s9<-function(dev=list(path="packets/old/packet.json",sha256=oh,never_sent=TRUE),abbr=paste0(substr(oh,1,16)," (full hash in deviation record)"),nsent=TRUE,usedev=TRUE){
@@ -115,26 +41,6 @@ check("T9 deviation hash not matching abbreviation fails",fails(run(s9(abbr=strr
 check("T9 too-short abbreviation fails",fails(run(s9(abbr=substr(oh,1,8))),cl))
 check("T9 resolution not marked never-sent fails",fails(run(s9(nsent=FALSE)),cl))
 x<-s9();x$supersession_resolutions[[1]]$path<-x$sends[[1]]$packet$path;check("T9 resolution naming a sent packet fails",fails(run(x),"supersession resolutions"))
-# T10 / C10: disclosed out-of-order send with an in-order redo and unused outputs.
-tm<-function(d) format(as.POSIXct(m_time(s$sent_at_utc)+d,origin="1970-01-01",tz="UTC"),"%Y-%m-%dT%H:%M:%SZ",tz="UTC")
-t_write(root,"transcripts/oo_reply.md",list(r="A"));t_write(root,"transcripts/redo_reply.md",list(r="R"))
-s10<-function(disc=TRUE,redo=TRUE,used=FALSE,devsend="A",redo_late=FALSE){x<-o
-  X<-s;X$id<-"X";X$depends_on<-list();X$verified_at_utc<-tm(100);X$sent_at_utc<-tm(-50)
-  A<-s;A$id<-"A";A$depends_on<-list("X");A$reply<-m_file_ref("transcripts/oo_reply.md",root)
-  R<-s;R$id<-"R";R$depends_on<-list("X");R$sent_at_utc<-tm(if(redo_late) 50 else 200);R$verified_at_utc<-tm(300);R$reply<-m_file_ref("transcripts/redo_reply.md",root)
-  if(used) R$attachments<-list(A$reply)
-  t_write(root,"deviations/dev10.json",list(send_id=devsend,nonce=A$nonce,disclosure="sent before X verified"))
-  if(disc||redo) A$out_of_order<-list(deviation_record=if(disc) m_file_ref("deviations/dev10.json",root) else NULL,redo_send_ids=if(redo) list("R") else list(),superseded_chain=list())
-  x$sends<-c(list(X,A),if(redo||used) list(R) else list());x}
-dA<-"send dependencies A"
-check("T10 baseline out-of-order without C10 record fails",fails(run(s10(disc=FALSE,redo=FALSE)),dA))
-check("T10 disclosed, redone in order, unused now passes",!fails(run(s10()),dA) && !fails(run(s10()),"send dependencies R"))
-check("T10 no disclosure fails",fails(run(s10(disc=FALSE)),dA))
-check("T10 deviation record for another send fails",fails(run(s10(devsend="Z")),dA))
-check("T10 no redo fails",fails(run(s10(redo=FALSE)),dA))
-check("T10 redo itself out of order fails",fails(run(s10(redo_late=TRUE)),dA))
-check("T10 outputs used (later send cites its reply) fails",fails(run(s10(used=TRUE)),dA))
-x<-s10();x$sends[[2]]$out_of_order$deviation_record$sha256<-strrep("0",64);check("T10 deviation record hash mismatch fails",fails(run(x),dA))
 # T11 / C11: procedure-gate evidence closure (complete/amend/finalize) applies the same C9 resolutions as m_operations.
 pg<-new.env(parent=globalenv());sys.source(file.path(repo_root,"procedure-gate/procedure_gate.R"),envir=pg)
 for(f in c("m_inventory","m_refs","m_read","m_ref_ok"))assign(f,get(f),envir=pg)
@@ -150,5 +56,40 @@ t_write(root,"deviations/dev9.json",list(path=x$sends[[1]]$packet$path,sha256=x$
 check("T11 resolution naming a sent packet is not applied by procedure closure",{t_write(root,op,s9());n1<-length(pg$closure_resolutions(root,"execution"));t_write(root,op,o);n1==1L} && {t_write(root,op,x);n<-length(pg$closure_resolutions(root,"execution"));t_write(root,op,o);n==0L})
 src<-readLines(file.path(repo_root,"procedure-gate/procedure_gate.R"))
 check("T11 complete and amend use step_closure; finalize passes resolutions",sum(grepl("closure <- step_closure(project_root, step_id, receipt)",src,fixed=TRUE))==2L && any(grepl("closure_resolutions(project_root,required)",src,fixed=TRUE)) && !any(grepl("paste0(step_id,\".json\"))))),project_root),error",src,fixed=TRUE)))
+# R1 (option B): review coverage. Positive and negative cases, derived from roles and receipt-reached replies (synthetic).
+rv<-function(stage,receipt_extra=NULL){t_write(root,"artifacts/procedure/run_state.json",list(run_id="SYNTHETIC",current_step=stage))
+  rp<-unname(m_stage_receipts[stage]);r0<-m_read(file.path(root,rp))
+  if(!is.null(receipt_extra)){r<-r0;for(k in names(receipt_extra))r[[k]]<-receipt_extra[[k]];t_write(root,rp,r)}
+  t_operations(root,stage);list(stage=stage,o=m_read(file.path(root,"artifacts/operations",paste0(stage,".json"))),rp=rp,r0=r0)}
+rvrun<-function(R,x){p<-file.path("artifacts/operations",paste0(R$stage,".json"));t_write(root,p,x);m_operations(root,list(run_id="SYNTHETIC",current_step=R$stage),R$stage)}
+F<-rv("finish",list(cross_review="PASS"));fo<-F$o
+check("R1 finish: all four required reviews captured passes",m_pass(rvrun(F,fo)))
+for(i in seq_along(fo$sends)){x<-fo;role<-x$sends[[i]]$role;x$sends<-x$sends[-i]
+  check(paste("R1 finish: dropped",role,"send fails"),fails(rvrun(F,x),paste("review coverage finish role",role)))}
+x<-fo;x$sends[[2]]$reply<-x$sends[[1]]$reply;cp<-x$sends[[2]]$capture$path;c<-m_read(file.path(root,cp));c$reply<-x$sends[[1]]$reply;t_write(root,cp,c);x$sends[[2]]$capture<-m_file_ref(cp,root)
+r6<-rvrun(F,x);check("R1 stale reply reused with consistent hashes fails (marker + distinct)",fails(r6,paste("review coverage finish role",fo$sends[[2]]$role)) && fails(r6,"review coverage finish distinct replies"))
+c$reply<-fo$sends[[2]]$reply;t_write(root,cp,c)
+x<-fo;c2<-m_read(file.path(root,x$sends[[3]]$capture$path));c2$send_id<-"OTHER";t_write(root,"captures/finish/wrong.json",c2);x$sends[[3]]$capture<-m_file_ref("captures/finish/wrong.json",root)
+check("R1 capture record for another send fails",fails(rvrun(F,x),paste("review coverage finish role",fo$sends[[3]]$role)))
+x<-fo;c2<-m_read(file.path(root,x$sends[[3]]$capture$path));c2$capture_sha256<-strrep("0",64);t_write(root,"captures/finish/hash.json",c2);x$sends[[3]]$capture<-m_file_ref("captures/finish/hash.json",root)
+check("R1 capture hash not equal to reply bytes fails",fails(rvrun(F,x),paste("review coverage finish role",fo$sends[[3]]$role)))
+x<-fo;rr<-t_file(root,"transcripts/finish/nomarker_reply.txt","Reply without its end marker");x$sends[[1]]$reply<-rr;c2<-m_read(file.path(root,x$sends[[1]]$capture$path));c2$reply<-rr;t_write(root,"captures/finish/nm.json",c2);x$sends[[1]]$capture<-m_file_ref("captures/finish/nm.json",root)
+check("R1 reply missing END_REPLY marker fails",fails(rvrun(F,x),paste("review coverage finish role",fo$sends[[1]]$role)))
+# receipt-reached reply with no send (role-agnostic requirement)
+x<-fo;ex<-x$sends[[4]];ex$id<-"finish-extra";ex$role<-"extra_reviewer";ex$nonce<-"TEST-extra";er<-t_file(root,"transcripts/finish/finish-extra_reply.txt","Extra\nEND_REPLY finish-extra TEST-extra")
+r<-m_read(file.path(root,F$rp));r$extra_review<-er;t_write(root,F$rp,r)
+check("R1 receipt-reached reply with no ledger send fails",fails(rvrun(F,fo),"review coverage finish reply transcripts/finish/finish-extra_reply.txt"))
+ex$reply<-er;t_write(root,"captures/finish/extra.json",list(send_id=ex$id,nonce=ex$nonce,reply=er));ex$capture<-m_file_ref("captures/finish/extra.json",root);x$sends<-c(x$sends,list(ex))
+check("R1 receipt-reached reply with its captured send passes",m_pass(rvrun(F,x)))
+x$sends<-c(x$sends,list(ex));check("R1 two sends claiming one required reply fails",fails(rvrun(F,x),"review coverage finish reply transcripts/finish/finish-extra_reply.txt"))
+t_write(root,F$rp,F$r0)
+D<-rv("design");do<-D$o;check("R1 design: required roles captured passes",m_pass(rvrun(D,do)))
+x<-do;x$sends<-x$sends[-2];check("R1 design: missing designer_b fails",fails(rvrun(D,x),"review coverage design role designer_b"))
+t_write(root,D$rp,D$r0)
+S<-rv("start");x<-S$o;x$sends<-list();check("R1 start: empty ledger fails",fails(rvrun(S,x),"operations ledger start"))
+s3x<-m_read(file.path(root,"artifacts/stage3_locked_design.json"));s3o<-s3x;s3x$methodology$structural_review$policy<-"required";t_write(root,"artifacts/stage3_locked_design.json",s3x)
+E4<-rv("execution");check("R1 execution: structural reviewer captured passes when required",m_pass(rvrun(E4,E4$o)))
+x<-E4$o;x$sends<-Filter(function(z)!identical(z$role,"structural reviewer"),x$sends);check("R1 execution: missing structural reviewer fails when locked plan requires it",fails(rvrun(E4,x),"review coverage execution role structural reviewer"))
+t_write(root,"artifacts/stage3_locked_design.json",s3o)
 cat(sum(unlist(results)),"/",length(results),"targeted gate tests passed\n")
 if(!all(unlist(results)))quit(status=1)
