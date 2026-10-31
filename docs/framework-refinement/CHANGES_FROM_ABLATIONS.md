@@ -139,3 +139,6 @@ Items 1, 2, 4, 5 and 7 (the #30 gate, #16 meaning, #37 tag, #48/#50 FLAG handlin
 - `m_inventory` accepts `supersession_resolutions`: a nested ref whose sha256 is an abbreviated (>=16 hex) prefix may be resolved only when a hash-checked deviation record names the same path, holds a full 64-hex sha256 beginning with that prefix, and marks the target never_sent; the resolved ref must then match the file bytes.
 - New check `supersession resolutions` (only when resolutions are present) fails if a resolution names a packet sent in the ledger.
 - Tests T9 (8 checks): the old false failure passes; wrong, missing, non-matching or too-short hashes, non-never-sent and sent-packet resolutions still fail.
+
+## C10: disclosed out-of-order send with an in-order redo (owner approval t1619s6776)
+`m_operations` send-dependencies now also passes when `out_of_order` holds a hash-checked deviation record for that exact send_id and nonce, one or more redo sends that follow it in correct dependency order, and no use of its reply outside `superseded_chain`. Without all three, the check still fails. Tests: T10 (8 cases, including no disclosure, wrong send, no redo, redo out of order, outputs used, and a hash mismatch). Targeted suite 61/61.

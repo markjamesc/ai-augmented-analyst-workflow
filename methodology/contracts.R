@@ -365,7 +365,22 @@ m_operations <- function(root,state,stage,final=FALSE) m_checks(function(add) {
       add(paste("execution packet completeness",s$id), ok,"Builder: full locked sections (or a verified builder_base packet of the same role, this or an earlier attempt's ledger) and explicit accepted code references; review/tool_repair: declared kind, attached inputs, no accepted code")
     }
     add(paste("capture match",s$id), identical(cap$send_id,s$id) && identical(cap$nonce,s$nonce) && identical(cap$reply,s$reply) && identical(cap$packet,s$packet) && method_ok && endsWith(trimws(reply),marker),"Nonce plus end marker and visual attestation, or byte-exact copy bound by sha256; not cryptographic proof of model identity")
-    add(paste("send dependencies",s$id), m_strings(s$depends_on,TRUE) && all(vapply(s$depends_on,function(id) {d<-Filter(function(x)identical(x$id,id),sends); length(d)==1 && m_time(d[[1]]$verified_at_utc)<=times[2]-uncertainty},logical(1))),"Chain verified replies before dependent sends")
+    dep_in_order <- function(x) {ux<-if(m_number(x$timestamp_uncertainty_seconds)) x$timestamp_uncertainty_seconds else Inf
+      m_strings(x$depends_on,TRUE) && all(vapply(x$depends_on,function(id) {d<-Filter(function(y)identical(y$id,id),sends); length(d)==1 && m_time(d[[1]]$verified_at_utc)<=m_time(x$sent_at_utc)-ux},logical(1)))}
+    # C10 (2026-10-31, owner card t1619s6776): an out-of-order send passes only if (1) a hash-checked deviation record discloses this exact send,
+    # (2) a later redo chain repeats the step in order (each redo send sent after it, verified, dependencies in order), and (3) nothing outside
+    # the declared superseded chain cites its reply (by path or sha256), and no accepted_code cites it.
+    c10 <- function() { oo<-s$out_of_order; if(!is.list(oo) || !is.list(oo$deviation_record) || !m_ref_ok(oo$deviation_record,root)) return(FALSE)
+      dv<-m_read(file.path(root,oo$deviation_record$path)); if(!is.list(dv) || !identical(dv$send_id,s$id) || !identical(dv$nonce,s$nonce) || !m_strings(oo$redo_send_ids,TRUE) || length(oo$redo_send_ids)==0L) return(FALSE)
+      redo<-lapply(unlist(oo$redo_send_ids),function(id) Filter(function(y)identical(y$id,id),sends))
+      if(any(lengths(redo)!=1)) return(FALSE); redo<-lapply(redo,`[[`,1)
+      redo_ok<-all(vapply(redo,function(r) isTRUE(is.finite(m_time(r$sent_at_utc)) && m_time(r$sent_at_utc)>times[2] && is.finite(m_time(r$verified_at_utc)) && dep_in_order(r) && is.null(r$out_of_order)),logical(1)))
+      chain<-c(s$id,unlist(oo$superseded_chain)); rh<-tolower(s$reply$sha256); rp<-s$reply$path
+      cites<-function(x) any(vapply(m_refs(x),function(r) identical(tolower(r$sha256),rh) || identical(r$path,rp),logical(1)))
+      unused<-!any(vapply(Filter(function(y)!(y$id %in% chain),sends),function(y) cites(y[setdiff(names(y),"out_of_order")]),logical(1))) &&
+        !any(vapply(sends,function(y) cites(y$packet_supplement) || {p<-if(m_ref_ok(y$packet,root)) m_read(file.path(root,y$packet$path)) else NULL; is.list(p) && cites(p$accepted_code)},logical(1)))
+      redo_ok && unused }
+    add(paste("send dependencies",s$id), (m_strings(s$depends_on,TRUE) && all(vapply(s$depends_on,function(id) {d<-Filter(function(x)identical(x$id,id),sends); length(d)==1 && m_time(d[[1]]$verified_at_utc)<=times[2]-uncertainty},logical(1)))) || isTRUE(c10()),"Chain verified replies before dependent sends; C10: a disclosed out-of-order send with a passing in-order redo and unused outputs")
     add(paste("watchdog",s$id), ready_opt || (times[2]-times[1]+uncertainty<=900) || m_ref_ok(s$overdue_report,root),"Strictly over 900 seconds requires retained escalation/disposition; not measurable (and not required) when ready time is absent for a hash-bound reply")
     if(!identical(s$approval_id,"none")) add(paste("send approval",s$id), any(vapply(o$approvals,function(a) identical(a$id,s$approval_id) && m_approval(a,state$run_id,stage,s$scope,times[2],root,rev$events,o$attempt),logical(1))),"Conditional approval checked at dispatch")
   }

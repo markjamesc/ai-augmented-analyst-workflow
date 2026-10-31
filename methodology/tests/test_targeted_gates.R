@@ -115,5 +115,25 @@ check("T9 deviation hash not matching abbreviation fails",fails(run(s9(abbr=strr
 check("T9 too-short abbreviation fails",fails(run(s9(abbr=substr(oh,1,8))),cl))
 check("T9 resolution not marked never-sent fails",fails(run(s9(nsent=FALSE)),cl))
 x<-s9();x$supersession_resolutions[[1]]$path<-x$sends[[1]]$packet$path;check("T9 resolution naming a sent packet fails",fails(run(x),"supersession resolutions"))
+# T10 / C10: disclosed out-of-order send with an in-order redo and unused outputs.
+tm<-function(d) format(as.POSIXct(m_time(s$sent_at_utc)+d,origin="1970-01-01",tz="UTC"),"%Y-%m-%dT%H:%M:%SZ",tz="UTC")
+t_write(root,"transcripts/oo_reply.md",list(r="A"));t_write(root,"transcripts/redo_reply.md",list(r="R"))
+s10<-function(disc=TRUE,redo=TRUE,used=FALSE,devsend="A",redo_late=FALSE){x<-o
+  X<-s;X$id<-"X";X$depends_on<-list();X$verified_at_utc<-tm(100);X$sent_at_utc<-tm(-50)
+  A<-s;A$id<-"A";A$depends_on<-list("X");A$reply<-m_file_ref("transcripts/oo_reply.md",root)
+  R<-s;R$id<-"R";R$depends_on<-list("X");R$sent_at_utc<-tm(if(redo_late) 50 else 200);R$verified_at_utc<-tm(300);R$reply<-m_file_ref("transcripts/redo_reply.md",root)
+  if(used) R$attachments<-list(A$reply)
+  t_write(root,"deviations/dev10.json",list(send_id=devsend,nonce=A$nonce,disclosure="sent before X verified"))
+  if(disc||redo) A$out_of_order<-list(deviation_record=if(disc) m_file_ref("deviations/dev10.json",root) else NULL,redo_send_ids=if(redo) list("R") else list(),superseded_chain=list())
+  x$sends<-c(list(X,A),if(redo||used) list(R) else list());x}
+dA<-"send dependencies A"
+check("T10 baseline out-of-order without C10 record fails",fails(run(s10(disc=FALSE,redo=FALSE)),dA))
+check("T10 disclosed, redone in order, unused now passes",!fails(run(s10()),dA) && !fails(run(s10()),"send dependencies R"))
+check("T10 no disclosure fails",fails(run(s10(disc=FALSE)),dA))
+check("T10 deviation record for another send fails",fails(run(s10(devsend="Z")),dA))
+check("T10 no redo fails",fails(run(s10(redo=FALSE)),dA))
+check("T10 redo itself out of order fails",fails(run(s10(redo_late=TRUE)),dA))
+check("T10 outputs used (later send cites its reply) fails",fails(run(s10(used=TRUE)),dA))
+x<-s10();x$sends[[2]]$out_of_order$deviation_record$sha256<-strrep("0",64);check("T10 deviation record hash mismatch fails",fails(run(x),dA))
 cat(sum(unlist(results)),"/",length(results),"targeted gate tests passed\n")
 if(!all(unlist(results)))quit(status=1)
