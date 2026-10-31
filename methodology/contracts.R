@@ -356,7 +356,7 @@ m_review_coverage <- function(add, root, stage, sends, receipt_path) {
   # F5: a review counts only if it saw a current artifact the receipt relies on (an attachment whose hash matches that file now).
   current <- function(s) m_rows(s$attachments) && length(s$attachments) > 0 && m_refs_ok(s$attachments, root, FALSE) &&
     any(vapply(s$attachments, function(a) is.list(a) && m_text(a$path) && a$path %in% setdiff(reached, rp), logical(1))) &&
-    all(vapply(subjects, function(p) !is.na(p) && file.exists(file.path(root, p)) && any(vapply(s$attachments, function(a) is.list(a) && (identical(a$path, p) || (startsWith(p, "analysis/") && m_ref_ok(a, root))) &&
+    all(vapply(subjects, function(p) !is.na(p) && file.exists(file.path(root, p)) && any(vapply(s$attachments, function(a) is.list(a) && (identical(a$path, p) || (startsWith(p, "analysis/") && m_text(a$path) && startsWith(a$path, "builds/frozen/") && m_ref_ok(a, root))) &&
       m_text(a$sha256) && identical(tolower(a$sha256), m_hash(file.path(root, p))), logical(1))), logical(1)))  # F5b: every reviewed subject, current
   # F4: where the receipt records provenance for a role, that role's send must be the provenance output and the same AI.
   prov <- if (m_rows(receipt$ai_provenance)) receipt$ai_provenance else list()

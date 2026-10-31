@@ -206,7 +206,10 @@ Owner cards t1673s6985, t1673s6991, t1674s7005. No analysis check was relaxed; t
 - **Probes.** `f5b-no-builders` (receipt carries no builder script; reaches the NA case), `pa-design-no-record`, `pa-finish-no-record`. The earlier `f5b-builders-omitted` (attachment side) is kept.
 - **ACC002 known-gap replay** (`tools/tests/test_acc002_known_gap.py`, on a copy): ACC002 predates R1/F1-F6 and cannot pass; the test pins today's failing checks (start 8/17, framing 14/25, design 29/57, execution 6/10) and fails if any is added or removed. Versus 52dd52c, execution no longer fails `review subjects` (the path-rule change). A passing check confirms every captured reply's sha256 and END_REPLY line.
 
+- **Correction (RV-D4 / RV-C4, owner card t1674s7005 scope; stricter only).** The content-equal alternative for an `analysis/**` execution subject now accepts only an attachment under `builds/frozen/**` with the subject's current hash; an equal-hash copy anywhere else (e.g. `other/`, `transcripts/`) no longer satisfies it. Tests: `PA-C equal-hash copy under other/ ...` and `... under transcripts/ ...` fail (both passed under 95649e7, i.e. were accepted), `PA-C builds/frozen/ copy satisfies ...` passes, `PA-C edited analysis/ file ...` fails.
+- **Verified, no change: malformed `receipts/*.json` fails closed** (DeepSeek RV-D4 point 2). `m_read` returns NULL on a parse error; with no other builder script the subject set gets NA and `review coverage execution review subjects` fails. With a direct script ref the corrupt file is skipped (no bypass, no dedicated message).
+
 #### Deferred (post-run items, not in this run)
 - **Numerical-auditor outputs rule** (the auditor must attach the outputs it audits).
 - **Cross-review build-outputs rule** (cross_review must see the build outputs).
-- **Plan B: full per-role subject map** (each role its own subject list instead of a shared stage list).
+- **Plan B: full per-role subject map** (each role its own subject list instead of a shared stage list) and per-artifact identity: includes ChatGPT RV-C4's Start point (a `data/` + `docs/` ref proves presence, not that they are the real Start artifacts). Note: Start already requires ALL eligible direct refs at their current hash, not any one of them.

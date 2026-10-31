@@ -149,7 +149,7 @@ t_write(root,F$rp,F$r0)
 er<-t_file(root,"transcripts/finish/late_reply.txt.bak","Late\nEND_REPLY late x");r<-m_read(file.path(root,F$rp));r$late_review<-er;t_write(root,F$rp,r)
 check("F6 receipt-reached _reply.txt.bak with no send fails",fails(rvrun(F,fo),"review coverage finish reply transcripts/finish/late_reply.txt.bak"))
 t_write(root,F$rp,F$r0)
-# Plan A (t1674s7005): NA guards, start data/+docs/ guard, execution path rule (builds/frozen|analysis via receipts/), content-equal match limited to analysis/.
+# Plan A (t1674s7005): NA guards, start data/+docs/ guard, execution path rule (builds/frozen|analysis via receipts/), content-equal match limited to analysis/ subjects matched by builds/frozen/ attachments.
 rs<-function(stage,f){rp<-unname(m_stage_receipts[stage]);r0<-m_read(file.path(root,rp));r<-f(r0);t_write(root,rp,r);list(rp=rp,r0=r0)}
 d0<-rs("design",function(r){r$stage_records<-NULL;r});Dg<-rv("design")
 check("PA design receipt with no own stage record fails (NA guard)",fails(rvrun(Dg,Dg$o),"review coverage design review subjects"));t_write(root,d0$rp,d0$r0)
@@ -170,6 +170,16 @@ check("PA analysis/ subject satisfied by its byte-identical frozen copy",m_pass(
 t_file(root,"builds/frozen/R-A/analysis/r_a/main.R","# synthetic R-A main");t_file(root,"analysis/r_a/main.R","# installed copy edited")
 check("PA edited installed analysis/ file is not satisfied by the frozen copy",fails(rvrun(Ev,x),"review coverage execution role"))
 t_file(root,"analysis/r_a/main.R","# synthetic R-A main");t_write(root,Ev$rp,Ev$r0)
+# Plan A correction (RV-D4/RV-C4): the content-equal alternative applies only to a builds/frozen/** attachment. Receipt without frozen_script,
+# so analysis/r_a/main.R is the only execution subject and the alternate-path attachment is isolated.
+Eq<-rv("execution",list(cross_review="PASS",builder_receipt=rc));oc<-t_file(root,"other/main_copy.R","# synthetic R-A main");tc<-t_file(root,"transcripts/execution/main_copy.R","# synthetic R-A main")
+alt<-function(ref)lapply(Eq$o$sends,function(z){z$attachments<-c(Filter(function(a)!identical(a$path,"analysis/r_a/main.R"),z$attachments),list(ref));z})
+check("PA-C equal-hash copy under other/ does not satisfy an analysis/ subject",{x<-Eq$o;x$sends<-alt(oc);fails(rvrun(Eq,x),"review coverage execution role")})
+check("PA-C equal-hash copy under transcripts/ does not satisfy an analysis/ subject",{x<-Eq$o;x$sends<-alt(tc);fails(rvrun(Eq,x),"review coverage execution role")})
+check("PA-C builds/frozen/ copy satisfies an analysis/ subject",{x<-Eq$o;x$sends<-alt(fz);m_pass(rvrun(Eq,x))})
+t_file(root,"analysis/r_a/main.R","# installed copy edited")
+check("PA-C edited analysis/ file is not satisfied by the builds/frozen/ copy",{x<-Eq$o;x$sends<-alt(fz);fails(rvrun(Eq,x),"review coverage execution role")})
+t_file(root,"analysis/r_a/main.R","# synthetic R-A main");t_write(root,Eq$rp,Eq$r0)
 dup<-t_file(root,"scratch/interp_copy.md","Synthetic interpretation");Fc<-rv("finish",list(cross_review="PASS",stage_records=interp))
 x<-Fc$o;x$sends<-lapply(x$sends,function(z){z$attachments<-c(Filter(function(a)!identical(a$path,"docs/stage5/interpretation.md"),z$attachments),list(dup));z})
 check("PA content-equal match does not apply outside analysis/",fails(rvrun(Fc,x),"review coverage finish role"));t_write(root,Fc$rp,Fc$r0)
