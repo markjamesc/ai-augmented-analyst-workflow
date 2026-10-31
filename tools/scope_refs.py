@@ -17,7 +17,9 @@ SNAP = 'evidence_snapshots'
 HIST = re.compile(r'(^|/)(runs|versioned|sandbox|superseded|failed_attempts)(/|$)|attempt\d|_attempt|pass\d(/|$)', re.I)
 def sha(p): return hashlib.sha256(open(p, 'rb').read()).hexdigest()
 def norm(p): return p.replace('\\', '/').lstrip('./') if not p.startswith('../') else p.replace('\\', '/')
-def isref(x): return isinstance(x, dict) and isinstance(x.get('path'), str) and isinstance(x.get('sha256'), str)
+# Aligned with the gate's m_refs (owner card t1637s6856): any object with both a path and a sha256 field is a reference, whatever the values.
+def isref(x): return isinstance(x, dict) and 'path' in x and 'sha256' in x
+def goodref(x): return isinstance(x.get('path'), str) and isinstance(x.get('sha256'), str) and re.fullmatch(r'[0-9a-fA-F]{64}', x['sha256']) is not None
 def refs(x):
     if isref(x): return [x]
     if isinstance(x, dict): return [r for v in x.values() for r in refs(v)]
@@ -37,12 +39,14 @@ def candidates(root, citing_rel, ref_path):
         out.append(norm(d + '/' + ref_path)); d = os.path.dirname(d)
     return out
 
-def snapshot(root, rel, name=None):
-    root = os.path.abspath(root); rel = norm(rel)
+def snapshot(root, rel, name=None, keep=()):
+    # keep: root paths that are identities locked by the design (validation components, replay outputs). A reference to one of these is
+    # hash-checked against the current root file and left pointing at the root path, so every copy names the same locked identity.
+    root = os.path.abspath(root); rel = norm(rel); keep = {norm(k) for k in keep}
     name = name or re.sub(r'[^A-Za-z0-9_.-]+', '_', rel)
     base = f'{SNAP}/{name}'
     if os.path.exists(os.path.join(root, base)): raise SystemExit(f'FAIL snapshot exists (write-once): {base}')
-    manifest = {"kind": "evidence_snapshot", "tool": "tools/scope_refs.py", "source": {"path": rel, "sha256": sha(os.path.join(root, rel))}, "entries": []}
+    manifest = {"kind": "evidence_snapshot", "tool": "tools/scope_refs.py", "source": {"path": rel, "sha256": sha(os.path.join(root, rel))}, "entries": [], "kept": {}}
     done = {}
     stage = os.path.join(root, SNAP, '.staging_' + name)  # built here, renamed into place only when complete (no partial snapshot on failure)
     if os.path.exists(stage): shutil.rmtree(stage)
@@ -57,6 +61,11 @@ def snapshot(root, rel, name=None):
         if obj is not None and refs(obj):
             def rw(x):
                 if isref(x):
+                    if not goodref(x): raise SystemExit(f'FAIL invalid ref in {src_rel}: {x}')
+                    if norm(x['path']) in keep:
+                        fp = os.path.join(root, norm(x['path']))
+                        if not os.path.isfile(fp) or sha(fp) != x['sha256'].lower(): raise SystemExit(f'FAIL kept identity ref not current at root in {src_rel}: {x["path"]}')
+                        manifest['kept'][norm(x['path'])] = x['sha256'].lower(); return x
                     hit = next((c for c in candidates(root, src_rel, x['path']) if os.path.isfile(os.path.join(root, c)) and sha(os.path.join(root, c)) == x['sha256'].lower()), None)
                     if hit is None: raise SystemExit(f'FAIL unresolvable ref in {src_rel}: {x["path"]} {x["sha256"][:12]} (no root/ancestor file with that hash)')
                     nd = copy(hit, x['sha256'].lower()); y = dict(x); y['path'] = nd; y['sha256'] = sha(phys(nd)); y['snapshot_of'] = {"path": x['path'], "sha256": x['sha256'], "resolved": hit}
@@ -106,6 +115,7 @@ def guard(root, files):
         if rel in seen: return
         seen.add(rel); obj = load(os.path.join(root, rel)) if rel.endswith('.json') else None
         for r in refs(obj) if obj is not None else []:
+            if not goodref(r): errs.append(f'{rel}: invalid reference (path/sha256 not a path and 64-hex hash): {r}'); continue
             p = norm(r['path']); fp = os.path.join(root, p)
             if not os.path.isfile(fp): errs.append(f'{rel}: missing {p}'); continue
             if sha(fp) != r['sha256'].lower(): errs.append(f'{rel}: stale hash {p}')
@@ -114,7 +124,8 @@ def guard(root, files):
                 if scope and s != scope: errs.append(f'{rel}: snapshot {scope} cites another snapshot {p}')
                 walk(p, s)
             else:
-                if scope: errs.append(f'{rel}: snapshot {scope} cites outside itself: {p}')
+                kept = (load(os.path.join(root, scope, 'manifest.json')) or {}).get('kept', {}) if scope else {}
+                if scope and not (kept.get(p) == r['sha256'].lower() and not HIST.search(p)): errs.append(f'{rel}: snapshot {scope} cites outside itself: {p}')
                 if HIST.search(p) and not (scope is None and replay_exception(root, rel, p)): errs.append(f'{rel}: cites historical-scope record by root path: {p}')
                 walk(p, None)
     for f in files:

@@ -26,7 +26,8 @@ def snap(p, name):
         m = J(f'{t}/manifest.json')
         if m['source'] != {"path": p, "sha256": sha(p)}: sys.exit(f'FAIL snapshot {name} exists for other bytes')
         return next(e['copy']['path'] for e in m['entries'] if e['original']['path'] == p)
-    return SR.snapshot(R, p, name)
+    keep = [q for v in M['operational']['validation_components'].values() for q in v] + list(M['replay_outputs'])  # locked identities stay root refs
+    return SR.snapshot(R, p, name, keep)
 now = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 ST = J('artifacts/procedure/run_state.json'); RUN = ST['run_id']
 D = J('artifacts/stage3_locked_design.json'); M = D['methodology']; dsha = sha('artifacts/stage3_locked_design.json')

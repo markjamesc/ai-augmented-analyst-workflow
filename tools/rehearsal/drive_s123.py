@@ -4,7 +4,8 @@ sys.path.insert(0, os.path.dirname(__file__)); from drive_common import *
 root, gate, RUN, SRC = sys.argv[1:5]; d = D(root, gate); res = {}
 os.makedirs(root)
 for x in ['data', 'analysis', 'validation', 'environment']: shutil.copytree(f'{SRC}/{x}', d.p(x))
-import subprocess; subprocess.run([sys.executable, '/workspace/reh/box_manifest.py', d.root], check=True)
+shutil.copy(f'{d.G}/tools/rehearsal/harness/structural_review_v2.R', d.p('validation/structural_review_v2.R'))  # owner card t1637s6856
+import subprocess; subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'box_manifest.py'), d.root], check=True)
 for x in ['stage1', 'stage2', 'stage3']: shutil.copytree(f'{SRC}/docs/{x}', d.p(f'docs/{x}'))
 d.wx('SYNTHETIC_REHEARSAL.txt', LAB + f'\nRun {RUN}. Content (data, accepted analysis code, validation tools, design text) copied from ACC002; every AI reply and owner record is SYNTHETIC.\n')
 d.gate('start', RUN)

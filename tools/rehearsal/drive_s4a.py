@@ -17,9 +17,7 @@ for sid, (ai, role, sub) in B.items():
     if d.sha(fr) != d.sha(f'analysis/{sub}/main.R'): raise SystemExit(f'FAIL {sid}: extracted code differs from installed analysis/{sub}/main.R')
     print(sid, 'frozen', d.sha(fr)[:12], '== installed')
 FZ = ['artifacts/stage3_locked_design.json'] + [f'builds/frozen/{s}/analysis/{v[2]}/main.R' for s, v in B.items()]
-for sid, ai, dep in [('S4-RV1', 'Grok', []), ('S4-RV2', 'ChatGPT', []), ('S4-RV3', 'DeepSeek', [])]:
-    d.send('execution', sid, ai, 'structural reviewer', 'review', f'{LAB}\nStructural review of R-A and R-B.\n', attach=FZ, depends=['S4-RA1', 'S4-RB1'],
-           reply_body='Stand-in structural review.\nVERDICT: STRUCTURALLY_ACCEPTABLE')
+# Structural reviews are sent by drive_s4b.py with the snapshot of the mechanical report attached (not before it exists).
 R = d.root
 for cmd in [['validation/source_verify.R', R], ['analysis/r_a/main.R', 'data/fixture_8row.csv', 'outputs/r_a'], ['analysis/r_b/main.R', 'data/fixture_8row.csv', 'outputs/r_b'],
             ['validation/compare_keyed.R', R], ['validation/run_fixtures.R', R], ['validation/check_methodology.R', R],
