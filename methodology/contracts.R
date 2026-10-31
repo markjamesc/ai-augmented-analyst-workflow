@@ -294,16 +294,28 @@ m_stage_receipts <- c(start="artifacts/stage1_decision.json", framing="artifacts
   execution="artifacts/stage4_validation_status.json", finish="artifacts/stage5_interpretation_status.json")
 # F5b (2026-10-31, RV-D2/RV-C2): the specific artifacts a required review must have seen, at their current hash. The stage receipt itself
 # never counts. Previous-stage receipt (framing..finish) plus, from the stage receipt's direct references: start = every non-review record;
-# design = its docs/ records (design gate record); execution = the frozen builder scripts (builds/frozen/**.R, at least one); finish =
-# its docs/*.md (the interpretation). Roles share the stage's subject list. Source: stage guides and ACC002/ACC003 ledgers (see docs).
+# design = its docs/ records (design gate record); execution = every *.R under builds/frozen/** or analysis/** that the receipt
+# references directly or one level through receipts/*.json (Plan A, owner card t1674s7005; validation/*.R is not a subject);
+# finish = its docs/*.md (the interpretation). design/execution/finish with no own subject, and start without both a data/ and a
+# docs/ ref, yield NA, which always fails. An analysis/** execution subject is also satisfied by a byte-identical attached copy
+# (the frozen builds/frozen copy the structural reviewer sees); no other subject has that match. Roles share the subject list.
 m_review_prior <- c(framing="artifacts/stage1_decision.json", design="artifacts/stage2_framing.json", execution="artifacts/stage3_locked_design.json", finish="artifacts/stage4_validation_status.json")
-m_review_subject_pattern <- c(start="^(?!(transcripts|captures|packets|approvals|artifacts/operations)/)", design="^docs/", execution="^builds/frozen/.+\\.R$", finish="^docs/.+\\.md$")
-m_review_subjects <- function(stage, receipt, rp) {
-  direct <- unique(unlist(lapply(m_refs(receipt), function(z) if (is.list(z) && m_text(z$path)) z$path)))
+m_review_subject_pattern <- c(start="^(?!(transcripts|captures|packets|approvals|artifacts/operations)/)", design="^docs/", execution="^(builds/frozen|analysis)/.+\\.R$", finish="^docs/.+\\.md$")
+m_review_subjects <- function(stage, receipt, rp, root = NULL) {
+  pth <- function(x) unique(unlist(lapply(m_refs(x), function(z) if (is.list(z) && m_text(z$path)) z$path)))
+  direct <- pth(receipt)
   pat <- m_review_subject_pattern[stage]
   own <- if (is.na(pat)) character(0) else direct[grepl(pat, direct, perl = TRUE)]
-  if (identical(stage, "execution") && !length(own)) own <- NA_character_  # structural review needs builder scripts; NA = unsatisfiable
-  setdiff(unique(c(if (!is.na(m_review_prior[stage])) unname(m_review_prior[stage]), own)), rp)
+  # Plan A (owner cards t1673s6991/t1674s7005): execution builder scripts are builds/frozen/** or analysis/** *.R files the stage-4 receipt
+  # references directly or one level through receipts/*.json (ACC002 layout: analysis/r_a|r_b/main.R reached via receipts/).
+  if (identical(stage, "execution") && !is.null(root)) for (p in direct[grepl("^receipts/[^/]+\\.json$", direct)]) {
+    f <- file.path(root, p); if (file.exists(f)) { via <- pth(m_read(f)); own <- unique(c(own, via[grepl(pat, via, perl = TRUE)])) } }
+  # NA = unsatisfiable: execution needs builder scripts, design its gate record (docs/), finish its interpretation (docs/*.md),
+  # start both its data (data/) and its start record (docs/).
+  if (stage %in% c("execution", "design", "finish") && !length(own)) own <- NA_character_
+  if (identical(stage, "start") && !(any(grepl("^data/", own)) && any(grepl("^docs/", own)))) own <- c(own, NA_character_)
+  out <- unique(c(if (!is.na(m_review_prior[stage])) unname(m_review_prior[stage]), own))
+  out[is.na(out) | out != rp]
 }
 # Paths reachable from a JSON file through hash references (current refs only; the operations ledger itself is not a source).
 m_reachable <- function(start, root) {
@@ -339,12 +351,12 @@ m_review_coverage <- function(add, root, stage, sends, receipt_path) {
       (is.null(cap$nonce) || identical(cap$nonce, s$nonce)) &&
       endsWith(trimws(txt), paste0("END_REPLY ", s$id, " ", s$nonce))
   }
-  subjects <- m_review_subjects(stage, receipt, rp)
+  subjects <- m_review_subjects(stage, receipt, rp, root)
   if (length(need_roles)) add(paste("review coverage", stage, "review subjects"), length(subjects) > 0 && !anyNA(subjects), "The artifacts under review are defined (execution: frozen builder scripts referenced)")
   # F5: a review counts only if it saw a current artifact the receipt relies on (an attachment whose hash matches that file now).
   current <- function(s) m_rows(s$attachments) && length(s$attachments) > 0 && m_refs_ok(s$attachments, root, FALSE) &&
     any(vapply(s$attachments, function(a) is.list(a) && m_text(a$path) && a$path %in% setdiff(reached, rp), logical(1))) &&
-    all(vapply(subjects, function(p) !is.na(p) && file.exists(file.path(root, p)) && any(vapply(s$attachments, function(a) is.list(a) && identical(a$path, p) &&
+    all(vapply(subjects, function(p) !is.na(p) && file.exists(file.path(root, p)) && any(vapply(s$attachments, function(a) is.list(a) && (identical(a$path, p) || (startsWith(p, "analysis/") && m_ref_ok(a, root))) &&
       m_text(a$sha256) && identical(tolower(a$sha256), m_hash(file.path(root, p))), logical(1))), logical(1)))  # F5b: every reviewed subject, current
   # F4: where the receipt records provenance for a role, that role's send must be the provenance output and the same AI.
   prov <- if (m_rows(receipt$ai_provenance)) receipt$ai_provenance else list()

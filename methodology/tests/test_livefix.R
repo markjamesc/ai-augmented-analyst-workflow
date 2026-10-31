@@ -34,6 +34,7 @@ now<-format(Sys.time(),"%Y-%m-%dT%H:%M:%SZ",tz="UTC")
 t_write(root,"artifacts/procedure/checks/start-begin.json",list(step="start",phase="begin",result="PASS",checked_at_utc=now))
 state<-list(run_id="SYNTHETIC-LIVEFIX",current_step="start",current_authorization=m_file_ref("artifacts/procedure/checks/start-begin.json",root))
 if(!file.exists(file.path(root,"artifacts/stage1_decision.json")))t_write(root,"artifacts/stage1_decision.json",list(stage=1,status="LOCKED",note="synthetic receipt for review coverage"))
+t_stage_records(root)
 t_write(root,"artifacts/procedure/run_state.json",state);t_operations(root,"start")
 opath<-"artifacts/operations/start.json";o<-m_read(file.path(root,opath));packetpath<-o$sends[[1]]$packet$path
 packet<-m_read(file.path(root,packetpath));packet$design_candidate<-m_file_ref("candidate.json",root);t_write(root,packetpath,packet)

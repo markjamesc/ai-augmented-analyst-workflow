@@ -33,6 +33,17 @@ HIST = re.compile(r'(^|/)(runs|versioned|sandbox|superseded|failed_attempts)(/|$
 def safe(name, what):
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', name or '') or HIST.search(name): sys.exit(f'FAIL {what} {name!r}: use [A-Za-z0-9._-] and never attempt/pass<N>/runs/versioned/sandbox/superseded')
     return name
+# Plan A (owner card t1674s7005): the packet refuses a role the stage does not allow and a send with no attachment other than
+# the stage receipt.  REVIEW_ROLES is a copy of contracts.R m_stage_ai_roles (kept in sync by tools/tests/test_runkit.py);
+# EXTRA_ROLES are the other roles a stage sends (cross_review everywhere; start decision_drafter; design lock_review;
+# execution builders and the structural reviewer), as in the REH-F5B rehearsal ledgers.
+REVIEW_ROLES = {'start': ['independent_reconstruction', 'red_team'], 'framing': ['framing_builder', 'decision_fit_review', 'framing_red_team'],
+                'design': ['designer_a', 'designer_b', 'risk_reviewer'], 'finish': ['interpreter', 'inference_reviewer', 'numerical_auditor']}
+EXTRA_ROLES = {'start': ['decision_drafter', 'cross_review'], 'framing': ['cross_review'], 'design': ['lock_review', 'cross_review'],
+               'execution': ['builder R-A', 'builder R-B', 'structural reviewer', 'cross_review'], 'finish': ['cross_review']}
+def allowed_roles(stage): return REVIEW_ROLES.get(stage, []) + EXTRA_ROLES.get(stage, [])
+STAGE_RECEIPTS = {'start': 'artifacts/stage1_decision.json', 'framing': 'artifacts/stage2_framing.json', 'design': 'artifacts/stage3_locked_design.json',
+                  'execution': 'artifacts/stage4_validation_status.json', 'finish': 'artifacts/stage5_interpretation_status.json'}
 def frag(stage, sid): return f'artifacts/operations/{stage}_sends/{sid}.json'
 def main():
     a = argparse.ArgumentParser(); a.add_argument('cmd'); a.add_argument('root'); a.add_argument('stage'); a.add_argument('id', nargs='?'); a.add_argument('file', nargs='?')
@@ -44,6 +55,8 @@ def main():
     k = K(x.root); st = k.state(); run = st['run_id']
     if x.cmd == 'packet':
         if st.get('current_step') != x.stage: sys.exit(f'FAIL stage {x.stage} is not the authorized current step')
+        if x.role not in allowed_roles(x.stage): sys.exit(f'FAIL role {x.role!r} is not allowed at {x.stage}: {allowed_roles(x.stage)}')
+        if not [f for f in x.attach if os.path.normpath(f).replace(os.sep, '/') != STAGE_RECEIPTS.get(x.stage)]: sys.exit(f'FAIL packet needs at least one --attach other than the stage receipt')
         nonce = secrets.token_hex(8); marker = f'END_REPLY {x.id} {nonce}'
         body = open(x.message, encoding='utf-8').read().rstrip('\n') + f'\n\nEnd your reply with this exact final line:\n{marker}\n'
         msg = k.wx(f'packets/{x.stage}/{x.id}/message.md', body)

@@ -1,5 +1,5 @@
 # SYNTHETIC rehearsal: negative probes (b, c, e, f, g + control) per REMEDIATION_LIVE_HANDOFF.md on copies of the certified ROOT.  Usage: drive_probes.py ROOT GATE PROBES
-import sys, os, json, subprocess; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); from drive_common import *
+import sys, os, json, subprocess, re; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); from drive_common import *
 R, G, P = [os.path.abspath(x) for x in sys.argv[1:4]]
 def run(cmd): r = subprocess.run(cmd, cwd=G, capture_output=True, text=True); return r.returncode, r.stdout + r.stderr
 # Own-tooling fix: the certified ROOT carries 0444 locked files on POSIX and copytree keeps modes, so prepare_live_probes.py
@@ -50,6 +50,16 @@ def f5b_receipt(d): _sends(d, 'finish', lambda S: [dict(x, attachments=[_ref(d, 
 def f5b_ancillary(d): _sends(d, 'finish', lambda S: [dict(x, attachments=[_ref(d, 'outputs/r_a/totals.csv')]) if x['id'] == 'S5-n1' else x for x in S])
 def f5b_omit(d): _sends(d, 'finish', lambda S: [dict(x, attachments=[a for a in x['attachments'] if a['path'] != 'docs/stage5/interpretation.md']) if x['id'] == 'S5-n1' else x for x in S])
 def f5b_stale(d): _sends(d, 'finish', lambda S: [dict(x, attachments=[dict(a, sha256='0'*64) if a['path'] == 'docs/stage5/interpretation.md' else a for a in x['attachments']]) if x['id'] == 'S5-n1' else x for x in S])
+# Plan A (t1674s7005): receipt-side probes.  _strip drops every ref whose path matches rx from a receipt, so the stage has no
+# own review subject; the NA guard must then FAIL "review subjects" (never pass vacuously).
+def _strip(x, rx):
+    if isinstance(x, dict): return {k: _strip(v, rx) for k, v in x.items() if not (isinstance(v, dict) and isinstance(v.get('path'), str) and re.search(rx, v['path']))}
+    if isinstance(x, list): return [_strip(v, rx) for v in x if not (isinstance(v, dict) and isinstance(v.get('path'), str) and re.search(rx, v['path']))]
+    return x
+def _rstrip(d, rp, rx): q = f'{d}/{rp}'; _jw(q, _strip(_jl(q), rx))
+def f5b_no_builders(d): _rstrip(d, 'artifacts/stage4_validation_status.json', r'^((builds/frozen|analysis)/.+\.R|receipts/[^/]+\.json)$')
+def pa_design_guard(d): _rstrip(d, 'artifacts/stage3_locked_design.json', r'^docs/')
+def pa_finish_guard(d): _rstrip(d, 'artifacts/stage5_interpretation_status.json', r'^docs/.+\.md$')
 def f5b_builders(d): _sends(d, 'execution', lambda S: [dict(x, attachments=[a for a in x['attachments'] if not a['path'].startswith('builds/')]) if x.get('role') == 'structural reviewer' else x for x in S])
 OPSS = lambda c, st: [RS, '--vanilla', 'tools/check_remediation.R', 'operations', f'{P}/{c}', st]
 for n, fn, st, chk in [('f1-start-role-dropped', f1, 'start', 'review coverage start role red_team'),
@@ -62,7 +72,10 @@ for n, fn, st, chk in [('f1-start-role-dropped', f1, 'start', 'review coverage s
                        ('f5b-ancillary-only', f5b_ancillary, 'finish', 'review coverage finish role numerical_auditor'),
                        ('f5b-subject-omitted', f5b_omit, 'finish', 'review coverage finish role numerical_auditor'),
                        ('f5b-subject-stale', f5b_stale, 'finish', 'review coverage finish role numerical_auditor'),
-                       ('f5b-builders-omitted', f5b_builders, 'execution', 'review coverage execution role structural reviewer')]:
+                       ('f5b-builders-omitted', f5b_builders, 'execution', 'review coverage execution role structural reviewer'),
+                       ('f5b-no-builders', f5b_no_builders, 'execution', 'review coverage execution review subjects'),
+                       ('pa-design-no-record', pa_design_guard, 'design', 'review coverage design review subjects'),
+                       ('pa-finish-no-record', pa_finish_guard, 'finish', 'review coverage finish review subjects')]:
     fn(_fcopy(n)); cases.append((n, OPSS(n, st), 1, chk))
 def failed(txt):
     try: return [c['check'] for c in json.loads(txt[txt.index('['):]) if c.get('result') != 'PASS']

@@ -62,7 +62,8 @@ rv<-function(stage,receipt_extra=NULL){t_write(root,"artifacts/procedure/run_sta
   if(!is.null(receipt_extra)){r<-r0;for(k in names(receipt_extra))r[[k]]<-receipt_extra[[k]];t_write(root,rp,r)}
   t_operations(root,stage);list(stage=stage,o=m_read(file.path(root,"artifacts/operations",paste0(stage,".json"))),rp=rp,r0=r0)}
 rvrun<-function(R,x){p<-file.path("artifacts/operations",paste0(R$stage,".json"));t_write(root,p,x);m_operations(root,list(run_id="SYNTHETIC",current_step=R$stage),R$stage)}
-F<-rv("finish",list(cross_review="PASS"));fo<-F$o
+interp<-list(t_file(root,"docs/stage5/interpretation.md","Synthetic interpretation"))  # real-layout finish record (rehearsal: docs/stage5/interpretation.md)
+F<-rv("finish",list(cross_review="PASS",stage_records=interp));fo<-F$o
 check("R1 finish: all four required reviews captured passes",m_pass(rvrun(F,fo)))
 for(i in seq_along(fo$sends)){x<-fo;role<-x$sends[[i]]$role;x$sends<-x$sends[-i]
   check(paste("R1 finish: dropped",role,"send fails"),fails(rvrun(F,x),paste("review coverage finish role",role)))}
@@ -101,52 +102,76 @@ Fr<-rv("framing");check("F1 framing: required roles captured passes",m_pass(rvru
 for(rl in c("framing_builder","decision_fit_review","framing_red_team")){x<-Fr$o;x$sends<-Filter(function(z)!identical(z$role,rl),x$sends)
   check(paste("F1 framing: missing",rl,"fails"),fails(rvrun(Fr,x),paste("review coverage framing role",rl)))}
 t_write(root,Fr$rp,Fr$r0)
-F<-rv("finish",list(cross_review="PASS"));fo<-F$o
+F<-rv("finish",list(cross_review="PASS",stage_records=interp));fo<-F$o
 x<-fo;c2<-m_read(file.path(root,x$sends[[2]]$capture$path));c2$capture_sha256<-NULL;t_write(root,"captures/finish/nosha.json",c2);x$sends[[2]]$capture<-m_file_ref("captures/finish/nosha.json",root)
 check("F2 capture record without capture_sha256 fails",fails(rvrun(F,x),paste("review coverage finish role",fo$sends[[2]]$role)))
 x<-fo;x$sends[[2]]$id<-x$sends[[1]]$id;check("F3 duplicate send id fails",fails(rvrun(F,x),"review coverage finish unique send ids"))
 x<-fo;x$sends[[2]]$nonce<-x$sends[[1]]$nonce;check("F3 duplicate nonce fails",fails(rvrun(F,x),"review coverage finish unique send ids"))
 pv<-lapply(fo$sends[1:3],function(z)list(role=z$role,provider=z$ai,output=z$reply))
-F<-rv("finish",list(cross_review="PASS",ai_provenance=pv));fo<-F$o
+F<-rv("finish",list(cross_review="PASS",stage_records=interp,ai_provenance=pv));fo<-F$o
 check("F4 sends matching recorded provenance pass",m_pass(rvrun(F,fo)))
 x<-fo;r1<-x$sends[[1]]$role;x$sends[[1]]$role<-x$sends[[2]]$role;x$sends[[2]]$role<-r1
 check("F4 swapped role labels (provenance mismatch) fails",fails(rvrun(F,x),paste("review coverage finish role",r1)))
 x<-fo;x$sends[[1]]$ai<-"other-ai";check("F4 send AI differs from provenance provider fails",fails(rvrun(F,x),paste("review coverage finish role",fo$sends[[1]]$role)))
-t_write(root,F$rp,F$r0);F<-rv("finish",list(cross_review="PASS"));fo<-F$o
+t_write(root,F$rp,F$r0);F<-rv("finish",list(cross_review="PASS",stage_records=interp));fo<-F$o
 x<-fo;x$sends[[3]]$attachments<-list();check("F5 review with no attachments fails",fails(rvrun(F,x),paste("review coverage finish role",fo$sends[[3]]$role)))
 x<-fo;st<-t_file(root,"inputs/old_copy.txt","stale");x$sends[[3]]$attachments<-list(st);check("F5 review that saw no reached artifact fails",fails(rvrun(F,x),paste("review coverage finish role",fo$sends[[3]]$role)))
 x<-fo;a<-x$sends[[3]]$attachments[[1]];a$sha256<-strrep("0",64);x$sends[[3]]$attachments<-list(a);check("F5 review that saw a superseded receipt fails",fails(rvrun(F,x),paste("review coverage finish role",fo$sends[[3]]$role)))
 # F5b (RV-D2 issue 2 / RV-C2 F5 PARTLY): each required send must attach every reviewed subject at its current hash; the receipt never counts.
-t_write(root,F$rp,F$r0);anc<-t_file(root,"data/ancillary.csv","a,b\n1,2");F<-rv("finish",list(cross_review="PASS",ancillary=anc));fo<-F$o
+t_write(root,F$rp,F$r0);anc<-t_file(root,"data/ancillary.csv","a,b\n1,2");F<-rv("finish",list(cross_review="PASS",stage_records=interp,ancillary=anc));fo<-F$o
 subj<-m_review_subjects("finish",m_read(file.path(root,F$rp)),F$rp);rl3<-paste("review coverage finish role",fo$sends[[3]]$role)
-check("F5b finish subjects are the stage4 receipt and the finish docs record, not the receipt",identical(sort(subj),sort(c("artifacts/stage4_validation_status.json","docs/finish/review_subject.md"))) && !(F$rp %in% subj))
+check("F5b finish subjects are the stage4 receipt and the finish docs record, not the receipt",identical(sort(subj),sort(c("artifacts/stage4_validation_status.json","docs/stage5/interpretation.md"))) && !(F$rp %in% subj))
 check("F5b correct current reviewed artifacts pass",m_pass(rvrun(F,fo)))
 x<-fo;x$sends[[3]]$attachments<-list(m_file_ref(F$rp,root));check("F5b receipt-only attachment fails",fails(rvrun(F,x),rl3))
 x<-fo;x$sends[[3]]$attachments<-list(m_file_ref("data/ancillary.csv",root));check("F5b current ancillary-only attachment fails",fails(rvrun(F,x),rl3))
-old<-m_file_ref("docs/finish/review_subject.md",root);t_file(root,"docs/finish/review_subject.md","Revised finish record");r<-m_read(file.path(root,F$rp));r$review_subject<-m_file_ref("docs/finish/review_subject.md",root);t_write(root,F$rp,r)
+old<-m_file_ref("docs/stage5/interpretation.md",root);t_file(root,"docs/stage5/interpretation.md","Revised finish record");r<-m_read(file.path(root,F$rp));r$stage_records[[1]]<-m_file_ref("docs/stage5/interpretation.md",root);t_write(root,F$rp,r)
 x<-fo;x$sends[[3]]$attachments<-list(m_file_ref("data/ancillary.csv",root),m_file_ref("artifacts/stage4_validation_status.json",root),old)
 check("F5b stale reviewed artifact with a current ancillary one fails",fails(rvrun(F,x),rl3))
 x<-fo;x$sends[[3]]$attachments<-list(m_file_ref("data/ancillary.csv",root),m_file_ref("artifacts/stage4_validation_status.json",root))
 check("F5b reviewed artifact changed and omitted (ancillary still current) fails",fails(rvrun(F,x),rl3))
-x<-fo;x$sends<-lapply(x$sends,function(z){z$attachments<-list(m_file_ref("data/ancillary.csv",root),m_file_ref("artifacts/stage4_validation_status.json",root),m_file_ref("docs/finish/review_subject.md",root));z})
+x<-fo;x$sends<-lapply(x$sends,function(z){z$attachments<-list(m_file_ref("data/ancillary.csv",root),m_file_ref("artifacts/stage4_validation_status.json",root),m_file_ref("docs/stage5/interpretation.md",root));z})
 check("F5b re-review on the revised artifact passes",m_pass(rvrun(F,x)))
-t_file(root,"docs/finish/review_subject.md",paste("Synthetic finish artifact under review"));t_write(root,F$rp,F$r0)
+t_file(root,"docs/stage5/interpretation.md","Synthetic interpretation");t_write(root,F$rp,F$r0)
 E5<-rv("execution",list(cross_review="PASS"));check("F5b execution review with no frozen builder scripts referenced fails",fails(rvrun(E5,E5$o),"review coverage execution review subjects"))
 t_write(root,E5$rp,E5$r0)
 # DeepSeek RV-D2 issue 1: provenance outputs that are real transcripts/<stage>/<id>_reply.txt captures.
-F<-rv("finish",list(cross_review="PASS"));fo<-F$o;t_write(root,F$rp,F$r0)
+F<-rv("finish",list(cross_review="PASS",stage_records=interp));fo<-F$o;t_write(root,F$rp,F$r0)
 pv<-lapply(fo$sends[1:3],function(z)list(role=z$role,provider=z$ai,output=z$reply))
 check("F4t provenance outputs are transcripts replies",all(vapply(pv,function(z)grepl("^transcripts/finish/.+_reply\\.txt$",z$output$path),logical(1))))
-F<-rv("finish",list(cross_review="PASS",ai_provenance=pv));fo<-F$o
+F<-rv("finish",list(cross_review="PASS",stage_records=interp,ai_provenance=pv));fo<-F$o
 check("F4t transcripts replies with matching provenance pass (reply checks exercised)",m_pass(rvrun(F,fo)) && any(grepl("review coverage finish reply transcripts/finish/",vapply(rvrun(F,fo),function(z)z$check,""))))
 x<-fo;x$sends[[1]]$ai<-"other-ai";check("F4t transcripts reply with a different AI than provenance fails",fails(rvrun(F,x),paste("review coverage finish role",fo$sends[[1]]$role)))
 x<-fo;x$sends<-x$sends[-1];check("F4t provenance transcripts reply with no send fails",fails(rvrun(F,x),paste0("review coverage finish reply ",pv[[1]]$output$path)))
-t_write(root,F$rp,F$r0);F<-rv("finish",list(cross_review="PASS"));fo<-F$o
+t_write(root,F$rp,F$r0);F<-rv("finish",list(cross_review="PASS",stage_records=interp));fo<-F$o
 er<-t_file(root,"transcripts/finish/late_reply.md","Late\nEND_REPLY late x");r<-m_read(file.path(root,F$rp));r$late_review<-er;t_write(root,F$rp,r)
 check("F6 receipt-reached _reply.md with no send fails",fails(rvrun(F,fo),"review coverage finish reply transcripts/finish/late_reply.md"))
 t_write(root,F$rp,F$r0)
 er<-t_file(root,"transcripts/finish/late_reply.txt.bak","Late\nEND_REPLY late x");r<-m_read(file.path(root,F$rp));r$late_review<-er;t_write(root,F$rp,r)
 check("F6 receipt-reached _reply.txt.bak with no send fails",fails(rvrun(F,fo),"review coverage finish reply transcripts/finish/late_reply.txt.bak"))
 t_write(root,F$rp,F$r0)
+# Plan A (t1674s7005): NA guards, start data/+docs/ guard, execution path rule (builds/frozen|analysis via receipts/), content-equal match limited to analysis/.
+rs<-function(stage,f){rp<-unname(m_stage_receipts[stage]);r0<-m_read(file.path(root,rp));r<-f(r0);t_write(root,rp,r);list(rp=rp,r0=r0)}
+d0<-rs("design",function(r){r$stage_records<-NULL;r});Dg<-rv("design")
+check("PA design receipt with no own stage record fails (NA guard)",fails(rvrun(Dg,Dg$o),"review coverage design review subjects"));t_write(root,d0$rp,d0$r0)
+f0<-rs("finish",function(r){if(is.list(r))r$stage_records<-NULL;r});Fg<-rv("finish",list(cross_review="PASS"));check("PA finish receipt with no own stage record fails (NA guard)",fails(rvrun(Fg,Fg$o),"review coverage finish review subjects"));t_write(root,f0$rp,f0$r0)
+s0<-rs("start",function(r){r$stage_records<-Filter(function(z)!grepl("^data/",z$path),r$stage_records);r});Sg<-rv("start")
+check("PA start receipt without a data/ ref fails",fails(rvrun(Sg,Sg$o),"review coverage start review subjects"));t_write(root,s0$rp,s0$r0)
+s0<-rs("start",function(r){r$stage_records<-Filter(function(z)!grepl("^docs/",z$path),r$stage_records);r});Sg<-rv("start")
+check("PA start receipt without a docs/ ref fails",fails(rvrun(Sg,Sg$o),"review coverage start review subjects"));t_write(root,s0$rp,s0$r0)
+Sg<-rv("start");check("PA start receipt with data/ and docs/ refs passes",m_pass(rvrun(Sg,Sg$o)))
+am<-t_file(root,"analysis/r_a/main.R","# synthetic R-A main");fz<-t_file(root,"builds/frozen/R-A/analysis/r_a/main.R","# synthetic R-A main");vr<-t_file(root,"validation/check_a.R","# validation")
+rc<-t_file(root,"receipts/r_a.json",jsonlite::toJSON(list(script=am,validation=vr),auto_unbox=TRUE))
+Ev<-rv("execution",list(cross_review="PASS",builder_receipt=rc,frozen_script=fz));sv<-m_review_subjects("execution",m_read(file.path(root,Ev$rp)),Ev$rp,root)
+check("PA execution subjects reach analysis/*.R one level via receipts/*.json",all(c("analysis/r_a/main.R","builds/frozen/R-A/analysis/r_a/main.R") %in% sv))
+check("PA execution subjects exclude validation/*.R",!("validation/check_a.R" %in% sv))
+check("PA execution via receipts passes with every subject attached",m_pass(rvrun(Ev,Ev$o)))
+x<-Ev$o;x$sends<-lapply(x$sends,function(z){z$attachments<-Filter(function(a)!identical(a$path,"analysis/r_a/main.R"),z$attachments);z})
+check("PA analysis/ subject satisfied by its byte-identical frozen copy",m_pass(rvrun(Ev,x)))
+t_file(root,"builds/frozen/R-A/analysis/r_a/main.R","# synthetic R-A main");t_file(root,"analysis/r_a/main.R","# installed copy edited")
+check("PA edited installed analysis/ file is not satisfied by the frozen copy",fails(rvrun(Ev,x),"review coverage execution role"))
+t_file(root,"analysis/r_a/main.R","# synthetic R-A main");t_write(root,Ev$rp,Ev$r0)
+dup<-t_file(root,"scratch/interp_copy.md","Synthetic interpretation");Fc<-rv("finish",list(cross_review="PASS",stage_records=interp))
+x<-Fc$o;x$sends<-lapply(x$sends,function(z){z$attachments<-c(Filter(function(a)!identical(a$path,"docs/stage5/interpretation.md"),z$attachments),list(dup));z})
+check("PA content-equal match does not apply outside analysis/",fails(rvrun(Fc,x),"review coverage finish role"));t_write(root,Fc$rp,Fc$r0)
 cat(sum(unlist(results)),"/",length(results),"targeted gate tests passed\n")
 if(!all(unlist(results)))quit(status=1)

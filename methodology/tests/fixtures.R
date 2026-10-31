@@ -17,7 +17,18 @@ t_ai <- function(root, roles, stage) lapply(roles, function(role) {
     input = t_file(root, paste0("ai/", stage, "-", role, "-input.txt"), "synthetic input"),
     output = t_file(root, paste0("ai/", stage, "-", role, "-output.txt"), paste0("synthetic output\nEND_REPLY ", stage, "-synthetic-", match(role, roles), " TEST-", stage, "-", match(role, roles))))
 })
+# Plan A (t1674s7005): real-layout stage records, as live receipts carry them (ACC002: data/ + docs/stage1/START_RECORD.md,
+# docs/stage2/FRAMING_RECORD.md, docs/stage3/DESIGN_GATE_RECORD.md; rehearsal finish: docs/stage5/interpretation.md). Written when a receipt
+# is built, never by t_operations; the review gate's subject rules then apply unchanged.
+t_stage_record <- function(root, rp, refs) { if (!file.exists(file.path(root, rp))) return(invisible(NULL)); r <- m_read(file.path(root, rp))
+  if (!is.list(r)) return(invisible(NULL)); r$stage_records <- lapply(refs, function(x) t_file(root, x[[1]], x[[2]])); t_write(root, rp, r) }
+t_stage_records <- function(root) {
+  t_stage_record(root, "artifacts/stage1_decision.json", list(c("data/stage1_input.csv", "id,value\n1,2"), c("docs/stage1/START_RECORD.md", "Synthetic start record")))
+  t_stage_record(root, "artifacts/stage2_framing.json", list(c("docs/stage2/FRAMING_RECORD.md", "Synthetic framing record")))
+  t_stage_record(root, "artifacts/stage3_locked_design.json", list(c("docs/stage3/DESIGN_GATE_RECORD.md", "Synthetic design gate record")))
+}
 t_design <- function(root) {
+  t_stage_records(root)
   path <- "artifacts/stage3_locked_design.json"; s <- m_read(file.path(root, path))
   m <- m_read(file.path(repo_root, "templates/methodology/design.example.json"))
   m$analytical_target$observed_population <- s$population; m$analytical_target$decision_unit <- s$grain
@@ -72,6 +83,7 @@ t_execution <- function(root) {
   t_write(root, "artifacts/stage4_validation_status.json", s4)
 }
 t_finish <- function(root) {
+  t_stage_record(root, "artifacts/stage5_interpretation_status.json", list(c("docs/stage5/interpretation.md", "Synthetic interpretation")))
   p <- "artifacts/stage5_interpretation_status.json"; s <- m_read(file.path(root, p))
   ref <- t_file(root, "reports/claim-audit.txt", "Synthetic reviewer trace")
   s$ai_provenance <- t_ai(root, c("interpreter", "inference_reviewer", "numerical_auditor"), "finish")
@@ -118,17 +130,16 @@ t_operations <- function(root,stage) {
   roles<-c(m_stage_ai_roles[[stage]],if(identical(receipt$cross_review,"PASS"))"cross_review",
     if(identical(stage,"execution") && identical(m_read(file.path(root,"artifacts/stage3_locked_design.json"))$methodology$structural_review$policy,"required"))"structural reviewer")
   if(!length(roles))roles<-"reviewer"
-  # F5b: a synthetic receipt that records no reviewed artifact gets one (docs/<stage>/review_subject.md) so reviews have a real subject.
-  if(!length(Filter(function(z)m_ref_ok(z,root)&&!grepl("^(transcripts|captures|packets|approvals)/",z$path)&&!identical(z$path,rp),m_refs(receipt)))){
-    receipt$review_subject<-t_file(root,paste0("docs/",stage,"/review_subject.md"),paste("Synthetic",stage,"artifact under review"));t_write(root,rp,receipt)}
+  # Plan A (t1674s7005): no invented review subject. The gate's subject rules apply as-is; a receipt without its stage record fails.
+  # Fixture receipts carry real-layout stage records (t_stage_records), as live receipts do (ACC002: docs/stageN/*_RECORD.md).
   sends<-lapply(seq_along(roles),function(i){id<-paste0(stage,"-synthetic-",i);nonce<-paste0("TEST-",stage,"-",i)
     p<-list(run_id=state$run_id,stage=stage,send_id=id,nonce=nonce,role=roles[[i]],attachments=list())
     t_write(root,paste0("packets/",stage,"/",id,".json"),p);packet<-m_file_ref(paste0("packets/",stage,"/",id,".json"),root)
     px<-Filter(function(x)identical(x$role,roles[[i]]),if(is.list(receipt$ai_provenance))receipt$ai_provenance else list())
     reply<-if(length(px)) px[[1]]$output else t_file(root,paste0("transcripts/",stage,"/",id,"_reply.txt"),paste("Synthetic reply",roles[[i]],"\nEND_REPLY",id,nonce))
     t_write(root,paste0("captures/",stage,"/",id,".json"),list(send_id=id,nonce=nonce,packet=packet,reply=reply,capture_sha256=reply$sha256))
-    sj<-m_review_subjects(stage,receipt,rp);sj<-sj[!is.na(sj)&file.exists(file.path(root,sj))]
-    rr<-Filter(function(z)m_ref_ok(z,root)&&!grepl("^(transcripts|captures|packets)/",z$path)&&!identical(z$path,rp),m_refs(receipt))
+    sj<-m_review_subjects(stage,receipt,rp,root);sj<-sj[!is.na(sj)&file.exists(file.path(root,sj))]
+    rr<-Filter(function(z)m_ref_ok(z,root)&&!grepl("^(transcripts|captures|packets|approvals|artifacts/operations)/",z$path)&&!identical(z$path,rp),m_refs(receipt))  # same exclusions as the gate
     att<-unname(lapply(unique(c(sj,if(length(rr))rr[[1]]$path)),m_file_ref,root=root))  # F5b: attach every reviewed subject at its current hash (never the receipt itself)
     list(id=id,ai="synthetic",role=roles[[i]],send_kind="review",nonce=nonce,packet=packet,attachments=att,reply=reply,capture=m_file_ref(paste0("captures/",stage,"/",id,".json"),root))})
   t_write(root,paste0("artifacts/operations/",stage,".json"),list(version="acceptance-v2",run_id=state$run_id,stage=stage,sends=sends))
