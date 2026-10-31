@@ -2,17 +2,18 @@
 import sys, os, json, csv, time; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); from drive_common import *
 d = D(sys.argv[1], sys.argv[2]); R = d.root
 s3 = d.J('artifacts/stage3_locked_design.json')['methodology']
-d.gate('begin', 'finish'); time.sleep(3)
+if not os.environ.get('REH_RESUME_S5'): d.gate('begin', 'finish'); time.sleep(3)  # resume skips an already-begun stage
 tot = list(csv.DictReader(open(d.p('outputs/r_a/totals.csv'))))[0]; rows = list(csv.DictReader(open(d.p('outputs/r_a/rank_rows.csv'))))
 qual = sorted(r['id'] for r in rows); sel = [r['id'] for r in sorted(rows, key=lambda r: int(r['rank_n'])) if r['place_state'] == 'SELECTED']
 c1 = f"Qualifying records {', '.join(qual)} (n={tot['qualified_n']}); selected {', '.join(sel)} (n={tot['selected_n']}); selected sum {tot['selected_sum']} (RES-totals, RES-rank_rows)"
 c2 = 'ACCEPT mechanical conformity of this synthetic run; no business action is authorized (RES-build_report)'
 DL = 'docs/stage5/interpretation.md'
-d.wx(DL, f'# {LAB}\n\nC1 (descriptive): {c1}.\n\nC2 (recommendation): {c2}.\n')
+_t = f'# {LAB}\n\nC1 (descriptive): {c1}.\n\nC2 (recommendation): {c2}.\n'
+if not (os.environ.get('REH_RESUME_S5') and os.path.exists(d.p(DL)) and open(d.p(DL), encoding='utf-8').read() == _t): d.wx(DL, f'# {LAB}\n\nC1 (descriptive): {c1}.\n\nC2 (recommendation): {c2}.\n')
 AT = [DL, 'artifacts/stage4_validation_status.json', 'outputs/r_a/totals.csv', 'outputs/r_a/rank_rows.csv']
 roles = [('S5-i1', 'ChatGPT', 'interpreter'), ('S5-r1', 'DeepSeek', 'inference_reviewer'), ('S5-n1', 'Grok', 'numerical_auditor')]
-rp = {sid: d.send('finish', sid, ai, role, 'review', f'Stage 5 {role} first pass. Review the attached interpretation against the attached outputs. End with VERDICT.', AT) for sid, ai, role in roles}
-rp['S5-x1'] = d.send('finish', 'S5-x1', 'ChatGPT', 'cross_review', 'Stage 5 cross review of the three frozen first passes. End with VERDICT.', AT + [rp[s] for s, _, _ in roles], depends=[s for s, _, _ in roles])
+rp = {sid: (f'transcripts/finish/{sid}_reply.md' if os.path.exists(d.p(f'transcripts/finish/{sid}_reply.md')) else d.send('finish', sid, ai, role, 'review', f'Stage 5 {role} first pass. Review the attached interpretation against the attached outputs. End with VERDICT.', AT)) for sid, ai, role in roles}
+rp['S5-x1'] = d.send('finish', 'S5-x1', 'ChatGPT', 'cross_review', 'review', 'Stage 5 cross review of the three frozen first passes. End with VERDICT.', AT + [rp[s] for s, _, _ in roles], depends=[s for s, _, _ in roles])
 cov = d.wx('docs/stage5/claim_coverage.json', dict(status='PASS', claims=['C1', 'C2'], evidence=d.ref(rp['S5-x1']), synthetic=LAB))
 rev = d.wx('docs/stage5/revision.json', dict(status='UNCHANGED', unresolved_flags=0, synthetic=LAB))
 oc = d.wx('docs/stage5/outcome_contract.json', s3['outcome_contract'])

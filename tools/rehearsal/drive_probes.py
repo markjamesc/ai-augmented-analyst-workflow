@@ -2,7 +2,13 @@
 import sys, os, json, subprocess; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); from drive_common import *
 R, G, P = [os.path.abspath(x) for x in sys.argv[1:4]]
 def run(cmd): r = subprocess.run(cmd, cwd=G, capture_output=True, text=True); return r.returncode, r.stdout + r.stderr
-run([PY, 'tools/prepare_live_probes.py', R, P])
+# Own-tooling fix: the certified ROOT carries 0444 locked files on POSIX and copytree keeps modes, so prepare_live_probes.py
+# could not alter its copies.  Probe from a writable staging copy (same bytes, u+w), never touching ROOT; check prepare's exit.
+import shutil, stat; S = P + '_src'; shutil.rmtree(S, ignore_errors=True); shutil.copytree(R, S, symlinks=True)
+for dp, dn, fn in os.walk(S):
+    for x in dn + fn: q = os.path.join(dp, x); (not os.path.islink(q)) and os.chmod(q, os.stat(q).st_mode | stat.S_IWUSR)
+code, txt = run([PY, 'tools/prepare_live_probes.py', S, P]); print(txt.strip()[-500:])
+if code != 0: raise SystemExit(f'prepare_live_probes failed ({code})')
 cases = [('a early', [RS, '--vanilla', 'tools/check_remediation.R', 'operations', f'{P}/early', 'finish'], 1),
          ('b changed-rb validation', [RS, '--vanilla', 'tools/check_remediation.R', 'validation', f'{P}/changed-rb'], 1),
          ('b changed-rb finalize', [RS, '--vanilla', 'procedure-gate/procedure_gate.R', 'finalize', f'{P}/changed-rb'], 'nonzero_or_uncertified'),
