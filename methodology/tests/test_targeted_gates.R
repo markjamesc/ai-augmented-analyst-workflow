@@ -101,5 +101,19 @@ check("T8 missing authorization without supplement fails",fails(run(sx(list(acce
 x<-sx(list(accepted_code=list(att)));sp<-m_read(file.path(root,"packets/execution-k.sup.json"));sp$supplements$sha256<-paste(rep("0",64),collapse="");t_write(root,"packets/execution-k.sup.json",sp);x$sends[[length(x$sends)]]$packet_supplement<-m_file_ref("packets/execution-k.sup.json",root)
 check("T8 supplement naming another packet fails",fails(run(x),"packet supplement") && fails(run(x),cid))
 check("T8 supplement changing other fields fails",fails(run(sx(list(accepted_code=list(att),attachments=list(att)))),"packet supplement"))
+# T9 / C9: supersedes ref to a never-sent packet with an abbreviated hash, resolved via a deviation record holding the full hash.
+t_write(root,"packets/old/packet.json",list(send_id="OLD",note="never sent"));oh<-m_file_ref("packets/old/packet.json",root)$sha256
+s9<-function(dev=list(path="packets/old/packet.json",sha256=oh,never_sent=TRUE),abbr=paste0(substr(oh,1,16)," (full hash in deviation record)"),nsent=TRUE,usedev=TRUE){
+  x<-o;x$sends[[1]]$supersedes<-list(path="packets/old/packet.json",sha256=abbr)
+  if(usedev){t_write(root,"deviations/dev9.json",dev);x$supersession_resolutions<-list(list(path="packets/old/packet.json",never_sent=nsent,deviation_record=m_file_ref("deviations/dev9.json",root)))};x}
+cl<-"operations evidence closure"
+check("T9 baseline abbreviated supersedes without resolution fails closure",fails(run(s9(usedev=FALSE)),cl))
+check("T9 resolved via deviation record full hash now passes",!fails(run(s9()),cl) && !fails(run(s9()),"supersession resolutions"))
+check("T9 wrong full hash in deviation record fails",fails(run(s9(dev=list(path="packets/old/packet.json",sha256=paste0(substr(oh,1,16),strrep("0",48)),never_sent=TRUE))),cl))
+check("T9 missing full hash in deviation record fails",fails(run(s9(dev=list(path="packets/old/packet.json",never_sent=TRUE))),cl))
+check("T9 deviation hash not matching abbreviation fails",fails(run(s9(abbr=strrep("f",16))),cl))
+check("T9 too-short abbreviation fails",fails(run(s9(abbr=substr(oh,1,8))),cl))
+check("T9 resolution not marked never-sent fails",fails(run(s9(nsent=FALSE)),cl))
+x<-s9();x$supersession_resolutions[[1]]$path<-x$sends[[1]]$packet$path;check("T9 resolution naming a sent packet fails",fails(run(x),"supersession resolutions"))
 cat(sum(unlist(results)),"/",length(results),"targeted gate tests passed\n")
 if(!all(unlist(results)))quit(status=1)

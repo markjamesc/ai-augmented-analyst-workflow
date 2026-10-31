@@ -369,16 +369,30 @@ m_operations <- function(root,state,stage,final=FALSE) m_checks(function(add) {
     add(paste("watchdog",s$id), ready_opt || (times[2]-times[1]+uncertainty<=900) || m_ref_ok(s$overdue_report,root),"Strictly over 900 seconds requires retained escalation/disposition; not measurable (and not required) when ready time is absent for a hash-bound reply")
     if(!identical(s$approval_id,"none")) add(paste("send approval",s$id), any(vapply(o$approvals,function(a) identical(a$id,s$approval_id) && m_approval(a,state$run_id,stage,s$scope,times[2],root,rev$events,o$attempt),logical(1))),"Conditional approval checked at dispatch")
   }
-  closure <- tryCatch(m_inventory(m_refs(o),root),error=function(e) NULL)
+  res <- Filter(function(r) is.list(r) && !any(vapply(sends,function(x) identical(x$packet$path,r$path),logical(1))), if(is.list(o$supersession_resolutions)) o$supersession_resolutions else list())
+  if(length(o$supersession_resolutions)) add("supersession resolutions", length(res)==length(o$supersession_resolutions), "A resolved supersedes target must not be a sent packet in this ledger")
+  closure <- tryCatch(m_inventory(m_refs(o),root,res),error=function(e) NULL)
   add("operations evidence closure", !is.null(closure), "At stage completion, reject stale nested packet references, including pre-lock candidates")
   add("deviation dispositions", m_rows(o$deviations) && all(vapply(o$deviations,function(x)m_text(x$id) && m_text(x$disposition) && m_ref_ok(x$evidence,root),logical(1))),"Recorded deviations do not override a failed check")
 })
 # Transitive JSON reference closure from the authoritative project root.
-m_inventory <- function(refs,root) {
+m_inventory <- function(refs,root,resolutions=list()) {
   seen<-list(); root<-normalizePath(root,winslash="/",mustWork=TRUE)
+  # C9 (2026-10-31, owner card t1616s6758): a supersedes reference to a never-sent packet whose recorded sha256 is abbreviated
+  # is verified through a hash-checked deviation record that holds the full sha256; the abbreviation must be a >=16-hex prefix of it.
+  resolve<-function(ref) {
+    pre<-regmatches(tolower(ref$sha256),regexpr("^[0-9a-f]+",tolower(ref$sha256)))
+    for(r in resolutions) {
+      d<-if(is.list(r$deviation_record) && m_ref_ok(r$deviation_record,root)) m_read(file.path(root,r$deviation_record$path)) else NULL
+      if(identical(r$path,ref$path) && isTRUE(r$never_sent) && length(pre)==1 && nchar(pre)>=16 && is.list(d) && identical(d$path,ref$path) &&
+         m_text(d$sha256) && nchar(d$sha256)==64 && startsWith(tolower(d$sha256),pre) && isTRUE(d$never_sent)) return(list(path=ref$path,sha256=d$sha256))
+    }
+    ref
+  }
   visit<-function(ref) {
     ref$path <- gsub("\\\\", "/", ref$path)
     if(startsWith(ref$path,paste0(root,"/"))) ref$path<-substring(ref$path,nchar(root)+2)
+    if(!m_ref_ok(ref,root)) ref<-resolve(ref)
     if(!m_ref_ok(ref,root)) stop("Missing, unsafe or stale inventory dependency: ",ref$path)
     if(!is.null(seen[[ref$path]])) {if(!identical(seen[[ref$path]]$sha256,ref$sha256))stop("Conflicting inventory identity");return(invisible(NULL))}
     seen[[ref$path]]<<-list(path=ref$path,sha256=ref$sha256,bytes=unname(file.info(file.path(root,ref$path))$size))

@@ -134,3 +134,8 @@ Items 1, 2, 4, 5 and 7 (the #30 gate, #16 meaning, #37 tag, #48/#50 FLAG handlin
 5. **Revision FLAG handling (C48/C50).** **[OPEN]** The tests did not define what happens after a FLAG beyond "correct and recheck". This change says flagged text does not pass the Finish Gates until corrected and the checklist passes.
 6. **C01 attribution.** The tested unblinded chat also saw a coordinator draft (shared with C02). C02 returned REVERT, so the coordinator-draft ban stays; the C01 result is not cleanly separated from that effect.
 7. **Dominance thresholds (C47).** **[OPEN]** The tested values (≥ 1,000 total, ≥ 30 per unit, share > 1/3) are written as the default; confirm or replace them in Stage 3 per project.
+
+## C9 (2026-10-31, owner card t1616s6758 item 3)
+- `m_inventory` accepts `supersession_resolutions`: a nested ref whose sha256 is an abbreviated (>=16 hex) prefix may be resolved only when a hash-checked deviation record names the same path, holds a full 64-hex sha256 beginning with that prefix, and marks the target never_sent; the resolved ref must then match the file bytes.
+- New check `supersession resolutions` (only when resolutions are present) fails if a resolution names a packet sent in the ledger.
+- Tests T9 (8 checks): the old false failure passes; wrong, missing, non-matching or too-short hashes, non-never-sent and sent-packet resolutions still fail.
