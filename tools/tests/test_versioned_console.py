@@ -16,7 +16,8 @@ ok('no console capture is empty', all(os.path.getsize(c) > 0 for c in cons))
 first = {os.path.basename(c): open(c, 'rb').read().split(b'\n', 1) for c in cons}
 ok('every capture starts with a one-line exit-status header', all(v[0].startswith(b'# exit status ') for v in first.values()))
 ok('quiet builders are labelled "no output" with nothing after the header', all(first[k][0].endswith(b'no output') and first[k][1] == b'' for k in ('builder_r_a.txt', 'builder_r_b.txt')))
-old = {os.path.basename(c): open(c, 'rb').read() for c in glob.glob(f'{r}/outputs/verification/versioned_old_*/console/*.txt')}
+def _strip(b): return b.split(b'\n', 1)[1] if b.startswith(b'# exit status ') else b  # fixture may already carry the overlay header
+old = {os.path.basename(c): _strip(open(c, 'rb').read()) for c in glob.glob(f'{r}/outputs/verification/versioned_old_*/console/*.txt')}
 ok('non-empty child output follows the header byte for byte (count stated)', all(first[k][1] == old[k] and first[k][0].endswith(f'{len(old[k])} bytes of output follow'.encode()) for k in old if old[k] and k in first))
 # references in the report bind the header-bearing bytes
 sm = json.load(open(glob.glob(f'{r}/outputs/verification/versioned/*/summary.json')[0]))
