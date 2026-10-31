@@ -48,6 +48,22 @@ procedure_paths <- function(project_root) {
   )
 }
 
+# C11 (2026-10-31, owner card t1636s6840): evidence-closure calls apply the same C9 supersession resolutions that m_operations applies
+# (a resolution naming a packet sent in that ledger is never applied), so `complete`, `amend`, `finalize` and m_operations agree. Record-only.
+closure_resolutions <- function(project_root, step_ids) {
+  unlist(lapply(step_ids, function(id) {
+    path <- file.path(project_root, "artifacts/operations", paste0(id, ".json"))
+    o <- if (file.exists(path)) tryCatch(m_read(path), error = function(e) NULL) else NULL
+    if (!is.list(o) || !is.list(o$supersession_resolutions)) return(list())
+    Filter(function(r) is.list(r) && !any(vapply(o$sends, function(x) identical(x$packet$path, r$path), logical(1))), o$supersession_resolutions)
+  }), recursive = FALSE)
+}
+
+step_closure <- function(project_root, step_id, receipt) {
+  tryCatch(m_inventory(m_refs(list(receipt = receipt, operations = m_read(file.path(project_root, "artifacts/operations", paste0(step_id, ".json"))))),
+    project_root, closure_resolutions(project_root, step_id)), error = function(e) NULL)
+}
+
 load_methodology <- function() {
   sys.source(file.path(procedure_repo_root(), "methodology/contracts.R"), envir = environment(load_methodology))
 }
@@ -513,7 +529,7 @@ procedure_complete <- function(project_root, step_id) {
   )
   checks <- c(checks, validate_stage_receipt(step_id, receipt, project_root))
   checks <- c(checks, m_operations(project_root, state, step_id))
-  closure <- tryCatch(m_inventory(m_refs(list(receipt=receipt,operations=m_read(file.path(project_root,"artifacts/operations",paste0(step_id,".json"))))),project_root),error=function(e)NULL)
+  closure <- step_closure(project_root, step_id, receipt)
   checks <- c(checks,list(check_result("Stage evidence closure",!is.null(closure),"All receipt and packet references must remain valid before completion")))
 
   workflow <- if (identical(step_id,"execution")) list(status="NOT_RUN", passed=FALSE,
@@ -630,7 +646,7 @@ procedure_amend <- function(project_root, step_id, new_receipt_path, change_reco
   )
   load_methodology()
   checks <- c(checks, validate_stage_receipt(step_id, receipt, project_root), m_change(change))
-  closure <- tryCatch(m_inventory(m_refs(list(receipt=receipt,operations=m_read(file.path(project_root,"artifacts/operations",paste0(step_id,".json"))))),project_root),error=function(e)NULL)
+  closure <- step_closure(project_root, step_id, receipt)
   checks <- c(checks,list(check_result("Amendment preserves referenced history",!is.null(closure) && !any(vapply(closure,function(x) identical(x$path,step$artifact) && !identical(x$sha256,new_sha),logical(1))),"Do not overwrite a candidate referenced by a past packet; use immutable versions or a successor")))
 
   record <- save_checks(project_root, step_id, if (id_ok) paste0("amend-", change_id) else "amend", checks)
@@ -720,7 +736,7 @@ procedure_finalize <- function(project_root) {
     check_result("Controlling documents unchanged", verify_framework_hashes(state), "framework hashes must match run start")
   )
   for (stage in required) checks <- c(checks, m_operations(project_root,state,stage,final=TRUE))
-  inventory <- tryCatch(m_inventory(c(m_refs(state$completed_steps), list(list(path="artifacts/workflow_gate_status.json",sha256=state$workflow_gate$report_sha256), list(path="artifacts/operations/revocations.json",sha256=m_hash(file.path(project_root,"artifacts/operations/revocations.json"))))), project_root),error=function(e) NULL)
+  inventory <- tryCatch(m_inventory(c(m_refs(state$completed_steps), list(list(path="artifacts/workflow_gate_status.json",sha256=state$workflow_gate$report_sha256), list(path="artifacts/operations/revocations.json",sha256=m_hash(file.path(project_root,"artifacts/operations/revocations.json"))))), project_root, closure_resolutions(project_root,required)),error=function(e) NULL)
   checks <- c(checks,list(check_result("Evidence dependency closure",!is.null(inventory),"All referenced files must exist at authoritative root with matching hashes")))
   record <- save_checks(project_root, "final", "certification", checks)
   if (!checks_pass(checks)) {
