@@ -30,7 +30,7 @@ class D:
         return f'transcripts/{stage}/{sid}_reply.md'
     def owner(s, stage, text):
         return s.wx(f'approvals/SYNTHETIC_owner_{stage}.md', f'# {LAB}\nSYNTHETIC stand-in for the owner record of stage {stage}: {text}\nRecorded {datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}\n')
-    def ledger(s, stage, *_unused):
+    def ledger(s, stage, *_unused, **_unused_kw):
         """The ledger carries only the captured sends (approvals/conditions/deviations cut as audit-only, t1660u)."""
         s.kit('ledger', stage, '--synthetic', LAB)
     def complete(s, stage, ok=(0,)):
