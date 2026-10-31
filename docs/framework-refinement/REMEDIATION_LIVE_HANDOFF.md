@@ -55,7 +55,7 @@ Require packet/capture PASS exit 0, begin AUTHORIZED, complete PASS, final certi
 
 ## Chaining and watchdog (c)
 
-Within the appropriate real stage, execute one genuine dependency chain across the three AIs, preserving independent first passes where required. Show the ready/sent/capture/verified times, dependencies, actual packets/replies and capture checks. Demonstrate executor polling (one minute or less); record actual delays. Separately use the labeled synthetic >900-second queue below to test timeout detection economically, without deliberately delaying authorized real work for 15 minutes. If live scheduling behavior itself fails, retain it and do not call the synthetic check a substitute.
+Within the appropriate real stage, execute one genuine dependency chain across the three AIs, preserving independent first passes where required. Show the dependencies, actual packets/replies and capture checks. Demonstrate executor polling (one minute or less); record actual delays. Separately use the labeled synthetic >900-second queue below to test timeout detection economically, without deliberately delaying authorized real work for 15 minutes. If live scheduling behavior itself fails, retain it and do not call the synthetic check a substitute.
 
 ## Negative probes (a), (b), (d), (e)
 
@@ -63,20 +63,19 @@ After the clean live fixture is preserved, make isolated, clearly labeled negati
 
 ```text
 python tools/prepare_live_probes.py ROOT PROBES
-Rscript tools/check_remediation.R operations PROBES/early finish
 Rscript tools/check_remediation.R validation PROBES/changed-rb
 python tools/acceptance.py watchdog ROOT PROBES/watchdog.json --out PROBES/watchdog-result.json
-Rscript tools/check_remediation.R operations PROBES/condition finish
-Rscript tools/check_remediation.R operations PROBES/revocation finish
+Rscript tools/check_remediation.R operations PROBES/dropped-review finish
+Rscript tools/check_remediation.R operations PROBES/stale-reply finish
 python tools/acceptance.py capture PROBES/stale-capture PROBES/stale-capture/probe-capture.json --out PROBES/stale-capture/rejected-capture.json
 ```
 
 Expected outcomes, prespecified:
 
-- **(a)** Early send: exit 1, chronology FAIL. The executor also demonstrates that it refuses actual stage work without AUTHORIZED. The recorded-order checker is not a browser interlock. Existing local Procedure Gate tests cover refused illegal transitions and unchanged state.
+- **(a)** Retired 2026-10-31 (send chronology cut, owner t1652u). The executor still refuses stage work without AUTHORIZED.
 - **(b)** One-line R-B comment after validation: exit 1, stale version/component failure. `Rscript procedure-gate/procedure_gate.R finalize PROBES/changed-rb` must refuse (nonzero; no PASS certification). Preserve that failure. **Correction:** MR alone is insufficient. Rebuild/rerun the version-bound bundle (fixtures both paths, applicable MR both paths, replay, reconciliation and affected downstream receipts). Do this through the existing amendment/successor mechanism or a fresh run; never reopen/overwrite the completed source run. Rehashing only the receipt must still fail. Exact analytical runner commands are project-specific and must be frozen in the fixture's Design, not guessed here. The final new bundle must pass `Rscript tools/check_remediation.R validation REPAIRED_ROOT` and affected gates; retain each attempt.
 - **(c)** Watchdog: FLAG, exit 1, overdue includes SYNTHETIC-overdue. The boundary is strictly >900 seconds, not >=900.
-- **(d)** Failed condition and recorded revocation: each exit 1, relevant approval FAIL. Show the actual executor stops/escalates on these labeled test inputs. Do not actually revoke the owner's grant or send an unauthorized request.
+- **(d)** Replaced 2026-10-31 (approvals and revocation ledger cut): **dropped-review** (numerical_auditor send removed) exit 1 with `review coverage finish role numerical_auditor` FAIL; **stale-reply** (inference_reviewer reply replaced by the interpreter's bytes, hashes consistent) exit 1 with `review coverage finish distinct replies` FAIL. The probe changes need ChatGPT's agreement before the live probe run.
 - **(e)** Stale prior reply with a fresh packet nonce: capture FAIL exit 2. A newly obtained matching live reply must pass exit 0; do not synthesize it.
 
 Before invoking the probe commands, agree with ChatGPT that these are the targeted scenarios; no broader live run is required absent a concrete defect. A full production-data rerun is not necessary.

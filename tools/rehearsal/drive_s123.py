@@ -13,7 +13,7 @@ d.wx('SYNTHETIC_REHEARSAL.txt', LAB + f'\nRun {RUN}. Content (data, accepted ana
 d.gate('start', RUN)
 A = lambda k: json.load(open(f'{SRC}/artifacts/{k}', encoding='utf-8-sig'))
 def stage(step, plan, receipt_fn, conds_fn):
-    d.gate('begin', step); time.sleep(3); rp = {}
+    d.gate('begin', step); rp = {}
     for sid, ai, role, deps, att, body in plan: rp[sid] = d.send(step, sid, ai, role, 'review', f'{LAB}\nStage {step}, role {role}.\n', attach=att, depends=deps, reply_body=body)
     rc = receipt_fn(rp); d.wx(f'artifacts/{rc[0]}', rc[1]); d.owner(step, f'sign-off of {step}')
     d.ledger(step, conds_fn(rp, rc[0])); res[step] = d.complete(step)[1:]
@@ -46,7 +46,7 @@ def r3(rp):
     for sid, role, ai in [('D-01','designer_a','ChatGPT'),('D-02','designer_b','Grok'),('D-03','risk_reviewer','DeepSeek')]:
         e = d.J(f'artifacts/operations/design_sends/{sid}.json')
         prov.append(dict(role=role, provider=ai, model='UNVERIFIED (SYNTHETIC)', session='SYNTHETIC', settings='SYNTHETIC', seeds='not exposed', context_disclosure='SYNTHETIC packet only',
-             first_pass_frozen_at=e['verified_at_utc'], peer_access='none_before_freeze', contamination='none (SYNTHETIC)', coordinator_draft_seen=False,
+             first_pass_frozen_at=e['captured_at_utc'], peer_access='none_before_freeze', contamination='none (SYNTHETIC)', coordinator_draft_seen=False,
              input=d.ref(f'packets/design/{sid}/message.md'), output=d.ref(rp[sid])))
     o['ai_provenance'] = prov
     o['evidence'] = dict(design_gate_record=d.ref('docs/stage3/DESIGN_GATE_RECORD.md'), fixtures_manifest=d.ref('validation/fixtures/manifest.json'), fixtures_oracle=d.ref('validation/fixtures/oracle.json'),

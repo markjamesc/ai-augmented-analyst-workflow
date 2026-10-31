@@ -21,23 +21,18 @@ class D:
     def gate(s, *a, ok=(0,)): return s.run([RS, '--vanilla', f'{s.G}/procedure-gate/procedure_gate.R', a[0], s.root, *a[1:]], ok=ok)
     def kit(s, *a): return s.run([PY, f'{s.G}/tools/runkit.py', a[0], s.root, *a[1:]])
     def send(s, stage, sid, ai, role, kind, body, attach=(), depends=(), reply_body=None, extra=()):
-        """packet -> (owner/parent dispatches) -> sent record -> Copy-button bytes -> capture.  Here the reply is SYNTHETIC."""
+        """packet -> (owner/parent dispatches) -> Copy-button bytes -> capture.  Here the reply is SYNTHETIC."""
         msg = f'/tmp/reh_msg_{sid}.md'; open(msg, 'w').write(body)
         out = s.kit('packet', stage, sid, '--ai', ai, '--role', role, '--kind', kind, '--message', msg, '--synthetic', LAB, '--attach', *attach, '--depends', *depends, *extra).stdout.split()
-        marker = ' '.join(out[1:4]); time.sleep(1)
-        s.kit('sent', stage, sid, '--basis', 'dispatcher_reported', '--uncertainty', '2'); time.sleep(3)
+        marker = ' '.join(out[1:4])
         rep = f'/tmp/reh_reply_{sid}.md'; open(rep, 'w', newline='\n').write(f'{LAB}\n\n{reply_body or "VERDICT: PASS"}\n\n{marker}\n')
-        s.kit('capture', stage, sid, rep); time.sleep(3)
+        s.kit('capture', stage, sid, rep)
         return f'transcripts/{stage}/{sid}_reply.md'
     def owner(s, stage, text):
         return s.wx(f'approvals/SYNTHETIC_owner_{stage}.md', f'# {LAB}\nSYNTHETIC stand-in for the owner record of stage {stage}: {text}\nRecorded {datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}\n')
-    def ledger(s, stage, conds, extra_scopes=()):
-        own = f'approvals/SYNTHETIC_owner_{stage}.md'; t = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
-        ap = [{"id": f"SYN-{stage}-{sc}", "scope": sc, "wording_author": "SYNTHETIC owner stand-in", "owner_record": own, "granted_at_utc": t, "conditions": [{"condition": c, "evidence": e} for c, e in conds]} for sc in ('stage_signoff',) + tuple(extra_scopes)]
-        dv = self_dev = s.wx(f'deviations/SYNTHETIC_{stage}.json', {"id": f"DEV-{stage}-SYNTHETIC", "disposition": "All replies and owner records in this stage are SYNTHETIC stand-ins (rehearsal)", "synthetic": LAB})
-        af = f'/tmp/reh_ap_{stage}.json'; json.dump(ap, open(af, 'w')); df = f'/tmp/reh_dv_{stage}.json'
-        json.dump([{"id": f"DEV-{stage}-SYNTHETIC", "disposition": "rehearsal: synthetic replies and owner records, disclosed", "evidence": f'deviations/SYNTHETIC_{stage}.json'}], open(df, 'w'))
-        time.sleep(1); s.kit('ledger', stage, '--approvals', af, '--deviations', df, '--synthetic', LAB)
+    def ledger(s, stage, *_unused):
+        """The ledger carries only the captured sends (approvals/conditions/deviations cut as audit-only, t1660u)."""
+        s.kit('ledger', stage, '--synthetic', LAB)
     def complete(s, stage, ok=(0,)):
         r = s.gate('complete', stage, ok=(0, 1)); res = json.loads(r.stdout[r.stdout.index('{'):]) if '{' in r.stdout else {}
         ch = res.get('checks', [])

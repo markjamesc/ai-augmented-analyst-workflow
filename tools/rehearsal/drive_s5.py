@@ -2,7 +2,7 @@
 import sys, os, json, csv, time; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); from drive_common import *
 d = D(sys.argv[1], sys.argv[2]); R = d.root
 s3 = d.J('artifacts/stage3_locked_design.json')['methodology']
-if not os.environ.get('REH_RESUME_S5'): d.gate('begin', 'finish'); time.sleep(3)  # resume skips an already-begun stage
+if not os.environ.get('REH_RESUME_S5'): d.gate('begin', 'finish')  # resume skips an already-begun stage
 tot = list(csv.DictReader(open(d.p('outputs/r_a/totals.csv'))))[0]; rows = list(csv.DictReader(open(d.p('outputs/r_a/rank_rows.csv'))))
 qual = sorted(r['id'] for r in rows); sel = [r['id'] for r in sorted(rows, key=lambda r: int(r['rank_n'])) if r['place_state'] == 'SELECTED']
 c1 = f"Qualifying records {', '.join(qual)} (n={tot['qualified_n']}); selected {', '.join(sel)} (n={tot['selected_n']}); selected sum {tot['selected_sum']} (RES-totals, RES-rank_rows)"
@@ -28,7 +28,7 @@ prov = []
 for sid, ai, role in roles:
     e = d.J(f'artifacts/operations/finish_sends/{sid}.json')
     prov.append(dict(role=role, provider=ai, model='UNVERIFIED (SYNTHETIC)', session='SYNTHETIC', settings='SYNTHETIC', seeds='not exposed', context_disclosure='SYNTHETIC packet only',
-        first_pass_frozen_at=e['verified_at_utc'], peer_access='none_before_freeze', contamination='none (SYNTHETIC)', coordinator_draft_seen=True,
+        first_pass_frozen_at=e['captured_at_utc'], peer_access='none_before_freeze', contamination='none (SYNTHETIC)', coordinator_draft_seen=True,
         input=d.ref(f'packets/finish/{sid}/message.md'), output=d.ref(rp[sid])))
 rc = dict(stage=5, status='PASS', synthetic=LAB, workflow_gate_report_sha256=d.sha('artifacts/workflow_gate_status.json'), ai1_first_pass='PASS', ai2_first_pass='PASS', ai3_first_pass='PASS',
    information_barrier='PASS', cross_review='PASS', finish_gates='PASS', human_analyst_approval='APPROVED', unresolved_issues=0, deliverables=[DL],

@@ -2,7 +2,7 @@
 
 Run tooling only (Python under `tools/`); no gate, procedure, methodology contract or validation R code changed.
 
-- `tools/runkit.py`: packet / sent / capture / ledger helper for hosted-chat sends. Naming convention: stage and send ids must match
+- `tools/runkit.py`: packet / capture / ledger helper (the `sent` step was cut 2026-10-31 as audit-only; see CHANGES_FROM_ABLATIONS.md) for hosted-chat sends. Naming convention: stage and send ids must match
   `[A-Za-z0-9][A-Za-z0-9._-]*` and must not match the historical-scope pattern or the bare word `attempt` (fixes the guard's
   'attempt' problem at the source without loosening it). Tests: `tools/tests/test_runkit.py`.
 - `tools/scope_refs.py`: write-once evidence snapshots of historical records (refs rewritten to snapshot copies, manifest of

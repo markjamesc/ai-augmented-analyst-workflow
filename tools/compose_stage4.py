@@ -149,7 +149,7 @@ if PH == '3':
         return {"role": role, "send_id": s['id'], "provider": s['ai'], "model": pk.get('model') or 'UNVERIFIED: model name not recorded in the packet',
                 "session": pk.get('session') or 'UNVERIFIED: chat URL not recorded in the packet', "settings": "UNVERIFIED: hosted chat does not expose sampling settings",
                 "seeds": "unavailable: the hosted chat does not expose a seed", "context_disclosure": "Packet message and hash-bound attachments only (packets/execution/" + s['id'] + ")",
-                "first_pass_frozen_at": s['verified_at_utc'], "peer_access": "none_before_freeze", "contamination": "None recorded: the packet carried no other-builder code or outputs (attachments listed in the packet).",
+                "first_pass_frozen_at": s['captured_at_utc'], "peer_access": "none_before_freeze", "contamination": "None recorded: the packet carried no other-builder code or outputs (attachments listed in the packet).",
                 "input": ref(f"packets/execution/{s['id']}/message.md"), "output": s['reply'], "frozen_script": ref(f"builds/frozen/{s['id']}/analysis/{sub}/main.R"), "capture_check": s['capture']}
     for role in ('R-A', 'R-B'):
         sub = 'r_a' if role == 'R-A' else 'r_b'

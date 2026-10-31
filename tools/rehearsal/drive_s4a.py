@@ -3,7 +3,7 @@
 import sys, os, re, json, time, shutil
 sys.path.insert(0, os.path.dirname(__file__)); from drive_common import *
 root, gate = sys.argv[1:3]; d = D(root, gate)
-d.gate('begin', 'execution'); time.sleep(3)
+d.gate('begin', 'execution')
 B = {'S4-RA1': ('ChatGPT', 'R-A', 'r_a'), 'S4-RB1': ('DeepSeek', 'R-B', 'r_b')}
 for sid, (ai, role, sub) in B.items():
     code = open(d.p(f'analysis/{sub}/main.R'), encoding='utf-8').read()
