@@ -15,7 +15,7 @@ t_ai <- function(root, roles, stage) lapply(roles, function(role) {
     first_pass_frozen_at = "2026-01-01T00:00:00Z", peer_access = if (stage == "execution") "none_before_freeze" else "disclosed stage-specific inputs",
     contamination = "Synthetic shared fixture; not an independence evaluation", coordinator_draft_seen = FALSE,
     input = t_file(root, paste0("ai/", stage, "-", role, "-input.txt"), "synthetic input"),
-    output = t_file(root, paste0("ai/", stage, "-", role, "-output.txt"), "synthetic output"))
+    output = t_file(root, paste0("ai/", stage, "-", role, "-output.txt"), paste0("synthetic output\nEND_REPLY ", stage, "-synthetic-", match(role, roles), " TEST-", stage, "-", match(role, roles))))
 })
 t_design <- function(root) {
   path <- "artifacts/stage3_locked_design.json"; s <- m_read(file.path(root, path))
@@ -121,8 +121,11 @@ t_operations <- function(root,stage) {
   sends<-lapply(seq_along(roles),function(i){id<-paste0(stage,"-synthetic-",i);nonce<-paste0("TEST-",stage,"-",i)
     p<-list(run_id=state$run_id,stage=stage,send_id=id,nonce=nonce,role=roles[[i]],attachments=list())
     t_write(root,paste0("packets/",stage,"/",id,".json"),p);packet<-m_file_ref(paste0("packets/",stage,"/",id,".json"),root)
-    reply<-t_file(root,paste0("transcripts/",stage,"/",id,"_reply.txt"),paste("Synthetic reply",roles[[i]],"\nEND_REPLY",id,nonce))
-    t_write(root,paste0("captures/",stage,"/",id,".json"),list(send_id=id,nonce=nonce,packet=packet,reply=reply))
-    list(id=id,ai="synthetic",role=roles[[i]],send_kind="review",nonce=nonce,packet=packet,attachments=list(),reply=reply,capture=m_file_ref(paste0("captures/",stage,"/",id,".json"),root))})
+    px<-Filter(function(x)identical(x$role,roles[[i]]),if(is.list(receipt$ai_provenance))receipt$ai_provenance else list())
+    reply<-if(length(px)) px[[1]]$output else t_file(root,paste0("transcripts/",stage,"/",id,"_reply.txt"),paste("Synthetic reply",roles[[i]],"\nEND_REPLY",id,nonce))
+    t_write(root,paste0("captures/",stage,"/",id,".json"),list(send_id=id,nonce=nonce,packet=packet,reply=reply,capture_sha256=reply$sha256))
+    rr<-if(is.list(receipt))Filter(function(z)m_ref_ok(z,root)&&!grepl("^(transcripts|captures)/",z$path),m_refs(receipt)) else list()
+    att<-if(length(rr))unname(rr[1]) else if(file.exists(file.path(root,rp)))list(m_file_ref(rp,root)) else list()  # F5: the review saw a current artifact the receipt reaches  # F5: the review saw the current stage receipt
+    list(id=id,ai="synthetic",role=roles[[i]],send_kind="review",nonce=nonce,packet=packet,attachments=att,reply=reply,capture=m_file_ref(paste0("captures/",stage,"/",id,".json"),root))})
   t_write(root,paste0("artifacts/operations/",stage,".json"),list(version="acceptance-v2",run_id=state$run_id,stage=stage,sends=sends))
 }

@@ -287,7 +287,9 @@ m_validation <- function(s3, receipt, root) m_checks(function(add) {
   add("environment restoration", m_ref_ok(e$environment_spec, root) && identical(restore$status,"PASS") && isTRUE(restore$fresh_environment) && identical(restore$environment_spec,e$environment_spec) && m_ref_ok(restore$console,root), "A package list alone is not an environment restoration test")
 })
 # Stage review roles the gate requires (one source for m_ai in procedure_gate and for review coverage).
-m_stage_ai_roles <- list(design=c("designer_a","designer_b","risk_reviewer"), finish=c("interpreter","inference_reviewer","numerical_auditor"))
+# start/framing (2026-10-31, F1, owner card t1665s6948): the reviews each stage receipt claims (stage1 ai2_independent_reconstruction,
+# ai3_independent_red_team; stage2 ai1_builder, ai2_decision_fit_review, ai3_framing_red_team), role ids as in the start/framing guide sec. 4.
+m_stage_ai_roles <- list(start=c("independent_reconstruction","red_team"), framing=c("framing_builder","decision_fit_review","framing_red_team"), design=c("designer_a","designer_b","risk_reviewer"), finish=c("interpreter","inference_reviewer","numerical_auditor"))
 m_stage_receipts <- c(start="artifacts/stage1_decision.json", framing="artifacts/stage2_framing.json", design="artifacts/stage3_locked_design.json",
   execution="artifacts/stage4_validation_status.json", finish="artifacts/stage5_interpretation_status.json")
 # Paths reachable from a JSON file through hash references (current refs only; the operations ledger itself is not a source).
@@ -309,7 +311,7 @@ m_review_coverage <- function(add, root, stage, sends, receipt_path) {
   add(paste("review coverage", stage, "receipt"), is.list(receipt), "The stage receipt defines which reviews are required")
   if (!is.list(receipt)) return(invisible(NULL))
   reached <- m_reachable(list(path = rp, sha256 = m_hash(rpath)), root)
-  need_replies <- unique(reached[startsWith(reached, paste0("transcripts/", stage, "/")) & grepl("_reply\\.[A-Za-z0-9]+$", reached)])
+  need_replies <- unique(reached[startsWith(reached, paste0("transcripts/", stage, "/")) & grepl("_reply(\\.|$)", basename(reached))])
   need_roles <- c(m_stage_ai_roles[[stage]], if (identical(receipt$cross_review, "PASS")) "cross_review")
   if (identical(stage, "execution")) {
     sr <- m_read(file.path(root, "artifacts/stage3_locked_design.json"))$methodology$structural_review$policy
@@ -320,19 +322,30 @@ m_review_coverage <- function(add, root, stage, sends, receipt_path) {
     cap <- if (m_ref_ok(s$capture, root)) m_read(file.path(root, s$capture$path)) else NULL
     txt <- if (m_ref_ok(s$reply, root)) paste(readLines(file.path(root, s$reply$path), warn = FALSE), collapse = "\n") else ""
     m_text(s$id) && m_text(s$nonce) && m_ref_ok(s$reply, root) && is.list(cap) && identical(cap$send_id, s$id) && identical(cap$reply, s$reply) &&
-      (is.null(cap$capture_sha256) || identical(tolower(cap$capture_sha256), tolower(s$reply$sha256))) &&
+      m_text(cap$capture_sha256) && identical(tolower(cap$capture_sha256), tolower(s$reply$sha256)) &&
+      (is.null(cap$nonce) || identical(cap$nonce, s$nonce)) &&
       endsWith(trimws(txt), paste0("END_REPLY ", s$id, " ", s$nonce))
   }
+  # F5: a review counts only if it saw a current artifact the receipt relies on (an attachment whose hash matches that file now).
+  current <- function(s) m_rows(s$attachments) && length(s$attachments) > 0 && m_refs_ok(s$attachments, root, FALSE) &&
+    any(vapply(s$attachments, function(a) is.list(a) && m_text(a$path) && a$path %in% reached, logical(1)))
+  # F4: where the receipt records provenance for a role, that role's send must be the provenance output and the same AI.
+  prov <- if (m_rows(receipt$ai_provenance)) receipt$ai_provenance else list()
+  prov_ok <- function(s, r) { px <- Filter(function(x) identical(x$role, r), prov)
+    !length(px) || (length(px) == 1 && identical(px[[1]]$output, s$reply) && identical(px[[1]]$provider, s$ai)) }  # missing records: m_ai role coverage
   for (p in need_replies) {
     hit <- Filter(function(s) is.list(s$reply) && identical(s$reply$path, p), rows)
     add(paste("review coverage", stage, "reply", p), length(hit) == 1 && bound(hit[[1]]), "Exactly one send captured this required reply, bound by hash, with its own end marker")
   }
   for (r in unique(need_roles)) {
-    hit <- Filter(function(s) identical(s$role, r) && bound(s), rows)
-    add(paste("review coverage", stage, "role", r), length(hit) >= 1, "Each required review role has a captured, hash-bound reply")
+    hit <- Filter(function(s) identical(s$role, r) && bound(s) && current(s) && prov_ok(s, r), rows)
+    add(paste("review coverage", stage, "role", r), length(hit) >= 1, "Each required review role has a captured, hash-bound reply from a send that saw current artifacts and matches the recorded provenance")
   }
   for (s in rows) add(paste("review coverage", stage, "capture", s$id), bound(s), "Every sent review reply is its own: capture names this send and reply, hash matches, own END_REPLY marker")
   h <- unlist(lapply(rows, function(s) if (is.list(s$reply) && m_text(s$reply$sha256)) tolower(s$reply$sha256)))
+  ids <- vapply(rows, function(s) if (m_text(s$id)) s$id else NA_character_, character(1))
+  nonces <- vapply(rows, function(s) if (m_text(s$nonce)) s$nonce else NA_character_, character(1))
+  add(paste("review coverage", stage, "unique send ids"), !anyNA(ids) && !anyDuplicated(ids) && !anyNA(nonces) && !anyDuplicated(nonces), "Each send id and nonce appears once in the stage ledger")
   add(paste("review coverage", stage, "distinct replies"), length(h) == length(rows) && !anyDuplicated(h), "No reply is reused for another send")
 }
 m_operations <- function(root,state,stage,final=FALSE,receipt=NULL) m_checks(function(add) {

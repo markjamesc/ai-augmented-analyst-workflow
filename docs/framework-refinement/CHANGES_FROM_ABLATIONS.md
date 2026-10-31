@@ -180,3 +180,15 @@ All six alone rehearsals and the joint rehearsal were 0 failures, 0 waivers.
 acceptance.py watchdog (tool, not a gate rule); owner records under approvals/ and the preapproval sheet (owner authority);
 locked sections in builder packets (P07 gate check cut, practice kept); "Controlling documents unchanged" (integrity).
 Probe changes (a) retired, (d) replaced by dropped-review and stale-reply: need ChatGPT's agreement before live use.
+
+### CHANGES 2026-10-31 (fourth set): review fixes F1-F7
+
+Owner card t1665s6948. Findings from reviews RV-D1 (DeepSeek) and RV-C1 (ChatGPT), verified in `/workspace/review_20261031/COMBINED_FIX_LIST.md`. All changes are in `m_review_coverage` (`methodology/contracts.R`); tests are F1-F6 in `methodology/tests/test_targeted_gates.R`. No check was relaxed.
+
+- **F1 Start/Framing roles.** `m_stage_ai_roles` now has `start = independent_reconstruction, red_team` and `framing = framing_builder, decision_fit_review, framing_red_team`. Sources: the stage 1 receipt fields `ai2_independent_reconstruction`, `ai3_independent_red_team` and the stage 2 fields `ai1_builder`, `ai2_decision_fit_review`, `ai3_framing_red_team` (procedure_gate.R), the AI1/AI2/AI3 roles in `docs/three-ai-start-and-framing-dialogue-framework.md` §4, and the role ids used by the rehearsal driver (S1-02, S1-03, S2-01..S2-03). The AI1 decision drafter at start is the dialogue lead, not a review, and is not required. Prospective: ACC002 start/framing ledgers carry no `role` field and would fail this rule.
+- **F2 capture hash required.** A capture record must carry `capture_sha256` equal to the reply sha256; a capture `nonce`, when present, must equal the send nonce.
+- **F3 unique sends.** New check `review coverage <stage> unique send ids`: every send has an id and a nonce, and no id or nonce repeats in the ledger.
+- **F4 role bound to provenance.** When the stage receipt has an `ai_provenance` record for a required role, that role's send must have the record's `output` as its reply and the record's `provider` as its `ai`. A missing record is still handled by `m_ai`.
+- **F5 review saw a current artifact.** A send counts for a required role only if it has at least one attachment, every attachment matches its file now, and at least one attachment is a file the stage receipt reaches.
+- **F6 reply names.** Required replies are all reached files under `transcripts/<stage>/` whose name matches `_reply(\.|$)` (for example `x_reply.md`, `x_reply.txt.bak`).
+- **F7 approvals and revocations (record only).** The approval and revocation enforcement removed in the third set (P09 revocation ledger, P10/C4 approval checks, and `artifacts/operations/revocations.json` in the finalize inventory) stays removed. Approvals are procedural: the owner's approval is recorded in the run notes and cards, and the gate does not check it.
