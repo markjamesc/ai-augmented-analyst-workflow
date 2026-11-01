@@ -1,27 +1,94 @@
-name: Lean R acceptance
+name: R Gate Tests
+
 on:
-  workflow_dispatch:
-  push:
-    branches: [main, 'acc003-*', 'acceptance-*']
   pull_request:
+    paths:
+      - "workflow-gate/**"
+      - "procedure-gate/**"
+      - "templates/workflow-gate/**"
+      - "templates/procedure-gate/**"
+      - "docs/**"
+      - "methodology/**"
+      - "tools/**"
+      - "templates/send_queue.json"
+      - "templates/preapproval_sheet.json"
+      - "templates/methodology/**"
+      - ".github/workflows/workflow-gate-test.yml"
+  push:
+    branches:
+      - workflow-gate-enforcement
+      - main
+      - portfolio-refresh-20260920
+      - "methodology-hardening-*"
+      - "regression-acceptance-*"
+      - "acceptance-remediation-*"
+    paths:
+      - "workflow-gate/**"
+      - "procedure-gate/**"
+      - "templates/workflow-gate/**"
+      - "templates/procedure-gate/**"
+      - "docs/**"
+      - "methodology/**"
+      - "tools/**"
+      - "templates/send_queue.json"
+      - "templates/preapproval_sheet.json"
+      - "templates/methodology/**"
+      - ".github/workflows/workflow-gate-test.yml"
+
 jobs:
-  r-tests:
+  test-workflow-gate:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: r-lib/actions/setup-r@v2
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
         with:
-          r-version: '4.6.1'
-      - name: Install required packages
-        run: Rscript --vanilla -e 'install.packages(c("jsonlite","digest","DBI","RSQLite"), repos="https://cloud.r-project.org")'
-      - name: Five R suites
-        run: Rscript --vanilla tools/run_tests.R . test-evidence
-      - uses: actions/upload-artifact@v4
-        if: always()
+          use-public-rspm: true
+          r-version: "4.6.1"
+
+      - name: Install gate dependencies
+        run: Rscript -e 'install.packages(c("jsonlite", "digest", "purrr", "magrittr"), repos="https://cloud.r-project.org")'
+
+      - name: Run workflow gate tests
+        run: Rscript workflow-gate/tests/test_workflow_gate.R .
+
+      - name: Run procedure gate tests
+        run: Rscript procedure-gate/tests/test_procedure_gate.R .
+
+      - name: Run methodology contract tests
+        run: Rscript methodology/tests/test_methodology.R .
+
+      - name: Run local acceptance tests
+        run: Rscript methodology/tests/test_acceptance.R .
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          name: evidence-${{ matrix.os }}
-          path: test-evidence
+          python-version: "3.12"
+
+      - name: Install schema dependency
+        run: python -m pip install jsonschema==4.23.0
+
+      - name: Check schema compatibility
+        run: python methodology/tests/test_schema.py .
+
+      - name: Acceptance remediation regression
+        run: Rscript methodology/tests/test_remediation.R .
+
+      - name: Helper regression
+        run: python -m unittest discover -s tools -p "test_acceptance.py"
+
+      - name: Live findings regression
+        run: Rscript methodology/tests/test_livefix.R .
+
+      - name: Successor project compatibility regression
+        run: Rscript methodology/tests/test_successor.R
+      - name: Targeted gate changes C1-C5
+        run: Rscript methodology/tests/test_targeted_gates.R

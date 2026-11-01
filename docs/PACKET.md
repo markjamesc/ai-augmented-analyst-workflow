@@ -4,6 +4,8 @@
 
 > **ACC003 lean workflow (certified 2026-10-30):** Where this text describes CLI commands, receipts, status JSONs or review tiers that the certified code does not run, those are not enforced in the certified ACC003 lean code (2026-10-30). See docs/r-procedure-gate-enforcement.md for the certified interface. 
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 
 Portfolio method packet for [ai-augmented-analyst-workflow](https://github.com/markjamesc/ai-augmented-analyst-workflow). Five stage frameworks plus the Stage 4 R execution engine, the Stage 4→5 deterministic Workflow Gate, and a whole-run R Procedure Gate.
 
@@ -41,3 +43,10 @@ Historical case studies do not need to be retrofitted merely for conformity. The
 | Cross-review (revise→lock) | [CROSS_REVIEW.md](CROSS_REVIEW.md) |
 
 Additive FORWARD sections land in Stages 1–2 Framing, Stage 3 measurement design, and Stage 4 validation frameworks. They do **not** rewrite prior locked / frozen historical Stage 3/4 packs. Case-specific evidence lives in project repos only.
+
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.
+
+Prospective live-finding repairs: follow [LIVE_FAILURE_REPAIRS.md](framework-refinement/LIVE_FAILURE_REPAIRS.md) for immutable candidates, nullable checkpoint schemas, source applicability, Windows references/restoration and capture/timing evidence. Prior run evidence remains unchanged.

@@ -1,0 +1,58 @@
+[
+  {
+    "path": "methodology/contracts.R",
+    "sha256": "d239e65455b102330217b5de54cb120153a7dd2586f333a4795d49ee1da995e0"
+  },
+  {
+    "path": "methodology/tools.R",
+    "sha256": "fdea8c6def8ece5805b18d3140753ff304c604aa1c151d175942d11352eda593"
+  },
+  {
+    "path": "methodology/schema.json",
+    "sha256": "712f335a65f06ab1fe7d1474fffc26d64a4076321c6490202cf254f475e18b1b"
+  },
+  {
+    "path": "methodology/operations.schema.json",
+    "sha256": "e481ec4f7bdef1d6b778f498f0d609109ece7701f179f28de9d911db646fc0f5"
+  },
+  {
+    "path": "procedure-gate/procedure_gate.R",
+    "sha256": "4c7ad82f11dca4f381e47e155d9d9245ff9a448708a11b78416873f704a01748"
+  },
+  {
+    "path": "procedure-gate/procedure.json",
+    "sha256": "6b57bb96da981fa0798ec7d05a68c2e5b32a015551d3d85449af8cb3d9365ae2"
+  },
+  {
+    "path": "workflow-gate/workflow_gate.R",
+    "sha256": "a94d24bf89e532ab2eda89b7769b545a076b677dde71b4dd495f1060e8e1f9dd"
+  },
+  {
+    "path": "tools/acceptance.py",
+    "sha256": "1c803bd16e182d3f72b7703923cd97a269d43fab427ad1291dc4afdcf1c701fb"
+  },
+  {
+    "path": "tools/check_remediation.R",
+    "sha256": "01c95c337accafba2c0b4e9a1e9b80c99993db221de4b8e0d5351375fe798c86"
+  },
+  {
+    "path": "tools/prepare_live_probes.py",
+    "sha256": "13d432b19a127a0afb8c8680e98b69ac939d48f0838b583bbcd98bf6487b54e4"
+  },
+  {
+    "path": "tools/run_r_job.ps1",
+    "sha256": "0d53a0e17451d6f1ac642865620f25785a99ceb1ec7c54d401545c973d94b4f2"
+  },
+  {
+    "path": "methodology/tests/fixtures.R",
+    "sha256": "010e1a6bef251d70ecb104f2fd02905f478ff34734eee860194849153d9888b2"
+  },
+  {
+    "path": "methodology/tests/test_remediation.R",
+    "sha256": "3945bf624ef36610a3303d8be53b3d7fb48427b61c76553c1d34ff39df232cc0"
+  },
+  {
+    "path": "tools/test_acceptance.py",
+    "sha256": "ca4f40d37f40564dcc22c0c2f8bad4094fb26291fbd92fc9031c4a193465027a"
+  }
+]

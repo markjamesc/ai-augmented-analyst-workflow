@@ -1,0 +1,22 @@
+PASS current validation accepted 
+PASS changed code invalidates validation 
+PASS wrapper-only hashes insufficient 
+PASS new bound reports accepted 
+PASS missing frozen fixture rejected 
+PASS missing output rules rejected 
+PASS action whole word and underscore 
+PASS valid recorded operations 
+PASS send before begin rejected 
+PASS future capture rejected 
+PASS failed approval condition rejected 
+PASS expired approval rejected 
+PASS wrong authorization rejected 
+PASS missing sends rejected 
+PASS missing packet rejected 
+PASS undeclared dependency rejected 
+PASS rehashed stale reply rejected 
+PASS recorded revocation rejected 
+PASS actual test wrapper passes 
+PASS mutation during test fails 
+PASS missing transitive inventory fails 
+21 / 21 remediation tests passed

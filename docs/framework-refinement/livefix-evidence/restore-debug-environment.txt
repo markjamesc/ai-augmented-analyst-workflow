@@ -1,0 +1,4 @@
+list(R = "R version 4.4.3 (2025-02-28)", environment = c(R_LIBS_USER = "/tmp/workflow-restore-debug/lib", 
+R_LIBS = "/tmp/workflow-restore-debug/lib", R_LIBS_SITE = "/workspace/scratch/300679a5be94/runtime/r/lib/R/site-library"
+), library_paths = c("/tmp/workflow-restore-debug/lib", "/workspace/scratch/300679a5be94/runtime/r/lib/R/library"
+))

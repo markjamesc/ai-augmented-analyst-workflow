@@ -2,6 +2,8 @@
 
 > **ACC003 lean workflow (certified 2026-10-30):** The certified engine runs: procedure_gate.R init → lock → validate → finish → finalize (status inspects the manifest), with exit codes 0 PASS, 1 ANALYSIS_DEFECT, 2 TOOL_ERROR. The mandatory structural cross-review / three-AI similarity review, chained stage receipts and the stage4 status JSON are not enforced in the certified ACC003 lean code (2026-10-30). Builders may get their own failing case, never a peer solution. Three unsuccessful repairs of the same defect escalate to the owner. File sources use SQL NOT_APPLICABLE and still check file identity; the offline test may create a disposable synthetic SQLite DB and query it read-only. The executable invariance adapter supports only acc003-csv.
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 
 > **Prospective methodology-v3:** apply [Methodology hardening](METHODOLOGY_HARDENING.md) alongside this framework. It consolidates the target/premise/sensitivity contracts, semantic checks, reproducibility and claim evidence. Its prospective contract resolves older conflicting wording; frozen historical runs keep their pinned version.
 
@@ -498,6 +500,8 @@ Blank, `PENDING`, or placeholder lineage fails Stage 4 readiness.
 
 > **ACC003 lean workflow (certified 2026-10-30):** Production-reader fixtures remain required (C41). The poison/stub-judge probe that replaces each builder's judged logic and scores every frozen fixture is not enforced in the certified ACC003 lean code (2026-10-30): pretest.R only rejects an always-TRUE comparator on small tables. These are not equivalent evidence. ACC003 combined the smoke run with the tiny-fixture run; this does not waive a reduced-scale smoke run for large production pipelines.
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 
 **Fixture Gate Pass is required before reconciliation may claim Pass.**
 
@@ -807,6 +811,8 @@ Manual edits to result tables are prohibited.
 
 > **ACC003 lean workflow (certified 2026-10-30):** This tier is not enforced in the certified ACC003 lean code (2026-10-30). No automatic failure for similar parsing idioms; investigate credible prohibited sharing or an uncovered correctness concern.
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 
 > **Structural cross-review is no longer universally required (ablation C30, KEEP).** After exact reconciliation, matching totals together with exit status 0 and passing fixtures on both paths are accepted as sufficient; a structural (logic) cross-review is not a mandatory tier. It may still be run, and when it is run its findings and gate bullets below apply. Tested scope: five seeded common-mode errors on one frozen pack; every seeded change that altered a locked output was still caught by the remaining mechanical checks, but the seeds were covered by fixtures, so the result may reflect the seed choice. A judged rule that no fixture exercises is therefore not covered by this relaxation: add a fixture for it (Stage 3 fixture map) or run the structural review for that rule.
 >
@@ -969,6 +975,8 @@ The process moves forward only when:
 ## 9A. Small-denominator and single-unit dominance check (ablation C47, KEEP)
 
 > **ACC003 lean workflow (certified 2026-10-30):** The rule stays: put the project-specific thresholds in the applicable safeguard plan in design.json and evaluate them in Finish. The 1,000/30/⅓ values are tested examples, not universal defaults. The schema checks only applicability plus a nonempty plan; automatic computation of this check is not enforced in the certified ACC003 lean code (2026-10-30).
+
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
 
 
 Every headline or gating metric gets a dominance check at Stage 4. Its thresholds and consequence are **predeclared in Stage 3, before execution** (post hoc thresholds are not allowed). The ablation tested the following configuration as an example. Prospective v3 requires justified project-specific thresholds; these are not automatic defaults:
@@ -1579,6 +1587,8 @@ Only ablations returning `KEEP` may authorize a reusable Stage 4 framework chang
 
 > **ACC003 lean workflow (certified 2026-10-30):** short-form summary of the certified lean rules, added by 9bc13eb. Where this summary and the full text above differ, the summary states the certified mechanics; the full text keeps the method.
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 ### Stage 4 — Execution
 
 Purpose: confirm that SQL/source delivery is correct and R wrangling implements the locked rule correctly. Required checks are executed by the pretested harness, not hand-written coordinator PASS reports.
@@ -1604,3 +1614,7 @@ Pretest the frozen checker with good controls, wrong sum/ID/rank/missingness, a 
 Each executed check yields PASS, ANALYSIS_DEFECT or TOOL_ERROR. A runtime crash is TOOL_ERROR: diagnose/repair and rerun. Missing evidence or an unexecuted check is never PASS. Do not call a checker problem proof of wrong analysis. Nothing advances to Finish until required checks pass on current hashes. Preserve failed attempts and escalate after three unsuccessful repairs of the same defect; no check is waived.
 
 The manifest binds the one design, source/SQL, both builder code/input declarations, checker/configuration/pretest, environment and actual outputs/reports. No chained stage receipts, watchdog, nonce/end-marker ceremony or mandatory three-AI similarity review. Hash changes invalidate affected prior verification. Exact comparisons and known answers remain strict.
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.

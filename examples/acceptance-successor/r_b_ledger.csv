@@ -1,0 +1,9 @@
+id,amount_raw,eligible_raw,amount_value,amount_status,eligible_value,qualified,qualified_rank,selected,selection_rank,exclusion_reason,outcome
+A,9,true,9,finite,TRUE,FALSE,,FALSE,,below_threshold,excluded_below_threshold
+B,10,true,10,finite,TRUE,TRUE,2,TRUE,2,,selected
+C,11,true,11,finite,TRUE,TRUE,1,TRUE,1,,selected
+D,20,false,20,finite,FALSE,FALSE,,FALSE,,ineligible,excluded_ineligible
+E,10,true,10,finite,TRUE,TRUE,3,FALSE,,,qualified_not_selected
+F,0,true,0,finite,TRUE,FALSE,,FALSE,,below_threshold,excluded_below_threshold
+G,,true,,blank,TRUE,FALSE,,FALSE,,blank,excluded_invalid_amount
+H,30,false,30,finite,FALSE,FALSE,,FALSE,,ineligible,excluded_ineligible

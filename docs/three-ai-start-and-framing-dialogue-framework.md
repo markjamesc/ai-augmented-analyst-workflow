@@ -2,6 +2,8 @@
 
 > **ACC003 lean workflow (certified 2026-10-30):** The separate machine Start and Framing Gates (begin/complete transitions, stage1/stage2 status JSONs) are not enforced in the certified ACC003 lean code (2026-10-30); their readiness criteria below remain operating instructions. Records consolidate into start.md and framing.md without losing their contents. Acknowledgement-only context messages are dropped; re-review only changes in meaning. Synthetic stakeholder content must be labelled synthetic.
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 
 > **Prospective methodology-v3:** apply [Methodology hardening](METHODOLOGY_HARDENING.md) alongside this framework. It consolidates the target/premise/sensitivity contracts, semantic checks, reproducibility and claim evidence. Its prospective contract resolves older conflicting wording; frozen historical runs keep their pinned version.
 
@@ -891,6 +893,8 @@ End of framework.
 
 > **ACC003 lean workflow (certified 2026-10-30):** short-form summary of the certified lean rules, added by 9bc13eb. Where this summary and the full text above differ, the summary states the certified mechanics; the full text keeps the method.
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 ### Start and Framing
 
 ## Start
@@ -902,3 +906,7 @@ Record the owner, intended decision, allowed actions and the real question behin
 Record one question in framing.md, including population, time/grain, intended claim type, capacity/decision constraints and material ambiguities. Changes in meaning get focused review; unchanged prose does not. These records inform the design contract and are hash-bound at owner lock. No additional machine stage-transition restrictions exist here.
 
 ACC003 asks whether the mechanical workflow reproduces a known synthetic rule and detects defects. It does not estimate real-world analytical accuracy or profit. GrokBot plays the synthetic stakeholder under the owner's instruction.
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.

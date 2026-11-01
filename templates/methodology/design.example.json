@@ -110,7 +110,9 @@
       "numeric_fields": [],
       "absolute_tolerance": 0,
       "relative_tolerance": 0,
-      "rationale": "Canonical table includes every candidate and explicit exclusion/eligibility fields in real projects."
+      "rationale": "Canonical table includes every candidate and explicit exclusion/eligibility fields in real projects.",
+      "field_nullability": {},
+      "numeric_missingness": {}
     }
   ],
   "checkpoint_coverage": [
@@ -131,7 +133,9 @@
       "preconditions": "Stable IDs and no semantic row order.",
       "rationale": "Judged membership depends on values, not source position.",
       "transformation": "Reverse input rows",
-      "expected_relation": "Identical keyed decisions"
+      "expected_relation": "Identical keyed decisions",
+      "coverage_type": "nonconstant",
+      "detectable_defect": "NOT_SET__defect and evidence that this relation detects it"
     }
   ],
   "structural_review": {
@@ -211,5 +215,76 @@
   ],
   "replay_outputs": [
     "outputs/judged.csv"
-  ]
+  ],
+  "operational": {
+    "version": "acceptance-v1",
+    "action_lexicon": [
+      "act",
+      "pilot",
+      "hold",
+      "recommend",
+      "increase",
+      "decrease",
+      "dispatch",
+      "deploy"
+    ],
+    "finality_lexicon": [
+      "final",
+      "conclusive",
+      "resolved"
+    ],
+    "negation_rule": "Lexical hit requires contextual review even when negated; no automatic exemption.",
+    "evidence_tag_rule": "Coordinator assigns tag from reviewed evidence and owner tradeoff; no causal upgrade.",
+    "fixture_inputs": {
+      "path": "fixtures/input.csv",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "fixture_expected": {
+      "path": "fixtures/expected.json",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "oracle_basis": "NOT_SET__independent justification",
+    "oracle_reviewer": "NOT_SET__reviewer",
+    "output_rules": [
+      {
+        "field": "id",
+        "kind": "computed",
+        "rule": "NOT_SET__all outcome semantics"
+      },
+      {
+        "field": "action",
+        "kind": "computed",
+        "rule": "NOT_SET__all outcome semantics"
+      }
+    ],
+    "packet_requirements": [
+      "output_rules",
+      "checkpoints",
+      "receipt_dependencies",
+      "accepted_code",
+      "checkpoint_output_rules"
+    ],
+    "validation_components": {
+      "R-A": [
+        "code/r_a.R"
+      ],
+      "R-B": [
+        "code/r_b.R"
+      ],
+      "harness": [
+        "tests/validate.R"
+      ],
+      "configuration": [
+        "config/analysis.json"
+      ],
+      "input": [
+        "inputs/source.csv"
+      ]
+    },
+    "source_contract": {
+      "kind": "sql",
+      "rationale": "NOT_SET__SQL extraction, or change kind to file with actual source rationale"
+    },
+    "checkpoint_output_rules": []
+  }
 }

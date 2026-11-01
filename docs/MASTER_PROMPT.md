@@ -2,6 +2,8 @@
 
 > **ACC003 lean workflow (certified 2026-10-30):** Run commands are now procedure_gate.R init/lock/validate/finish/finalize/status (exit 0/1/2). The begin/complete/amend commands, run_state.json, stage receipts and stage5_allowed described below are not enforced in the certified ACC003 lean code (2026-10-30). Owner authority covers the exact Stage-3 lock, repair-limit escalation, locked-decision changes, new credentials/spending and publication. Three unsuccessful repairs of the same defect escalate. ACC003 prompts live separately in acceptance/acc003/run-kit/prompts.
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 
 > **Status:** Locked orchestration language for **new / prospective** projects.  
 > Does **not** rewrite prior locked project master prompts or frozen historical packs.  
@@ -316,6 +318,8 @@ The first two items record the published framework lock. The remaining items are
 
 > **ACC003 lean workflow (certified 2026-10-30):** short-form summary of the certified lean rules, added by 9bc13eb. Where this summary and the full text above differ, the summary states the certified mechanics; the full text keeps the method.
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 ### Master prompt: lean five-stage analysis
 
 Use the current linked stage documents and one authoritative design.json. Do not reconstruct older requirements from historical documents. GrokBot coordinates; ChatGPT drafts and builds R-A; DeepSeek builds R-B; Grok performs the single independent Design review and validation oversight. Finish uses ChatGPT synthesis, Grok inference review and DeepSeek numerical/evidence review. Each designated review occurs once; verify only affected content after a substantive correction.
@@ -335,3 +339,17 @@ Fix tools and rerun affected checks. Do not infer wrong analysis from a crash, m
 Routine invocations/path corrections and byte-identical restoration are delegated to GrokBot. Other code/configuration changes return to ChatGPT; changed harness dependencies/config/interfaces require affected pretests again. Changed analytical decisions require owner approval and a successor run/contract; retain predecessor evidence. Usage/access outages pause safely. PC offline: retry every five minutes up to three times, then report. Silence is never new authority.
 
 Reserved owner touchpoints: Stage-3 lock, three failed repairs, changed locked decisions, and publishing. No main changes or PR/merge without separate approval. No unnecessary owner confirmations, deadlines, nonce or FILE-line gates. Wrong/stale/truncated inputs are still corrected before use.
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.
+
+### Required escalation and pre-approval policy
+
+Generate `templates/preapproval_sheet.json` at Start. Each application records unique ID, run, stage, exact scope, owner verbatim file/hash, wording author, granted/expiry UTC, conditions and evidence, revocation rule, action time and application. Cover stage sign-offs, Validation Gate, structural review, human Finish, final certification, limitations, repair scope, publication, checkpoint replacement, cleanup and results delivery; mark inapplicable items with reasons. Coordinator-written approval wording must be disclosed. A grant is not evidence that its conditions held. A later revocation overrides a prior grant, including a prior 'tonight' grant. Record known revocations in `artifacts/operations/revocations.json` as `{run_id, events:[{approval_id,recorded_at_utc,owner_record:{path,sha256}}]}`. No fabricated human reading or stakeholder confirmation.
+
+Owner-only actions, unless already explicitly authorized for the exact scope: writes to live systems or the DB; push, merge, PR, email, publish or post; deletions; changing locked values or gate rules; loosening a check or accepting risk; sign-offs not pre-approved; anything that changes a result. Escalate missing/expired/failed conditional consent. Existing authorization persists within scope.
+
+Act and log within existing authority: repair packets and reruns, coordinator tooling fixes, and bounded PC-offline retries every five minutes, at most three, checking state before each retry. A serious item blocks its own branch and dependent work, not unrelated authorized work. Batch questions without delaying ready authorized sends. Never use silence as new consent. Stage 5 cannot run alongside unfinished validation of repaired code.
+
+Prospective live-finding repairs: follow [LIVE_FAILURE_REPAIRS.md](framework-refinement/LIVE_FAILURE_REPAIRS.md) for immutable candidates, nullable checkpoint schemas, source applicability, Windows references/restoration and capture/timing evidence. Prior run evidence remains unchanged.

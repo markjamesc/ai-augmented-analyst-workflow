@@ -1,0 +1,56 @@
+PASS D22 explicit nullable contract accepted 
+PASS D22 output versus checkpoint conflict rejected 
+PASS D22 nullable finite-only contract rejected at Design 
+PASS D22 undeclared nullability rejected 
+PASS D22 unpaired missingness flag rejected 
+PASS D22 eight-row missing G compares by key 
+PASS D22 missing versus zero rejected 
+PASS D22 unexpected infinity rejected 
+PASS D22 unexpected NaN rejected 
+PASS D22 wrong missing token rejected 
+PASS D22 missing row identity mismatch rejected 
+PASS D22 legacy finite-only behavior retained 
+PASS D22 all-missing rows supported only with policy 
+$path
+[1] "candidate.json"
+
+$sha256
+[1] "3e3eaa20a6f181f3e6af87bd549593af1930f0735f3395ce4e8f96ec0c3865aa"
+
+$path
+[1] "candidate.json"
+
+$sha256
+[1] "e0cac6fa88ea7926ba6104e4c25ae220b0644ef71514e611ccc7d648f783be20"
+
+PASS D20 snapshot survives candidate rewrite 
+PASS D20 snapshot is idempotent 
+PASS D20 current nested packet accepted 
+$path
+[1] "candidate.json"
+
+$sha256
+[1] "2480fe33f88f8a3af3d58aeecc3cc7207efb28379b645d3502482fd4f0a541fa"
+
+PASS D20 rewritten nested reference refused at completion 
+PASS D20 immutable candidate references accepted 
+PASS D07 bare screen attestation rejected 
+PASS D03 Windows path canonicalized 
+PASS D03 traversal rejected 
+PASS D03 outside prefix rejected 
+PASS SQL N/A with file fidelity accepted 
+PASS SQL false PASS on file-only input rejected 
+PASS SQL N/A rejected for SQL source 
+$path
+[1] "source-check.txt"
+
+$sha256
+[1] "7f8b1dfc466b6249f06cbe55c9174df2578e7754da793fded244ef5cba2a38f1"
+
+PASS N/A does not bypass fidelity hashes 
+PASS D27 actual child inherits environment 
+PASS D27 parent environment restored 
+PASS D27 child failure retained 
+PASS D27 parent restored after failure 
+PASS D27 wrapper probes fresh child library 
+31 / 31 live-finding checks passed

@@ -2,6 +2,8 @@
 
 > **ACC003 lean workflow (certified 2026-10-30):** One draft, one independent Design reviewer, one consolidated revision and focused verification of resolved findings. The authoritative run contract is design.json, validated by methodology/schema.json and contracts.R; this prose must agree with it. Mode A/B is replaced by the single model rule (see the appended summary). A changed locked design needs an owner-approved successor run. The ACC003 contract enforces zero absolute/relative tolerance (contracts.R); that is an ACC003 restriction, not a universal rule.
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 
 > **Prospective methodology-v3:** apply [Methodology hardening](METHODOLOGY_HARDENING.md) alongside this framework. It consolidates the target/premise/sensitivity contracts, semantic checks, reproducibility and claim evidence. Its prospective contract resolves older conflicting wording; frozen historical runs keep their pinned version.
 
@@ -1036,6 +1038,8 @@ Before the Design Gate, check the locked text for these recurring gaps. Each one
 
 > **ACC003 lean workflow (certified 2026-10-30):** This table remains a procedural Design requirement (keep one authoritative table in or attached to the contract). The certified code compares declared checkpoints and known cases; it does not interpret table cells or recompute clock rules. Executable coverage of this table is not enforced in the certified ACC003 lean code (2026-10-30).
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 
 The Design Gate requires an **output-field × outcome table** approved by the owner before Stage 4:
 
@@ -1670,6 +1674,8 @@ End of framework.
 
 > **ACC003 lean workflow (certified 2026-10-30):** short-form summary of the certified lean rules, added by 9bc13eb. Where this summary and the full text above differ, the summary states the certified mechanics; the full text keeps the method.
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 ### Stage 3 — Measurement Design
 
 One authoritative design.json, validated by methodology/schema.json and the R semantic validator. The human-readable summary is a view of this contract, never a competing authority.
@@ -1692,3 +1698,7 @@ Record whether a model exists and whether its predictions determine the answer. 
 Insight-only modeling uses one build; label it exploratory/unvalidated and exclude it from the decision and headline. Promoting it into a decision needs an approved new contract. No Mode A/B labels or extra branch machinery.
 
 No per-field AI authorship, duplicated output/nullability tables, separate spec-to-builder review tier or repeated three-AI final Design audits.
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.

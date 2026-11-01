@@ -1,0 +1,49 @@
+{
+  "version": "acceptance-v1",
+  "run_id": "NOT_SET__run",
+  "stage": "start",
+  "authorization": {
+    "path": "artifacts/procedure/checks/begin.json",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "completed_at_utc": "NOT_SET__time",
+  "approvals": [],
+  "sends": [
+    {
+      "id": "NOT_SET__send",
+      "ai": "NOT_SET__actual provider/model/session",
+      "nonce": "NOT_SET__unique nonce",
+      "packet": {
+        "path": "packets/send.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "attachments": [],
+      "reply": {
+        "path": "replies/send.txt",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "capture": {
+        "path": "captures/send.json",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "depends_on": [],
+      "approval_id": "none",
+      "ready_at_utc": "NOT_SET__time",
+      "sent_at_utc": "NOT_SET__time",
+      "captured_at_utc": "NOT_SET__time",
+      "verified_at_utc": "NOT_SET__time",
+      "timestamp_basis": "machine_observed",
+      "timestamp_uncertainty_seconds": 0,
+      "dispatch_evidence": {
+        "path": "NOT_SET__dispatch-evidence.txt",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  ],
+  "all_sends_recorded": false,
+  "transcript_index": {
+    "path": "transcripts/index.json",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "deviations": []
+}

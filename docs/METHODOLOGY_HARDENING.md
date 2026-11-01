@@ -2,6 +2,8 @@
 
 > **ACC003 lean workflow (certified 2026-10-30):** Where this text describes CLI commands, receipts, status JSONs or review tiers that the certified code does not run, those are not enforced in the certified ACC003 lean code (2026-10-30). See docs/r-procedure-gate-enforcement.md for the certified interface. 
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 
 Implementation release candidate, authorized by the owner on 2026-10-10 (“start step 2”).
 Base: `e4af085e144884fa8563bb48d9c199aeb5f52f3d` on the ablation KEEP branch.
@@ -124,3 +126,10 @@ The earlier review was a targeted critical review, not a registered systematic r
 11. TRIPOD+AI (2024), https://doi.org/10.1136/bmj-2023-078378; Hughes et al. (2019), https://doi.org/10.1093/ije/dyz032 — prediction reporting and context-dependent missingness methods.
 12. Morris et al. (2019), https://doi.org/10.1002/sim.8086 — prespecified simulation aims, generators, targets, methods and performance measures; synthetic truth is generator-specific.
 13. NIST AI 600-1 (2024), https://doi.org/10.6028/NIST.AI.600-1 — provenance and context-specific evaluation; no guarantee from model agreement.
+
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.
+
+Prospective live-finding repairs: follow [LIVE_FAILURE_REPAIRS.md](framework-refinement/LIVE_FAILURE_REPAIRS.md) for immutable candidates, nullable checkpoint schemas, source applicability, Windows references/restoration and capture/timing evidence. Prior run evidence remains unchanged.

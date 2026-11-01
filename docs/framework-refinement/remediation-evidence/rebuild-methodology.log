@@ -1,0 +1,20 @@
+Warning message:
+In system2(command = file.path(R.home("bin"), "Rscript"), args = c(shQuote(gate_script),  :
+  running command ''/workspace/scratch/300679a5be94/runtime/r/lib/R/bin/Rscript' '/workspace/scratch/300679a5be94/candidate/workflow-gate/workflow_gate.R' '/tmp/RtmpXeo2GH/methodology-tests-92e7b0377d5' 2>&1' had status 1
+$path
+[1] "answer.md"
+
+$sha256
+[1] "53ecf75dacc041ac3412ea2434712b56ebc3f34b810888dde5ded95ef298ed68"
+
+Methodology checks passed: 28 contract defects rejected; keyed membership, boundaries, metamorphic fault detection and actual fresh-process replay verified.
+$status
+[1] "STARTED"
+
+$run_id
+[1] "OLD"
+
+$next_step
+[1] "start"
+
+Successor and retry tests passed: predecessor retained, no inherited completions, referee hashed, failed attempt preserved.

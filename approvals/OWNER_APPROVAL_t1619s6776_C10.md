@@ -1,0 +1,3 @@
+# Owner approval t1619s6776 (2026-10-31 06:14 CT), relayed by the parent agent
+Option (a): narrow gate rule C10. An out-of-order send is accepted by the send-dependencies check only when (1) a hash-checked deviation record names that send_id and nonce, (2) listed redo sends are sent later, verified, in dependency order, and not out of order themselves, and (3) nothing outside the send and its declared superseded chain cites its reply (by path or sha256), including packet supplements and accepted_code.
+Further steering t1622u (06:16 CT): Stage 4 close and Stage 5 pre-authorized; stops only for a real analysis failure, fabrication risk, or a push.

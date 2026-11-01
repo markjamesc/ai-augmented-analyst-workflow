@@ -2,6 +2,8 @@
 
 > **ACC003 lean workflow (certified 2026-10-30):** One synthesis (ChatGPT), one inference review (Grok), one numbers/evidence review (DeepSeek), one consolidated correction with affected-content verification at the new hash. finish.json fields answer, limitations and safeguard_disposition are nonempty strings; each claim has text, type, evidence_paths and interpretation; exploratory_changes_decision must be false. Live mode rejects simulated reviews; offline certificates are OFFLINE_MECHANICS_ONLY and live ones LIVE_PROCEDURAL_ACCEPTANCE.
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 
 > **Prospective methodology-v3:** apply [Methodology hardening](METHODOLOGY_HARDENING.md) alongside this framework. It consolidates the target/premise/sensitivity contracts, semantic checks, reproducibility and claim evidence. Its prospective contract resolves older conflicting wording; frozen historical runs keep their pinned version.
 
@@ -546,6 +548,8 @@ This table guides reasoning; it does not replace project-specific judgment.
 
 > **ACC003 lean workflow (certified 2026-10-30):** This table and lexicon remain a procedural responsibility. The certified gate checks only allowed claim types and review bindings; executing the table is not enforced in the certified ACC003 lean code (2026-10-30).
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 
 Recommendation proportionality is checked by the following table. The coordinator assigns **one evidence tag** to the recommendation before the check (not per claim), from the Stage 4 evidence actually available:
 
@@ -1089,6 +1093,8 @@ End of framework.
 
 > **ACC003 lean workflow (certified 2026-10-30):** short-form summary of the certified lean rules, added by 9bc13eb. Where this summary and the full text above differ, the summary states the certified mechanics; the full text keeps the method.
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 ### Stage 5 — Finish
 
 Entry requires all required substantive checks PASS on current evidence. ChatGPT synthesizes the direct answer, strongest evidence, limitations and recommendation. Grok reviews inference; DeepSeek reviews numbers/evidence. Each has one fresh role chat and one review; one consolidated correction is allowed, followed only by affected-content verification. Unresolved substantive objections cannot be recorded as accepted.
@@ -1098,3 +1104,7 @@ For each material claim, retain its text, type, exact validated evidence paths a
 Record final answer/claims in finish.json and hash the substantive content for the reviews. The final certificate rechecks current validated artifacts and review-content bindings. The tool verifies references/statuses, not the truth of natural-language reasoning or the authenticity of a human/AI attestation. Reviewers must actually inspect content; a fabricated acceptance record is not compliant.
 
 For ACC003, certificate scope is mechanical three-AI process acceptance on a known synthetic fixture. Offline rehearsal certificates are explicitly OFFLINE_MECHANICS_ONLY. Neither establishes real-world accuracy, model quality or economic benefit. Outcome evaluation remains a separate task requiring observed outcomes and a defensible counterfactual.
+
+## Prospective acceptance remediation
+
+New runs must follow [SEND_QUEUE_PROTOCOL.md](SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.

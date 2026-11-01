@@ -134,3 +134,82 @@ Items 1, 2, 4, 5 and 7 (the #30 gate, #16 meaning, #37 tag, #48/#50 FLAG handlin
 5. **Revision FLAG handling (C48/C50).** **[OPEN]** The tests did not define what happens after a FLAG beyond "correct and recheck". This change says flagged text does not pass the Finish Gates until corrected and the checklist passes.
 6. **C01 attribution.** The tested unblinded chat also saw a coordinator draft (shared with C02). C02 returned REVERT, so the coordinator-draft ban stays; the C01 result is not cleanly separated from that effect.
 7. **Dominance thresholds (C47).** **[OPEN]** The tested values (≥ 1,000 total, ≥ 30 per unit, share > 1/3) are written as the default; confirm or replace them in Stage 3 per project.
+
+## C9 (2026-10-31, owner card t1616s6758 item 3)
+- `m_inventory` accepts `supersession_resolutions`: a nested ref whose sha256 is an abbreviated (>=16 hex) prefix may be resolved only when a hash-checked deviation record names the same path, holds a full 64-hex sha256 beginning with that prefix, and marks the target never_sent; the resolved ref must then match the file bytes.
+- New check `supersession resolutions` (only when resolutions are present) fails if a resolution names a packet sent in the ledger.
+- Tests T9 (8 checks): the old false failure passes; wrong, missing, non-matching or too-short hashes, non-never-sent and sent-packet resolutions still fail.
+
+## C10: disclosed out-of-order send with an in-order redo (owner approval t1619s6776)
+`m_operations` send-dependencies now also passes when `out_of_order` holds a hash-checked deviation record for that exact send_id and nonce, one or more redo sends that follow it in correct dependency order, and no use of its reply outside `superseded_chain`. Without all three, the check still fails. Tests: T10 (8 cases, including no disclosure, wrong send, no redo, redo out of order, outputs used, and a hash mismatch). Targeted suite 61/61.
+
+## C11: procedure evidence closure applies the C9 supersession resolutions (owner approval t1636s6840)
+Before C11, `m_operations` applied an operations ledger's `supersession_resolutions` (C9) but the procedure gate's Stage evidence closure (`complete` ~line 516, `amend`, finalize inventory) called `m_inventory` without them, so the two gates disagreed on the same ledger. `step_closure()`/`closure_resolutions()` now pass the ledger's resolutions to `m_inventory`. The resolutions are filtered exactly as in m_operations: any resolution naming a packet that the ledger sent is dropped, and `m_inventory` still requires the hash match and never-sent status. Record-only; no analysis check is relaxed. Tests: T11 (7 checks: baseline fails; resolved passes and agrees with m_operations; wrong hash fails; sent-status fails; another stale ref still fails; a resolution naming a sent packet is not applied; static wiring of complete/amend/finalize). Targeted suite 68/68.
+
+## Round 2 cuts (2026-10-31, owner t1652u / card t1651s6906, t1660u, t1663u)
+Commits on gates-targeted-2026-10-31 (local only): 6bf2bd5 (gate: P01-P13 cut, R1 added), 45a263c (runkit/drivers/docs),
+404500b and 1a5db96 (pure tooling bugs found by the rehearsal), plus this doc commit.
+Evidence: /workspace/ablation_plan/ROUND2_RESULTS_2026-10-31.md and res_*.json (P01-P13); /workspace/abl/res_new_*.json
+(gate at 6bf2bd5 on the pre-cut root), /workspace/abl/res3_*.json (joint: new runkit root), /workspace/abl/alone/res_*.json (per-group alone).
+
+### Gate rules cut (P01-P13)
+P01 capture match fields, P02 dispatch timing provenance, P03 send chronology, P04 watchdog in the gate, P05 send dependencies
+(incl. the C10 out-of-order deviation path), P06 packet binding, P07 execution packet completeness, P08 send coverage flag,
+P09 revocation ledger, P10 approvals (sign-off conditions, IDs, send approval), P11 operations identity, P12 completion
+timestamp, P13 deviation dispositions. Reason for each: audit-only; no planted analysis defect escaped alone or jointly.
+P05 was the only incidental guard against a dropped review; it is replaced by R1.
+Kept: P14 send identity, P15-P20 integrity/closure, every analysis check, C3 and C9-C11.
+
+### Added: R1 review coverage
+Per stage, derived generically from the locked design and stage roles: every required role has a captured send, its reply
+file exists with the recorded hash, the capture names that reply, and replies are distinct. Catches a dropped final review
+(R16), a dropped start send (R17), a dropped auditor (R13/R14) and stale-reply swaps (A7, A7c), with integrity on and off.
+
+### Run-record cuts (runkit and drivers), each ablated alone and jointly (t1663u)
+F1 dispatch/chronology (`sent` step, dispatch file, ready/sent/verified times, basis, uncertainty); F2 binding file and
+capture_evidence; F3 packet/ledger authorization and approval_id; F4 capture_method; F5 ledger approvals, deviations,
+revocations.json, transcript index, all_sends_recorded, completed_at, attempt; driver chronology sleeps (timing only, no record).
+Method: for each group, a scratch commit (branches abl-alone-*) with the pre-cut runkit minus that group only; a full
+5-stage rehearsal; then 15 cases (baseline, A1-A7, A6c, A7c, R13-R17) x integrity on/off on that root. V0 = nothing cut.
+Result: V0, F1, F2, F3, F4, F5 and the joint cut (real runkit at 1a5db96) give the identical pattern: every A-defect and
+every missing-review case caught, except A2 with integrity off (also escapes with nothing cut; only integrity hashes catch
+it) and R15 (per-send duplicate file deleted while the ledger keeps the send; review not missing; harmless, as before).
+All six alone rehearsals and the joint rehearsal were 0 failures, 0 waivers.
+
+### Kept because unsure (not cut)
+acceptance.py watchdog (tool, not a gate rule); owner records under approvals/ and the preapproval sheet (owner authority);
+locked sections in builder packets (P07 gate check cut, practice kept); "Controlling documents unchanged" (integrity).
+Probe changes (a) retired, (d) replaced by dropped-review and stale-reply: need ChatGPT's agreement before live use.
+
+### CHANGES 2026-10-31 (fourth set): review fixes F1-F7
+
+Owner card t1665s6948. Findings from reviews RV-D1 (DeepSeek) and RV-C1 (ChatGPT), verified in `/workspace/review_20261031/COMBINED_FIX_LIST.md`. All changes are in `m_review_coverage` (`methodology/contracts.R`); tests are F1-F6 in `methodology/tests/test_targeted_gates.R`. No check was relaxed.
+
+- **F1 Start/Framing roles.** `m_stage_ai_roles` now has `start = independent_reconstruction, red_team` and `framing = framing_builder, decision_fit_review, framing_red_team`. Sources: the stage 1 receipt fields `ai2_independent_reconstruction`, `ai3_independent_red_team` and the stage 2 fields `ai1_builder`, `ai2_decision_fit_review`, `ai3_framing_red_team` (procedure_gate.R), the AI1/AI2/AI3 roles in `docs/three-ai-start-and-framing-dialogue-framework.md` §4, and the role ids used by the rehearsal driver (S1-02, S1-03, S2-01..S2-03). The AI1 decision drafter at start is the dialogue lead, not a review, and is not required. Prospective: ACC002 start/framing ledgers carry no `role` field and would fail this rule.
+- **F2 capture hash required.** A capture record must carry `capture_sha256` equal to the reply sha256; a capture `nonce`, when present, must equal the send nonce.
+- **F3 unique sends.** New check `review coverage <stage> unique send ids`: every send has an id and a nonce, and no id or nonce repeats in the ledger.
+- **F4 role bound to provenance.** When the stage receipt has an `ai_provenance` record for a required role, that role's send must have the record's `output` as its reply and the record's `provider` as its `ai`. A missing record is still handled by `m_ai`.
+- **F5 review saw a current artifact.** A send counts for a required role only if it has at least one attachment, every attachment matches its file now, and at least one attachment is a file the stage receipt reaches other than the receipt itself.
+- **F5b review saw the artifact under review (RV-D2 issue 2, RV-C2 F5 PARTLY; owner card t1665s6948).** Every required-role send must also attach each reviewed subject of its stage, by path, with the hash that file has now (`m_review_subjects`). The stage receipt never counts. Subjects: start = every record the start receipt references directly, other than transcripts, captures, packets and approvals (e.g. the start record and data); framing = `artifacts/stage1_decision.json`; design = `artifacts/stage2_framing.json` plus the design receipt's direct `docs/` references (design gate record); execution (structural reviewer, cross_review) = `artifacts/stage3_locked_design.json` plus every frozen builder script `builds/frozen/**.R` the receipt references (none referenced = check `review coverage execution review subjects` fails); finish = `artifacts/stage4_validation_status.json` plus the finish receipt's direct `docs/*.md` references (the interpretation). A send whose current attachments are only ancillary, or only the receipt, or that holds a stale copy of a subject, fails its role. The locked design is the output of the design stage and hashes the design replies, so design reviewers cannot attach it; it is the subject of the execution reviews instead. Sources: stage guides (docs/three-ai-start-and-framing-dialogue-framework.md, docs/three-ai-validation-and-analysis-framework.md) for which artifact each stage reviews; rehearsal drivers drive_s123.py, drive_s4a/b.py, drive_s5.py and REH-F16C ledgers for the attachments real sends carry. Strictly additional: no earlier conjunct was removed.
+- **F6 reply names.** Required replies are all reached files under `transcripts/<stage>/` whose name matches `_reply(\.|$)` (for example `x_reply.md`, `x_reply.txt.bak`).
+- **F7 approvals and revocations (record only).** The approval and revocation enforcement removed in the third set (P09 revocation ledger, P10/C4 approval checks, and `artifacts/operations/revocations.json` in the finalize inventory) stays removed. Approvals are procedural: the owner's approval is recorded in the run notes and cards, and the gate does not check it.
+
+### CHANGES 2026-10-31 (fifth set): Plan A (RV-D3 / RV-C3 follow-up)
+
+Owner cards t1673s6985, t1673s6991, t1674s7005. No analysis check was relaxed; the ACC002 live layout was checked first.
+
+- **Path-rule change (execution review subjects).** Was: the frozen builder scripts `builds/frozen/**.R` referenced directly by the stage 4 receipt. Now: every `*.R` under `builds/frozen/**` or `analysis/**` that the stage 4 receipt references directly or one level through `receipts/*.json`. Reason: on the real ACC002 layout the old rule found no subject and NA-failed. `validation/*.R` is deliberately not a subject (owner-approved narrowing). The NA guard stays: no such script, the check fails.
+- **Content-equal match (analysis/ only).** An `analysis/**` execution subject is also satisfied by an attachment at another path whose hash equals the subject's current hash (the structural reviewer attaches the byte-identical `builds/frozen/...` copy). It applies to no other subject or stage; an edited installed file is not satisfied by the old frozen copy (tested).
+- **NA guards.** design (`docs/` records), execution (above) and finish (`docs/*.md`) receipts with no own subject fail `review coverage <stage> review subjects`. New start guard: the stage 1 receipt must reference both a `data/` file and a `docs/` file.
+- **Fixtures.** The invented `docs/<stage>/review_subject.md` is gone. Fixture receipts carry real-layout stage records (`t_stage_records`: `data/` + `docs/stage1/START_RECORD.md`, `docs/stage2/FRAMING_RECORD.md`, `docs/stage3/DESIGN_GATE_RECORD.md`, `docs/stage5/interpretation.md`). The fixture attachment filter uses the gate's exclusions.
+- **runkit packet refusals.** `packet` refuses a role not allowed at the stage (`REVIEW_ROLES`, a copy of `m_stage_ai_roles` with a sync test, plus `EXTRA_ROLES`: cross_review; start decision_drafter; design lock_review; execution builder R-A, builder R-B, structural reviewer) and a send with no `--attach` other than the stage receipt.
+- **Probes.** `f5b-no-builders` (receipt carries no builder script; reaches the NA case), `pa-design-no-record`, `pa-finish-no-record`. The earlier `f5b-builders-omitted` (attachment side) is kept.
+- **ACC002 known-gap replay** (`tools/tests/test_acc002_known_gap.py`, on a copy): ACC002 predates R1/F1-F6 and cannot pass; the test pins today's failing checks (start 8/17, framing 14/25, design 29/57, execution 6/10) and fails if any is added or removed. Versus 52dd52c, execution no longer fails `review subjects` (the path-rule change). A passing check confirms every captured reply's sha256 and END_REPLY line.
+
+- **Correction (RV-D4 / RV-C4, owner card t1674s7005 scope; stricter only).** The content-equal alternative for an `analysis/**` execution subject now accepts only an attachment under `builds/frozen/**` with the subject's current hash; an equal-hash copy anywhere else (e.g. `other/`, `transcripts/`) no longer satisfies it. Tests: `PA-C equal-hash copy under other/ ...` and `... under transcripts/ ...` fail (both passed under 95649e7, i.e. were accepted), `PA-C builds/frozen/ copy satisfies ...` passes, `PA-C edited analysis/ file ...` fails.
+- **Verified, no change: malformed `receipts/*.json` fails closed** (DeepSeek RV-D4 point 2). `m_read` returns NULL on a parse error; with no other builder script the subject set gets NA and `review coverage execution review subjects` fails. With a direct script ref the corrupt file is skipped (no bypass, no dedicated message).
+
+#### Deferred (post-run items, not in this run)
+- **Numerical-auditor outputs rule** (the auditor must attach the outputs it audits).
+- **Cross-review build-outputs rule** (cross_review must see the build outputs).
+- **Plan B: full per-role subject map** (each role its own subject list instead of a shared stage list) and per-artifact identity: includes ChatGPT RV-C4's Start point (a `data/` + `docs/` ref proves presence, not that they are the real Start artifacts). Note: Start already requires ALL eligible direct refs at their current hash, not any one of them.

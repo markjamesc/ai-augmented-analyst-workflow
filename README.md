@@ -2,6 +2,8 @@
 
 Step 3 review: [local acceptance results and remaining live checks](docs/framework-refinement/STEP3_LOCAL_ACCEPTANCE.md).
 
+Supported and CI-tested R version: **R 4.6.1** (Linux GitHub Actions). See [environment change and tested-version status](docs/framework-refinement/R_4_6_1_ENVIRONMENT_CHANGE.md). This version update is separate from the original candidate's acceptance results.
+
 This portfolio artifact presents my five-stage analytical workflow for turning technical reporting into decision support:
 
 1. **Start** — identify the business decision behind the metric request.
@@ -112,6 +114,8 @@ SQL, R, Tidyverse, interpretable statistical modeling, Excel reporting and autom
 
 > Merged from 9bc13eb. This adds the certified lean mechanics and the ACC003 acceptance record to the full packet above; it does not replace it. Builders in ACC003 use no web, repository or connector access (run-kit prompts 07/08). The run-approved F15 contract clarification is recorded in [ACC003 acceptance](docs/framework-refinement/ACC003_ACCEPTANCE.md).
 
+> **Gate merge 2026-10-31 (branch merge-gates-2026-10-31):** The code in this tree is the fixed gate code from 48b4af8, not the ACC003 lean code of 9bc13eb. The ACC003 lean note above records what was certified for ACC003 on the lean code; it does not describe the current gates. Where it says a command, receipt, review tier, role, nonce or END_REPLY line is not enforced or was cut, the current gates enforce the rules in this text plus the CHANGES 2026-10-31 sections of [r-procedure-gate-enforcement.md](docs/r-procedure-gate-enforcement.md) and [r-workflow-gate-enforcement.md](docs/r-workflow-gate-enforcement.md): F1 Start/Framing roles, F5b reviewed subjects, R1 review coverage, and the Round 2 cuts. No restored text was removed.
+
 Start → Framing → Design → Execution → Finish. Purpose: prevent false analysis without unnecessary process. This candidate starts from `51b6b0f4741cf97720349c180313353300f5078b`; it does not retroactively change any earlier certification or failed attempt.
 
 ### Entry points
@@ -150,3 +154,10 @@ This repository is not open source and does not grant permission to copy, distri
 ## Prospective methodology-v3 release candidate
 
 [Methodology hardening design and migration](docs/METHODOLOGY_HARDENING.md) integrates the final ablation dispositions with research-backed contracts and R enforcement. This branch is a Step-2 implementation candidate, not evidence that the complete three-AI workflow improves accuracy. See [implementation map](docs/framework-refinement/HARDENING_IMPLEMENTATION.md).
+
+
+## Prospective acceptance remediation
+
+New runs must follow [docs/SEND_QUEUE_PROTOCOL.md](docs/SEND_QUEUE_PROTOCOL.md). This adds recorded authorization/send ordering, scoped approval applications, exact test-version binding, capture checks and limited certificate assurance. It does not change original candidate results or certify the historical acceptance run.
+
+Prospective repairs from the small live acceptance test are documented in [Live failure repairs](docs/framework-refinement/LIVE_FAILURE_REPAIRS.md). The failed predecessor remains unchanged; successor acceptance is required before merge.
