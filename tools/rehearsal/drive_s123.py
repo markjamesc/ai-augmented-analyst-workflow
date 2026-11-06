@@ -4,9 +4,13 @@ sys.path.insert(0, os.path.dirname(__file__)); from drive_common import *
 root, gate, RUN, SRC = sys.argv[1:5]; d = D(root, gate); res = {}
 os.makedirs(root)
 for x in ['data', 'analysis', 'validation', 'environment']: shutil.copytree(f'{SRC}/{x}', d.p(x))
-for _h in ['structural_review_v2.R', 'versioned_reports.R']: os.chmod(d.p(f'validation/{_h}'), 0o644)  # source copy may be read-only
+for _h in ['structural_review_v2.R', 'versioned_reports.R', 'run_fixtures.R']:
+    fp = d.p(f'validation/{_h}')
+    if os.path.exists(fp): os.chmod(fp, 0o644)  # source copy may be read-only
 shutil.copy(f'{d.G}/tools/rehearsal/harness/structural_review_v2.R', d.p('validation/structural_review_v2.R'))  # owner card t1637s6856
 shutil.copy(f'{d.G}/tools/rehearsal/harness/versioned_reports.R', d.p('validation/versioned_reports.R'))  # owner card t1638s6865
+shutil.copy(f'{d.G}/tools/rehearsal/harness/run_fixtures.R', d.p('validation/run_fixtures.R'))  # stage4-fixes: code-independent planted defects
+shutil.copy(f'{d.G}/tools/rehearsal/harness/planted_transforms.R', d.p('validation/planted_transforms.R'))
 import subprocess; subprocess.run([sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'box_manifest.py'), d.root], check=True)
 for x in ['stage1', 'stage2', 'stage3']: shutil.copytree(f'{SRC}/docs/{x}', d.p(f'docs/{x}'))
 d.wx('SYNTHETIC_REHEARSAL.txt', LAB + f'\nRun {RUN}. Content (data, accepted analysis code, validation tools, design text) copied from ACC002; every AI reply and owner record is SYNTHETIC.\n')
@@ -52,6 +56,17 @@ def r3(rp):
     o['evidence'] = dict(design_gate_record=d.ref('docs/stage3/DESIGN_GATE_RECORD.md'), fixtures_manifest=d.ref('validation/fixtures/manifest.json'), fixtures_oracle=d.ref('validation/fixtures/oracle.json'),
         first_pass_replies=[d.ref(rp[k]) for k in ['D-01','D-02','D-03']], cross_review=d.ref(rp['D-04']), lock_review=d.ref(rp['D-05']),
         stage1_decision=d.ref('artifacts/stage1_decision.json'), stage2_framing=d.ref('artifacts/stage2_framing.json'), owner_record=d.ref('approvals/SYNTHETIC_owner_design_lock.md'))
+    # L6: lock must name the lineage producer actually used (check_lineage_v2.R), not v1.
+    def _rename_lineage(obj):
+        if isinstance(obj, dict):
+            return {k: _rename_lineage(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [_rename_lineage(v) for v in obj]
+        if isinstance(obj, str) and obj == 'validation/check_lineage.R':
+            return 'validation/check_lineage_v2.R'
+        return obj
+    if 'methodology' in o and isinstance(o['methodology'], dict):
+        o['methodology'] = _rename_lineage(o['methodology'])
     return 'stage3_locked_design.json', o
 d.owner('design_lock', 'lock of the reused ACC002 design text')
 stage('design', [('D-01','ChatGPT','designer_a',[],DT,None), ('D-02','Grok','designer_b',[],DT,None), ('D-03','DeepSeek','risk_reviewer',[],DT,None),

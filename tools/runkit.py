@@ -57,11 +57,16 @@ def main():
         if st.get('current_step') != x.stage: sys.exit(f'FAIL stage {x.stage} is not the authorized current step')
         if x.role not in allowed_roles(x.stage): sys.exit(f'FAIL role {x.role!r} is not allowed at {x.stage}: {allowed_roles(x.stage)}')
         if not [f for f in x.attach if os.path.normpath(f).replace(os.sep, '/') != STAGE_RECEIPTS.get(x.stage)]: sys.exit(f'FAIL packet needs at least one --attach other than the stage receipt')
+        # Validate every attachment exists and hash it BEFORE any write-once packet file is created (L5/M2 orphan fix).
+        att_refs = []
+        for f in x.attach:
+            if not os.path.isfile(k.p(f)): sys.exit(f'FAIL attachment missing before packet write: {f}')
+            att_refs.append(k.ref(f))
         nonce = secrets.token_hex(8); marker = f'END_REPLY {x.id} {nonce}'
         body = open(x.message, encoding='utf-8').read().rstrip('\n') + f'\n\nEnd your reply with this exact final line:\n{marker}\n'
         msg = k.wx(f'packets/{x.stage}/{x.id}/message.md', body)
         P = {"run_id": run, "stage": x.stage, "send_id": x.id, "nonce": nonce, "end_marker": marker,
-             "target_ai": x.ai, "role": x.role, "send_kind": x.kind, "message": msg, "attachments": [k.ref(f) for f in x.attach],
+             "target_ai": x.ai, "role": x.role, "send_kind": x.kind, "message": msg, "attachments": att_refs,
              "depends_on": x.depends}
         if x.synthetic: P['synthetic'] = x.synthetic
         if x.builder_role: P['builder_role'] = x.builder_role
@@ -82,7 +87,9 @@ def main():
         k.wx(frag(x.stage, x.id), e); print('captured', rp['sha256'][:16])
     elif x.cmd == 'ledger':
         if st.get('current_step') != x.stage: sys.exit(f'FAIL stage {x.stage} not current')
-        d = k.p(f'artifacts/operations/{x.stage}_sends'); sends = [json.load(open(os.path.join(d, f))) for f in sorted(os.listdir(d))] if os.path.isdir(d) else []
+        d = k.p(f'artifacts/operations/{x.stage}_sends')
+        # L5: only *.json send fragments; notes/non-JSON must live under *_notes/ and are ignored here.
+        sends = [json.load(open(os.path.join(d, f))) for f in sorted(os.listdir(d)) if f.endswith('.json')] if os.path.isdir(d) else []
         if not sends: sys.exit('FAIL no captured sends')
         sends.sort(key=lambda e: (e['captured_at_utc'], e['id']))
         o = {"version": "acceptance-v2", "run_id": run, "stage": x.stage, "sends": sends, "tool": "tools/runkit.py"}

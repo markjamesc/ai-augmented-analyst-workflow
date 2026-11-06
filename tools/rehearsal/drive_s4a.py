@@ -1,5 +1,7 @@
-# Stage 4 part A: begin execution, builder sends (SYNTHETIC replies carrying the ACC002 accepted code), freeze+install, reviews,
-# then the locked pipeline through structural_review_v2.  Usage: drive_s4a.py ROOT GATE
+# Stage 4 part A: begin execution, builder sends (SYNTHETIC replies carrying the ACC002 accepted code), freeze+install,
+# then the locked pipeline through the first structural_review_v2 pass.
+# Usage: drive_s4a.py ROOT GATE
+# L3: check_methodology and lineage run in drive_s4b.py AFTER the dispositions+structural rerun.
 import sys, os, re, json, time, shutil
 sys.path.insert(0, os.path.dirname(__file__)); from drive_common import *
 root, gate = sys.argv[1:3]; d = D(root, gate)
@@ -20,6 +22,6 @@ FZ = ['artifacts/stage3_locked_design.json'] + [f'builds/frozen/{s}/analysis/{v[
 # Structural reviews are sent by drive_s4b.py with the snapshot of the mechanical report attached (not before it exists).
 R = d.root
 for cmd in [['validation/source_verify.R', R], ['analysis/r_a/main.R', 'data/fixture_8row.csv', 'outputs/r_a'], ['analysis/r_b/main.R', 'data/fixture_8row.csv', 'outputs/r_b'],
-            ['validation/compare_keyed.R', R], ['validation/run_fixtures.R', R], ['validation/check_methodology.R', R],
-            ['validation/check_lineage_v2.R', R, 'S4-RA1', 'S4-RB1'], ['validation/structural_review_v2.R', R]]:
+            ['validation/compare_keyed.R', R], ['validation/run_fixtures.R', R],
+            ['validation/structural_review_v2.R', R]]:
     r = d.run([RS, '--vanilla', *cmd], ok=(0, 1, 2, 3)); print('RUN', cmd[0], 'exit', r.returncode)
