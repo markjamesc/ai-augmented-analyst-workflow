@@ -377,17 +377,55 @@ m_review_coverage <- function(add, root, stage, sends, receipt_path) {
   add(paste("review coverage", stage, "unique send ids"), !anyNA(ids) && !anyDuplicated(ids) && !anyNA(nonces) && !anyDuplicated(nonces), "Each send id and nonce appears once in the stage ledger")
   add(paste("review coverage", stage, "distinct replies"), length(h) == length(rows) && !anyDuplicated(h), "No reply is reused for another send")
 }
+# H1 (2026-11-06, owner card t1850s7711, option A): a SENT review whose attached interpretation candidate was later replaced may stay
+# in the ledger as history. Declared in a write-once sidecar artifacts/operations/<stage>.historical.json:
+#   {"historical_sends":[{"send_id":..., "supersession":{"path","sha256"}}]}
+# The hash-bound supersession record must name the send (historical_sent_fail or historical_sends), bind a current new_candidate,
+# and map each replaced canonical path to a hash-checked archived copy (superseded_inputs). Only refs reached through that send
+# (its own attachments, or children of its packet) may resolve to those archived copies, and only when the sha256 matches exactly.
+# F5/F5b coverage is unchanged: a historical send never counts as current coverage because its attachments do not hash to current files.
+m_historical <- function(root, stage, sends) {
+  side <- file.path(root, "artifacts/operations", paste0(stage, ".historical.json"))
+  h <- if (file.exists(side)) m_read(side) else NULL
+  if (!is.list(h) || !m_rows(h$historical_sends)) return(list())
+  out <- list()
+  for (e in h$historical_sends) {
+    if (!is.list(e) || !m_text(e$send_id) || !m_ref_ok(e$supersession, root)) next
+    s <- Filter(function(x) identical(x$id, e$send_id), if (m_rows(sends)) sends else list())
+    if (length(s) != 1 || !m_ref_ok(s[[1]]$packet, root)) next
+    d <- m_read(file.path(root, e$supersession$path))
+    named <- is.list(d) && (identical(d$historical_sent_fail, e$send_id) || e$send_id %in% unlist(d$historical_sends))
+    if (!named || !m_ref_ok(d$new_candidate, root) || !is.list(d$superseded_inputs) || !length(d$superseded_inputs)) next
+    if (!all(vapply(d$superseded_inputs, m_ref_ok, logical(1), root = root))) next
+    out[[length(out) + 1]] <- list(historical = TRUE, send_id = e$send_id, packet_path = s[[1]]$packet$path, map = d$superseded_inputs)
+  }
+  out
+}
+m_hist_resolve <- function(ref, hist, root) {
+  for (h in hist) { a <- h$map[[ref$path]]
+    if (is.list(a) && m_text(ref$sha256) && identical(tolower(a$sha256), tolower(ref$sha256)) && m_ref_ok(a, root)) return(a) }
+  ref
+}
+m_hist_ref_ok <- function(ref, root, hist) m_ref_ok(ref, root) || m_ref_ok(m_hist_resolve(ref, hist, root), root)
+m_ops_refs <- function(o, hist) {  # ledger refs; a historical send's attachments are verified through m_hist_ref_ok and its packet
+  hid <- vapply(hist, function(h) h$send_id, character(1))
+  o$sends <- lapply(o$sends, function(s) { if (is.list(s) && identical(length(intersect(s$id, hid)), 1L)) s$attachments <- NULL; s })
+  m_refs(o)
+}
 m_operations <- function(root,state,stage,final=FALSE,receipt=NULL) m_checks(function(add) {
   # 2026-10-31 (owner card t1651s6906, option B): paperwork rules P01-P13 cut on ablation evidence (round 2); kept send identity,
   # supersession resolutions and evidence closure; added review coverage. `final` is retained for callers and no longer changes checks.
   o <- m_read(file.path(root,"artifacts/operations",paste0(stage,".json")))
   sends <- o$sends
   add(paste("operations ledger",stage), is.list(o) && m_rows(sends) && length(sends) > 0, "The stage ledger exists and lists its sends")
-  for(s in sends) add(paste("send identity",s$id), m_text(s$id) && m_text(s$ai) && m_text(s$nonce) && m_ref_ok(s$packet,root) && m_refs_ok(s$attachments,root,FALSE) && m_ref_ok(s$reply,root) && m_ref_ok(s$capture,root), "Preserve exact packet, files, reply and capture record")
+  hist <- m_historical(root,stage,sends); hid <- vapply(hist,function(h) h$send_id,character(1))
+  for(s in sends) add(paste("send identity",s$id), m_text(s$id) && m_text(s$ai) && m_text(s$nonce) && m_ref_ok(s$packet,root) &&
+    (if (s$id %in% hid) all(vapply(m_refs(s$attachments), m_hist_ref_ok, logical(1), root=root, hist=Filter(function(h) identical(h$send_id,s$id),hist))) else m_refs_ok(s$attachments,root,FALSE)) &&
+    m_ref_ok(s$reply,root) && m_ref_ok(s$capture,root), "Preserve exact packet, files, reply and capture record (H1: a declared historical send may bind archived copies of a replaced candidate)")
   m_review_coverage(add,root,stage,sends,receipt)
   res <- Filter(function(r) is.list(r) && !any(vapply(sends,function(x) identical(x$packet$path,r$path),logical(1))), if(is.list(o$supersession_resolutions)) o$supersession_resolutions else list())
   if(length(o$supersession_resolutions)) add("supersession resolutions", length(res)==length(o$supersession_resolutions), "A resolved supersedes target must not be a sent packet in this ledger")
-  closure <- tryCatch(m_inventory(m_refs(o),root,res),error=function(e) NULL)
+  closure <- tryCatch(m_inventory(m_ops_refs(o,hist),root,c(res,hist)),error=function(e) NULL)
   add("operations evidence closure", !is.null(closure), "At stage completion, reject stale nested packet references, including pre-lock candidates")
 })
 # Transitive JSON reference closure from the authoritative project root.
@@ -404,14 +442,24 @@ m_inventory <- function(refs,root,resolutions=list()) {
     }
     ref
   }
-  visit<-function(ref) {
+  hist<-Filter(function(r) isTRUE(r$historical), resolutions); resolutions<-Filter(function(r) !isTRUE(r$historical), resolutions)
+  visit_all<-function(rs,u) for(child in rs) visit(child,u)
+  visit<-function(ref, under=list()) {
     ref$path <- gsub("\\\\", "/", ref$path)
     if(startsWith(ref$path,paste0(root,"/"))) ref$path<-substring(ref$path,nchar(root)+2)
+    if(!m_ref_ok(ref,root) && length(under)) ref<-m_hist_resolve(ref,under,root)
     if(!m_ref_ok(ref,root)) ref<-resolve(ref)
     if(!m_ref_ok(ref,root)) stop("Missing, unsafe or stale inventory dependency: ",ref$path)
     if(!is.null(seen[[ref$path]])) {if(!identical(seen[[ref$path]]$sha256,ref$sha256))stop("Conflicting inventory identity");return(invisible(NULL))}
     seen[[ref$path]]<<-list(path=ref$path,sha256=ref$sha256,bytes=unname(file.info(file.path(root,ref$path))$size))
-    if(grepl("\\.json$",ref$path,ignore.case=TRUE)) for(child in m_refs(m_read(file.path(root,ref$path)))) visit(child)
+    if(grepl("\\.json$",ref$path,ignore.case=TRUE)) { j<-m_read(file.path(root,ref$path))
+      # anchors: the historical send's packet, a send record/capture naming that send id AND binding that same packet,
+      # or an archived copy listed in that send's supersession record (an old candidate's own refs point at old canonical paths)
+      u<-c(under,Filter(function(h) identical(h$packet_path,ref$path) || (is.list(j) && (identical(j$send_id,h$send_id) || identical(j$id,h$send_id)) &&
+        is.list(j$packet) && identical(j$packet$path,h$packet_path)) ||
+        any(vapply(h$map,function(a) identical(a$path,ref$path) && identical(tolower(a$sha256),tolower(ref$sha256)),logical(1))),hist)); hs<-vapply(hist,function(h) h$send_id,character(1))
+      if(is.list(j) && m_rows(j$sends) && length(hs)) { for(sd in j$sends) visit_all(m_refs(sd), c(u,Filter(function(h) is.list(sd) && identical(h$send_id,sd$id),hist))); j$sends<-NULL }
+      visit_all(m_refs(j),u) }
   }
   for(ref in refs) visit(ref)
   unname(seen[order(names(seen))])
