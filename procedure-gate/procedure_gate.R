@@ -58,10 +58,16 @@ closure_resolutions <- function(project_root, step_ids) {
     Filter(function(r) is.list(r) && !any(vapply(o$sends, function(x) identical(x$packet$path, r$path), logical(1))), o$supersession_resolutions)
   }), recursive = FALSE)
 }
+# H1 (2026-11-06, owner card t1850s7711): closure also honours declared historical sends (see m_historical in contracts.R).
+closure_hist <- function(project_root, step_ids) unlist(lapply(step_ids, function(id) {
+  o <- tryCatch(m_read(file.path(project_root, "artifacts/operations", paste0(id, ".json"))), error = function(e) NULL)
+  if (is.list(o)) m_historical(project_root, id, o$sends) else list()
+}), recursive = FALSE)
 
 step_closure <- function(project_root, step_id, receipt) {
-  tryCatch(m_inventory(m_refs(list(receipt = receipt, operations = m_read(file.path(project_root, "artifacts/operations", paste0(step_id, ".json"))))),
-    project_root, closure_resolutions(project_root, step_id)), error = function(e) NULL)
+  tryCatch({ h <- closure_hist(project_root, step_id)
+    m_inventory(c(m_refs(list(receipt = receipt)), m_ops_refs(m_read(file.path(project_root, "artifacts/operations", paste0(step_id, ".json"))), h)),
+    project_root, c(closure_resolutions(project_root, step_id), h)) }, error = function(e) NULL)
 }
 
 load_methodology <- function() {
@@ -736,7 +742,7 @@ procedure_finalize <- function(project_root) {
     check_result("Controlling documents unchanged", verify_framework_hashes(state), "framework hashes must match run start")
   )
   for (st in procedure$steps) checks <- c(checks, m_operations(project_root,state,st$id,final=TRUE,receipt=st$artifact))
-  inventory <- tryCatch(m_inventory(c(m_refs(state$completed_steps), list(list(path="artifacts/workflow_gate_status.json",sha256=state$workflow_gate$report_sha256))), project_root, closure_resolutions(project_root,required)),error=function(e) NULL)
+  inventory <- tryCatch(m_inventory(c(m_refs(state$completed_steps), list(list(path="artifacts/workflow_gate_status.json",sha256=state$workflow_gate$report_sha256))), project_root, c(closure_resolutions(project_root,required), closure_hist(project_root,required))),error=function(e) NULL)
   checks <- c(checks,list(check_result("Evidence dependency closure",!is.null(inventory),"All referenced files must exist at authoritative root with matching hashes")))
   record <- save_checks(project_root, "final", "certification", checks)
   if (!checks_pass(checks)) {
